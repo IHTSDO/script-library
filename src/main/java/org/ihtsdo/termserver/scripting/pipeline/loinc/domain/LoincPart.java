@@ -20,7 +20,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
  * SYSTEM     --> 704327008 |Direct site (attribute)|
  * SYSTEM     --> 718497002 |Inherent location (attribute)|
  */
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 
 public class LoincPart extends Part {
 

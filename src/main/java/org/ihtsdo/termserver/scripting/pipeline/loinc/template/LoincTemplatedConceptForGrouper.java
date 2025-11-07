@@ -2,7 +2,7 @@ package org.ihtsdo.termserver.scripting.pipeline.loinc.template;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
 

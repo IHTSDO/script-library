@@ -6,7 +6,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.utils.SnomedUtilsBase;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.pipeline.*;
-import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
+import org.ihtsdo.termserver.scripting.pipeline.domain.*;
 import org.ihtsdo.termserver.scripting.pipeline.npu.NpuScriptConstants;
 import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuConcept;
 import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuDetail;
@@ -85,7 +85,7 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 		if (part.getPartNumber().contains(",") && (additionalAttributes == null || additionalAttributes.isEmpty())) {
 			additionalAttributes = attemptPartialCompoundKeyLookup(part, attributeType);
 		}
-		for (RelationshipTemplate rt : additionalAttributes) {
+		for (RelationshipTemplate rt : new ArrayList<>(additionalAttributes)) {
 			applyTemplateSpecificModellingRules(additionalAttributes, part, rt);
 		}
 		attributes.addAll(additionalAttributes);
@@ -102,7 +102,7 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			//Do we also know about the other part?
 			Part otherPart = cpm.getPart(partialKeys[1].trim());
 			if (otherPart != null) {
-				slotTermAppendMap.put(part.getPartTypeName(), " with " + otherPart.getPartName());
+				slotTermAppendMap.put(NPU_PART_UNIT, " with reference to " + otherPart.getPartName());
 			}
 		}
 		return additionalAttributes;
@@ -142,7 +142,7 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			slotTermMap.put(NPU_PART_SYSTEM, "");
 		}
 
-		if (part.getPartNumber().equals("QU65029")) {
+		if (part.getPartNumber().contains("QU65029")) {
 			//Add an extra attribute for a precondition of fasting
 			attributes.add(fastingAttribute);
 		}

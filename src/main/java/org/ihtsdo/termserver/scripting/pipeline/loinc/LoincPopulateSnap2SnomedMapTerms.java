@@ -2,7 +2,7 @@ package org.ihtsdo.termserver.scripting.pipeline.loinc;
 
 import org.ihtsdo.otf.exception.NotImplementedException;
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.slf4j.Logger;

@@ -8,7 +8,7 @@ import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.pipeline.AttributePartMapManager;
 import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineManager;
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +98,14 @@ public class NpuAttributePartMapManager extends AttributePartMapManager {
 				gl.getConcept("260082001|Human leukocyte antigen DQB1 allele (substance)|")));
 		hardCodedMappings.put("QU50106", List.of(
 				gl.getConcept("20071003000102 |Arbitrary substance concentration (property) (qualifier value)|")));
+		hardCodedMappings.put("QU50310", List.of(
+				gl.getConcept("20141003000107 |10^-6 (qualifier value)|")));
+		hardCodedMappings.put("QU50439", List.of(
+				gl.getConcept("30061003000105 |10^-3/international unit per litre (qualifier value)|")));
+		hardCodedMappings.put("QU50440", List.of(
+				gl.getConcept("60061003000103 |10^3/international unit per litre (qualifier value)|")));
+
+
 	}
 
 }

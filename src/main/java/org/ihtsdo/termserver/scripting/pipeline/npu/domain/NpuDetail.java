@@ -1,6 +1,6 @@
 package org.ihtsdo.termserver.scripting.pipeline.npu.domain;
 
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.npu.NpuScriptConstants;
 
 import java.util.List;

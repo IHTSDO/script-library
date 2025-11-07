@@ -2,7 +2,7 @@ package org.ihtsdo.termserver.scripting.pipeline.npu.domain;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 
 import java.util.Collection;
 import java.util.List;
@@ -376,5 +376,9 @@ public class NpuConcept extends ExternalConcept {
 			new Part(proc, "Proc"),
 			new Part(unit, "Unit")
 		);
+	}
+
+	public boolean isCurrentVersion() {
+		return currentVersion != null && currentVersion.equalsIgnoreCase("true");
 	}
 }

@@ -1,6 +1,6 @@
 package org.ihtsdo.termserver.scripting.pipeline.loinc.domain;
 
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.LoincScriptConstants;
 
 public class LoincDetail extends Part implements LoincScriptConstants {

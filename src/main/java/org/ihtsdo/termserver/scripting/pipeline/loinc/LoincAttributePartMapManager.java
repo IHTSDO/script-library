@@ -4,7 +4,7 @@ import java.util.*;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.pipeline.AttributePartMapManager;
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 
 public class LoincAttributePartMapManager extends AttributePartMapManager implements LoincScriptConstants {
 

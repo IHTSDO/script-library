@@ -8,6 +8,7 @@ import org.ihtsdo.termserver.scripting.pipeline.*;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ConceptWrapper;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConceptUsage;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
 import org.ihtsdo.termserver.scripting.util.CaseSensitivityUtils;
 import org.slf4j.Logger;
@@ -397,7 +398,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		//TO DO Detect GB Spelling and break out another term
 		try {
 			Description targetPt = rt.getTarget().getPreferredSynonym(US_ENG_LANG_REFSET);
-			if (targetPt == null) {
+			if (targetPt == null || targetPt.getTerm() == null) {
 				LOGGER.info("Check here that we didn't find a PT for {}", rt.getTarget());
 			}
 			String itemStr = targetPt.getTerm();

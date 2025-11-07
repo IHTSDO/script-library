@@ -1,5 +1,6 @@
 package org.ihtsdo.termserver.scripting.pipeline.npu;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,9 +12,10 @@ import org.apache.commons.io.FileUtils;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineManager;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
-import org.ihtsdo.termserver.scripting.pipeline.Part;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuConcept;
 import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuDetail;
+import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuPart;
 import org.ihtsdo.termserver.scripting.pipeline.npu.template.NpuTemplatedConcept;
 import org.ihtsdo.termserver.scripting.pipeline.npu.template.NpuTemplatedConceptWithComponent;
 import org.slf4j.Logger;
@@ -80,6 +82,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 	@Override
 	protected void loadSupportingInformation() throws TermServerScriptException {
 		importNpuConcepts();
+		importNpuParts();
 		importNpuDetail();
 		loadPanels();
 
@@ -151,17 +154,36 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		ObjectMapper mapper = new XmlMapper();
 		TypeReference<List<NpuConcept>> listType = new TypeReference<>(){};
 		try {
-			FileInputStream is = FileUtils.openInputStream(getInputFile(FILE_IDX_NPU_FULL));
+			File conceptFile = getInputFile(FILE_IDX_NPU_FULL);
+			LOGGER.info("Importing NPU Concepts from file: " + conceptFile);
+			FileInputStream is = FileUtils.openInputStream(conceptFile);
 			List<NpuConcept> npuConcepts = mapper.readValue(is, listType);
 			externalConceptMap = npuConcepts.stream()
+					.filter(NpuConcept::isCurrentVersion)
 				.collect(Collectors
 						.toMap(NpuConcept::getExternalIdentifier,
-								c -> c,
-								(first, second) -> ((NpuConcept)second).getEffectiveTo() == null ? second : first));
+								c -> c));
 				} catch (IOException e) {
 			throw new TermServerScriptException(e);
 		}
 		LOGGER.info("Loaded {} NPU Concepts", externalConceptMap.size());
+	}
+
+	private void importNpuParts() throws TermServerScriptException {
+		ObjectMapper mapper = new XmlMapper();
+		TypeReference<List<NpuPart>> listType = new TypeReference<>(){};
+		try {
+			File partFile = getInputFile(FILE_IDX_NPU_PARTS);
+			LOGGER.info("Importing NPU Parts from file: " + partFile);
+			FileInputStream is = FileUtils.openInputStream(partFile);
+			List<NpuPart> npuParts = mapper.readValue(is, listType);
+			partMap = npuParts.stream()
+					.filter(NpuPart::isCurrentVersion)
+					.collect(Collectors.toMap(NpuPart::getPartNumber, p -> p ));
+		} catch (IOException e) {
+			throw new TermServerScriptException(e);
+		}
+		LOGGER.info("Loaded {} NPU Parts", partMap.size());
 	}
 
 	private void loadPanels() {

@@ -14,6 +14,7 @@ import org.ihtsdo.termserver.scripting.delta.Rf2ConceptCreator;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConceptNull;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincTerm;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConceptNull;
@@ -186,14 +187,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 		if (externalIdentifier.equals("49959-0")) {
 			LOGGER.debug("Check compnum3");
-		}
-
-		if (externalIdentifier.equals("20695-3")) {
-			LOGGER.debug("Check term capitalization");
-		}
-
-		if (externalIdentifier.equals("18305-3")) {
-			LOGGER.debug("Check terming includes 'specimen'");
 		}
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);

@@ -9,6 +9,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
+import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		} else if (containsMappingForPartNum(partNum)) {
 			RelationshipTemplate rt = partToAttributeMap.get(partNum).clone();
 			rt.setType(attributeType);
-			return List.of(rt);
+			return new ArrayList<>(List.of(rt));
 		} else if (!cpm.getMappingsAllowedAbsent().contains(partNum)) {
 			//Some special rules exist for certain parts, so we don't need to report if we have one of those.
 			String partStr = parts.get(partNum) == null ? "Part Not Known - " + partNum : parts.get(partNum).toString();

@@ -12,6 +12,7 @@ public interface NpuScriptConstants extends ContentPipeLineConstants {
 
 	int FILE_IDX_NPU_TECH_PREVIEW_CONCEPTS = 2;
 	int FILE_IDX_NPU_FULL = 3;
+	int FILE_IDX_NPU_PARTS = 4;
 	int FILE_IDX_NPU_DETAIL = 5;
 
 }
