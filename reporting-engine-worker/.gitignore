@@ -1,9 +1,0 @@
-secure/*
-*application-local.properties
-historic-data/
-resources/*
-snapshots
-releases
-releases/
-reports/*
-!/scripts/*.sh

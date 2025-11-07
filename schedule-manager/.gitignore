@@ -1,9 +1,0 @@
-target
-bin
-.*
-*.iml
-*.sh
-*.csv
-*.pem
-*.zip
-application-*.properties

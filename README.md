@@ -1,190 +1,99 @@
-# SNOMED Reporting Engine (SRE)
+Terminology Server - Script Engine
+===============================================
+This project is a library of classes which work with a local (cached) snapshot of some specified authoring project, so that only concepts which are targeted for modification are actually requested in full from the Terminology Server.
 
-![Last Commit](https://img.shields.io/github/last-commit/ihtsdo/reporting-engine/develop)
-![Issues](https://img.shields.io/github/issues/ihtsdo/reporting-engine)
-![Contributors](https://img.shields.io/github/contributors/ihtsdo/reporting-engine)
+The types of jobs undertaken by these classes cover:
+* Modifications to concepts, grouped into tasks.
+* Modifications generated as a delta archive
+* Reports
+* Generating refsets
+* Generating delta archives of translations
+* Generating Snapshots
+* Taking a delta archive and playing the changes it describes via the API into tasks
+* Extract all relevant content from an extension or edition of SNOMED CT
 
-![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
-![GitHub commit activity the past year](https://img.shields.io/github/commit-activity/m/ihtsdo/reporting-engine/develop)
 
-The **SNOMED Reporting Engine (SRE)** is a collection of Spring Boot–based services that orchestrate the end-to-end life-cycle of **content-quality reports, analytical exports and scripted fixes** against **SNOMED CT** and its extensions.  
-It integrates with a rich ecosystem of backend systems—**Snowstorm**, **IMS**, **ActiveMQ**, **AWS S3**, **Consul**, **Vault** and others—while exposing a **REST / WebSocket API** (documented via Swagger-UI) through which UI clients, automation pipelines and power users can trigger, monitor and retrieve reports.
+Download and Build
+================================
 
-This document explains **how to run SRE locally** and the **engineering best-practices** expected when contributing to the code-base.
+Requirement - Java 8 (or later), Maven, Git
 
----
-
-## 1  High-Level Architecture
-
-```mermaid
-flowchart TD
-    UI["Web UI / CLI / API Consumers"] --> Scheduler
-    Scheduler["Schedule-Manager (REST/API)"] -->|REST & WebSocket| Worker["Reporting-Engine-Worker"]
-    Worker -->|JMS| ActiveMQ[(ActiveMQ Broker)]
-    Worker -->|REST| Snowstorm[(Snowstorm Terminology Server)]
-    Scheduler -->|SQL| MySQL[(MySQL 8.*)]
-    Worker -->|S3 SDK| S3[(AWS S3)]
-    Scheduler -->|Config| Consul[(Consul)]
-    Scheduler -->|Secrets| Vault[(Hashicorp Vault)]
+```bash	
+git clone git@git.ihtsdotools.org:ihtsdo/reporting-engine.git
+cd reporting-engine/script-engine
+mvn clean package
 ```
 
-<br/>
+Running 
+=======
+Classes can either be run from the command line, or via an IDE.  In either event, the steps are roughly the same:
+* Build the code
+* Specify the project, authoring and cookie string as parameters to the class 
 
-#### Typical Report-Run Lifecycle
+eg ` -c uat-ims-ihtsdo=0IPyP4K3zs1234rdAhxFqw00 -a pwilliams -p BLKUPDATE2 `
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Scheduler
-    participant MySQL
-    participant ActiveMQ
-    participant Worker
-    participant Snowstorm
-    participant S3
-    User->>Scheduler: Trigger Report (REST/CLI)
-    Scheduler->>MySQL: Persist job & audit
-    Scheduler--)ActiveMQ: Publish report.jobs event
-    ActiveMQ-->>Worker: Consume job message
-    Worker->>Snowstorm: Fetch necessary terminology data
-    Worker->>S3: Upload intermediate / final artefacts
-    Worker-->>ActiveMQ: Job status updates
-    ActiveMQ-->>Scheduler: Asynchronous status updates
-    Scheduler-->>User: Subscribe / poll for progress
+You may also need to supply, say, a list of relationship ids to be consumed using the -iR parameter, or a file to be processed using "-f".  A full list of command line flags can be found [here](docs/commandLineFlags.md)
+
+* It's recommended that you give the process sufficient memory to run eg `-Xms14g -Xmx16g`
+* As well as the parameters specified via the command line, the runtime code will ask for a number of options to be confirmed / selected.   Most importantly, a number from 1 - 9 which identifies which environment is to be selected.   
+* Any default option specified in square brackets can be accepted by pressing return.
+
+```	
+Select an environment 
+  0: http://localhost:8080/
+  1: https://dev-authoring.ihtsdotools.org/
+  2: https://uat-authoring.ihtsdotools.org/
+  3: https://uat-flat-termserver.ihtsdotools.org/
+  4: https://prod-authoring.ihtsdotools.org/
+  5: https://dev-ms-authoring.ihtsdotools.org/
+  6: https://uat-ms-authoring.ihtsdotools.org/
+  7: https://prod-ms-authoring.ihtsdotools.org/
+Choice: 2
+Specify Project [DRUGJUL18]: 
+Number of concepts per task [40]: 
+Time delay between tasks (throttle) seconds [15]: 20
+Time delay between concepts (throttle) seconds [5]: 3
 ```
 
-Key points:
-* **Stateless** services – job state lives in the DB or external stores, enabling horizontal scalability.
-* **Spring Scheduling, JMS & WebSocket** power asynchronous report generation and client notifications.
-* **Module-oriented** – the project is split into three independent Spring Boot applications:
-  * **`script-engine`** – rich library of Groovy/Java scripts for content analysis & fixes.
-  * **`reporting-engine-worker`** – headless worker that executes scripts on demand.
-  * **`schedule-manager`** – REST API & UI-facing facade that schedules work and persists metadata.
-* Each module can be packaged as a fat **JAR** or a Debian **.deb** for production deployment under `supervisord`.
+* All classes will produce a time and environment stamped processing report, which will be the report output itself in the case of a report.  This can be written either to Google Sheets (if an appropriate developer token is supplied) or CSV on the local disk.
 
----
+Content Extraction
+==================
 
-## 2  Feature Highlights
+Supplied with a zip archive, (optionally also a dependency release) and a list of concept ids, the Extension Extract class can be used to extract those components along with any dependencies, move them into the target module and produce a delta archive as output. In addition, the process will check the active status of any components in the target system, and attempt to provide alternatives (via historical associations) if the referenced components have been made inactive.   If this should occur, new relationship ids may be required and these can be provided in a text file.
 
-* **Interactive Swagger-UI / OpenAPI 3 docs** – automatically exposed by each Spring Boot module.
-* **SSO-secured Spring Security layer** – configurable via the `ihtsdo-spring-sso` dependency.
-* **Extensive Reporting & Fixing Library** – hundreds of scripts covering quality assurance, terminology analytics, delta comparison, drug validation and more (see `script-engine/src/main/java/org/ihtsdo/termserver/scripting`).
-* **JMS Messaging (ActiveMQ)** – queue prefixes (`re.jms.queue.prefix`) enable multi-tenant deployments.
-* **AWS S3-backed storage** for release packages, validation resources and generated report artefacts.
-* **MySQL persistence** via Spring Data JPA & HikariCP connection pooling.
-* **Consul & Vault support** for distributed configuration and secrets management.
-* **Cloud-ready logging** with Logback and structured JSON patterns.
+Steps
+-----
 
----
+Run the script from the script-engine subdirectory.  Taking an extract from the Nebraska Extension as a worked example:
 
-## 3  Project Layout
+``` bash
+cd script-engine
 
-```
-reporting-engine/
-  script-engine/               ← Core script library & CLI helpers
-  reporting-engine-worker/     ← Worker microservice processing jobs
-  schedule-manager/            ← REST API & scheduling service
-  docs/                        ← Additional documentation & HOWTOs
-  pom.xml                      ← Parent Maven build descriptor
+java  -Xms14G -Xmx14G -cp target/scripting-tools-*.jar \
+org.ihtsdo.termserver.scripting.delta.ExtractExtensionComponents \
+-c ims-ihtsdo=FfGemoPuRxg68YJeZYOfXQAAAAAAAIACcHdpbGxpYW1z \
+-iR dummy -p Nebraska_20210316.zip -f extract.txt \
+-dp SnomedCT_InternationalRF2_PRODUCTION_20210131T120000Z.zip
 ```
 
-Module conventions:
-* `scripting`             Domain-specific Groovy/Java scripts (under `script-engine/.../scripting`).
-* `reports`               Pre-packaged report definitions.
-* `fixes`                 Automated content-fix scripts.
-* `rest`                  Spring MVC controllers and DTOs (schedule-manager).
-* `service`               Business logic, services & repositories.
-* `util`                  General-purpose helpers.
+Each of those parameters is described below:
 
----
+| Argument | Meaning |
+| -------- | ------- |
+| -f extract.txt | A text file of the identifiers of the concepts to be extracted, one per line. |
+| -c ims-ihtsdo=FfGemoPuRxg68YJeZYOfXQAAAAAAAIACcHdpbGxpYW1z | An authorised cookie is required on the relevant SNOMED International environment. This can be found by right-clicking on the 'lock' icon to the left of the browser URL address bar when viewing one of the tools provided by SNOMED International. |
+| -Xms14G -Xmx14G | Ensures the process has 14Gb of memory to work with |
+| -dp SnomedCT_InternationalRF2_PRODUCTION_20200131T120000Z.zip | Optional dependency package, but needed when working with an extension (this should also be in the releases subdirectory) |
+| -cp script-engine/target/scripting-tools-*.jar | Run the jar file that was produced during the build |
+| -p Nebraska_20200316.zip | This is the ""project"" file, either an Edition package or Extension package. In this case we're working with an extension rather than an edition archive, so we must also supply the dependency release via the -dp parameters. These files are expected to exist in a 'releases' folder in the current directory.
+| org.ihtsdo.termserver.scripting.delta.ExtractExtensionComponents | This is the Java class within the Jar that performs the extract |
+| -iR dummy | Uses dummy SCTIDs where they're needed when new relationships need to be generated. -iD and -iC are equivalent files for descriptions and concepts. In future developments, it's likely that we'll need iD and not iR |
 
-## 4  Getting Started Locally
-
-### 4.1  Prerequisites
-
-1. **JDK 17** (as defined by the parent BOM)
-2. **Maven 3.8+** (wrapper provided)
-3. **MySQL 8** running on `localhost:3306` with a database called `schedule_manager`.
-4. **ActiveMQ 5.x** (an embedded broker starts automatically for local dev, but external brokers are recommended for JMS testing).
-5. (Optional) **Snowstorm**, **Consul** & **Vault** if you want to mirror a production-like setup.
-
-> Tip: A `docker-compose.yml` for the full stack is planned – contributions welcome!
-
-### 4.2  Clone & Build
+If the file you are working with does not come with a complete set of components as a delta file, unzip then rename the contents of the archive to a snapshot eg using:
 
 ```bash
-# Clone the repo
-git clone https://github.com/IHTSDO/reporting-engine.git
-cd reporting-engine
-
-# Build all modules and run the unit tests
-./mvnw clean verify
+find . -exec rename 's|Delta|Snapshot|' {} + 
 ```
 
-* `verify` executes the test-suite and builds `target/<module>-<VERSION>.jar` for every sub-module.
-* Run `./mvnw -Pdeb package` to also create Debian packages under each module.
-
-### 4.3  Configuration
-
-1. Copy the default `application.properties` file from each module to an `*-local.properties` variant (already `.gitignored`).  
-   Example for *schedule-manager*:
-   ```properties
-   spring.datasource.username=<your-db-user>
-   spring.datasource.password=<your-db-pwd>
-   schedule.manager.terminology.server.uri=http://localhost:8080/snowstorm/snomed-ct/
-   re.jms.queue.prefix=local-re
-   re.environment.shortname=local
-   ```
-2. Any property can also be supplied via environment variables, e.g. `SPRING_DATASOURCE_URL` or `AWS_KEY`.
-
-### 4.4  Run
-
-```bash
-# Start the Scheduler API
-java -Xms512m -Xmx2g \
-     -jar schedule-manager/target/schedule-manager-<VERSION>.jar \
-     --server.port=8089 \
-     --spring.profiles.active=local
-
-# In a separate shell start a Worker instance (can scale horizontally)
-java -Xms512m -Xmx2g \
-     -jar reporting-engine-worker/target/reporting-engine-worker-<VERSION>.jar \
-     --spring.profiles.active=local
-```
-
-Swagger UI for the API will be available at <http://localhost:8089/schedule-manager/swagger-ui/index.html>.
-
----
-
-## 5  Messaging & Async Workflows
-
-* JMS queues are prefixed using `re.jms.queue.prefix` for safe multi-tenant deployments.
-* Payload sizes can be tuned via `activemq.max.message.concept-activities`.
-* **Consumers must be idempotent** – messages may be redelivered when using ActiveMQ in fail-over mode.
-
----
-
-## 6  Deployment
-
-### 6.1  Fat JAR
-
-Each module can run standalone:
-
-```bash
-java -Xms512m -Xmx4g \
-     -Dspring.profiles.active=prod \
-     -jar schedule-manager-<VERSION>.jar
-```
-
-### 6.2  Debian package
-
-1. `./mvnw -Pdeb package`
-2. Copy the resulting `.deb` from each module to your server.
-3. ```bash
-   sudo dpkg -i schedule-manager-<VERSION>-all.deb
-   sudo systemctl restart supervisor        # if applicable
-   ```
-   Configuration lives under `/opt/<module>/` and logs under `/var/log/re/`.
-
----
-
-© SNOMED International – Licensed under the Apache 2.0 License.
+At the end of the process a delta RF2 zip file will be produced and saved in the directory where you ran the command.
