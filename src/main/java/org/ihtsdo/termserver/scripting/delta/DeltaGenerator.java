@@ -87,7 +87,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		//We definitely need to finish saving a snapshot to disk before we start making changes
 		//Otherwise if we run multiple times, we'll pick up changes from a previous run.
 		ArchiveImporter.setRunAsynchronously(false);
-		initialiseGenerators(args);
+		initialiseDeltaGeneratorSpecifics(args);
 		
 		super.init(args);
 		if (!dryRun) {
@@ -97,7 +97,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		}
 	}
 	
-	public void initialiseGenerators(String[] args) throws TermServerScriptException {
+	public void initialiseDeltaGeneratorSpecifics(String[] args) throws TermServerScriptException {
 		for (int x=0; x<args.length; x++) {
 			if (args[x].equals("-nS")) {
 				nameSpace = args[++x];
@@ -117,6 +117,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 			}
 			if (args[x].equals("-e")) {
 				eclSubset = args[++x];
+			}
+			if (args[x].equals("--patchET")) {
+				getRF2Manager().setPatchEffectiveTime(args[++x]);
 			}
 		}
 	}
@@ -226,14 +229,14 @@ public abstract class DeltaGenerator extends TermServerScript {
 			targetModuleId = firstSourceModule;
 		}
 
-		print ("Targetting which language code? [" + languageCode + "]: ");
+		print ("Targeting which language code? [" + languageCode + "]: ");
 		response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
 			languageCode = response;
 		}
 
 		String langRefsetIdStr = StringUtils.join(targetLangRefsetIds, ",");
-		print ("Targetting which language refset(s)? [" + langRefsetIdStr + "]: ");
+		print ("Targeting which language refset(s)? [" + langRefsetIdStr + "]: ");
 		response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
 			targetLangRefsetIds = response.split(COMMA);
