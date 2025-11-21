@@ -57,11 +57,11 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 
 		//Most products we're working with will only support en-US
 		defaultPrefAcceptabilityMap = Map.of(
-				US_ENG_LANG_REFSET, Acceptability.PREFERRED
+				cpm.getPrimaryLangRefset(), Acceptability.PREFERRED
 		);
 
 		defaultAccAcceptabilityMap = Map.of(
-				US_ENG_LANG_REFSET, Acceptability.ACCEPTABLE
+				cpm.getPrimaryLangRefset(), Acceptability.ACCEPTABLE
 		);
 	}
 
@@ -258,23 +258,37 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		ptTemplateStr = tidyUpTerm(ptTemplateStr);
 		ptTemplateStr = StringUtils.capitalizeFirstLetter(ptTemplateStr);
 
-		Description pt = Description.withDefaults(ptTemplateStr, DescriptionType.SYNONYM, defaultPrefAcceptabilityMap);
-		applyTemplateSpecificTermingRules(pt);
+		if (cpm.isIncludeShortNameAsPreferredTerm()) {
+			addExternalTermAsSynonym(getExternalConcept().getShortDisplayName(), defaultPrefAcceptabilityMap);
+
+			//Templated description without semantic tag becomes just another synonym
+			Description syn = Description.withDefaults(ptTemplateStr, DescriptionType.SYNONYM, defaultAccAcceptabilityMap);
+			applyTemplateSpecificTermingRules(syn);
+			concept.addDescription(syn);
+		} else {
+			Description pt = Description.withDefaults(ptTemplateStr, DescriptionType.SYNONYM, defaultPrefAcceptabilityMap);
+			applyTemplateSpecificTermingRules(pt);
+			concept.addDescription(pt);
+		}
 
 		Description fsn = Description.withDefaults(ptTemplateStr + getSemTag(), DescriptionType.FSN, defaultPrefAcceptabilityMap);
 		applyTemplateSpecificTermingRules(fsn);
-
-		concept.addDescription(pt);
 		concept.addDescription(fsn);
 
-		if (cpm.shouldIncludeShortNameDescription()) {
-			//Also add the Long Common Name as a Synonym
-			String scn = getExternalConcept().getShortDisplayName();
-			Description lcn = Description.withDefaults(scn, DescriptionType.SYNONYM, defaultAccAcceptabilityMap);
-			//Override the case significance for these
-			lcn.addIssue(CaseSensitivityUtils.FORCE_CS);
-			concept.addDescription(lcn);
+		if (cpm.shouldIncludeShortNameDescription() && !cpm.isIncludeShortNameAsPreferredTerm()) {
+			addExternalTermAsSynonym(getExternalConcept().getShortDisplayName(), defaultAccAcceptabilityMap);
 		}
+
+		if (cpm.shouldIncludeLongNameDescription()) {
+			addExternalTermAsSynonym(getExternalConcept().getLongDisplayName(), defaultAccAcceptabilityMap);
+		}
+	}
+
+	private void addExternalTermAsSynonym(String externalTerm, Map<String, Acceptability> acceptabilityMap) throws TermServerScriptException {
+		Description extDesc = Description.withDefaults(externalTerm, DescriptionType.SYNONYM, acceptabilityMap);
+		//Override the case significance for these
+		extDesc.addIssue(CaseSensitivityUtils.FORCE_CS);
+		concept.addDescription(extDesc);
 	}
 
 	private void reviewCaseSensitivity(Concept c) throws TermServerScriptException {
@@ -397,9 +411,10 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 	private String getCaseAdjustedTweakedTerm(IRelationship rt) {
 		//TO DO Detect GB Spelling and break out another term
 		try {
-			Description targetPt = rt.getTarget().getPreferredSynonym(US_ENG_LANG_REFSET);
+			Description targetPt = rt.getTarget().getPreferredSynonym(cpm.getPrimaryLangRefset());
 			if (targetPt == null || targetPt.getTerm() == null) {
-				LOGGER.info("Check here that we didn't find a PT for {}", rt.getTarget());
+				String msg = String.format("Unable to find PT for %s in %s", rt.getTarget(), gl.getConcept(cpm.getPrimaryLangRefset()));
+				throw new IllegalStateException(msg);
 			}
 			String itemStr = targetPt.getTerm();
 			itemStr = applyTermTweaking(rt, itemStr);
@@ -487,7 +502,6 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		return term;
 	}
 
-
 	protected void checkAndRemoveDuplicateAttributes() {
 		Set<RelationshipTemplate> relsSeen = new HashSet<>();
 		Set<Relationship> relsToRemove = new HashSet<>();
@@ -505,4 +519,5 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 			LOGGER.warn("Removed a redundant {} from {}",r, this);
 		}
 	}
+
 }

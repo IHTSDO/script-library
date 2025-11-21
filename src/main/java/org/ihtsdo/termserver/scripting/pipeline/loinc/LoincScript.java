@@ -15,7 +15,6 @@ import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincPart;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincTerm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 public abstract class LoincScript extends ContentPipelineManager implements LoincScriptConstants {
 

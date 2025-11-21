@@ -42,13 +42,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	private static final String ALL_CAPS_SLOT_REGEX = "\\[([A-Z]+)\\]";
 	private static final Pattern allCapsSlotPattern = Pattern.compile(ALL_CAPS_SLOT_REGEX);
 
-	public void recordSuccessfulModelling(TemplatedConcept tc) {
-		successfullyModelled.add(tc);
-	}
-
-	public boolean shouldIncludeShortNameDescription() {
-		return includeShortNameDescription;
-	}
+	protected String primaryLangRefset = US_ENG_LANG_REFSET;
 
 	private enum RunMode { NEW, INCREMENTAL_DELTA, INCREMENTAL_API}
 	
@@ -74,6 +68,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	protected Set<TemplatedConcept> successfullyModelled = new HashSet<>();
 	protected Set<TemplatedConcept> inactivatedConcepts = new HashSet<>();
 	protected boolean includeShortNameDescription = true;
+	protected boolean includeShortNameAsPreferredTerm = false;
+	protected boolean includeLongNameDescription = false;
 
 	private  Map<String, Map<String, Integer>> summaryCountsByCategory = new HashMap<>();
 
@@ -99,7 +95,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			loadProjectSnapshot(false);
 			postInit();
 			conceptCreator = Rf2ConceptCreator.build(this, getInputFile(FILE_IDX_CONCEPT_IDS), getInputFile(FILE_IDX_DESC_IDS), getInputFile(FILE_IDX_REL_IDS), this.getNamespace());
-			conceptCreator.initialiseGenerators(new String[]{"-nS",this.getNamespace(), "-m", getExternalContentModuleId()});
+			conceptCreator.initialiseDeltaGeneratorSpecifics(new String[]{"-nS",this.getNamespace(), "-m", getExternalContentModuleId()});
 			TemplatedConcept.initialise(this);
 			loadSupportingInformation();
 			importPartMap();
@@ -136,6 +132,30 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 				conceptCreator.finish();
 			}
 		}
+	}
+
+	public void recordSuccessfulModelling(TemplatedConcept tc) {
+		successfullyModelled.add(tc);
+	}
+
+	public boolean shouldIncludeShortNameDescription() {
+		return includeShortNameDescription;
+	}
+
+	public boolean isIncludeShortNameAsPreferredTerm() {
+		return includeShortNameAsPreferredTerm;
+	}
+
+	public void setIncludeShortNameAsPreferredTerm(boolean includeShortNameAsPreferredTerm) {
+		this.includeShortNameAsPreferredTerm = includeShortNameAsPreferredTerm;
+	}
+
+	public boolean shouldIncludeLongNameDescription() {
+		return includeLongNameDescription;
+	}
+
+	public void setIncludeLongNameDescription(boolean includeLongNameDescription) {
+		this.includeLongNameDescription = includeLongNameDescription;
 	}
 
 	public String getExternalContentModuleId() {
@@ -954,6 +974,14 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		//Construct a dummy LoincNum with this property and see if it's in scope or not
 		ExternalConceptNull dummy = new ExternalConceptNull(DUMMY_EXTERNAL_IDENTIFIER, property);
 		return getAppropriateTemplate(dummy) instanceof TemplatedConceptNull ? "N" : "Y";
+	}
+
+	public String getPrimaryLangRefset() {
+		return primaryLangRefset;
+	}
+
+	protected void setPrimaryLangRefset(String primaryLangRefset) {
+		this.primaryLangRefset = primaryLangRefset;
 	}
 
 }

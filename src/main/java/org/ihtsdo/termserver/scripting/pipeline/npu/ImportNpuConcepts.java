@@ -72,6 +72,9 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		scheme = gl.getConcept(SCTID_NPU_SCHEMA);
 		externalContentModuleId = SCTID_NPU_EXTENSION_MODULE;
 		namespace = "1003000";
+		this.setPrimaryLangRefset(GB_ENG_LANG_REFSET);
+		this.setIncludeShortNameAsPreferredTerm(true);
+		this.setIncludeLongNameDescription(true);
 	}
 
 	@Override
@@ -155,7 +158,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		TypeReference<List<NpuConcept>> listType = new TypeReference<>(){};
 		try {
 			File conceptFile = getInputFile(FILE_IDX_NPU_FULL);
-			LOGGER.info("Importing NPU Concepts from file: " + conceptFile);
+			LOGGER.info("Importing NPU Concepts from file: {}", conceptFile);
 			FileInputStream is = FileUtils.openInputStream(conceptFile);
 			List<NpuConcept> npuConcepts = mapper.readValue(is, listType);
 			externalConceptMap = npuConcepts.stream()

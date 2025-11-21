@@ -42,6 +42,7 @@ public class Rf2ConceptCreator extends DeltaGenerator {
 			conceptCreator.project = clone.getProject();
 			conceptCreator.tsClient = clone.getTSClient();
 			conceptCreator.edition = "INT";
+			conceptCreator.dryRun = clone.isDryRun();
 		}
 		conceptCreator.initialiseOutputDirectory();
 		conceptCreator.initialiseFileHeaders();
