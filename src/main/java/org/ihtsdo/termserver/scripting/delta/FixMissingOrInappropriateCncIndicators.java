@@ -9,11 +9,8 @@ import org.ihtsdo.termserver.scripting.domain.*;
 	See INFRA-1407 and ISRS-225
 	
 	This class replaces the "fix" version so that we are sure of having new UUIDs for these new
-	indicators
-	
-	MAINT-489
+	indicators.  MAINT-489
 */
-
 public class FixMissingOrInappropriateCncIndicators extends DeltaGenerator implements ScriptConstants{
 
 	private static final int MUT_IDX_ACTIVE = 0;
@@ -24,10 +21,8 @@ public class FixMissingOrInappropriateCncIndicators extends DeltaGenerator imple
 		try {
 			delta.newIdsRequired = false;
 			delta.init(args);
-
 			delta.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
 			delta.getGraphLoader().setRecordPreviousState(true);
-
 			delta.loadProjectSnapshot();
 			delta.additionalReportColumns = "Description ET, Details";
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
@@ -60,14 +55,14 @@ public class FixMissingOrInappropriateCncIndicators extends DeltaGenerator imple
 				report(c, Severity.LOW, ReportActionType.INACT_IND_ADDED, d, iie);
 				incrementSummaryInformation("Inactivation indicators added");
 			} else if (c.isActiveSafely()) {
-				checkForCncInidicatorAndInactivate(c, d, "active");
+				checkForCncIndicatorAndInactivate(c, d, "active");
 			}
 		} else if (!d.isActiveSafely()) {
-			checkForCncInidicatorAndInactivate(c, d, "inactive");
+			checkForCncIndicatorAndInactivate(c, d, "inactive");
 		}
 	}
 
-	private void checkForCncInidicatorAndInactivate(Concept c, Description d, String activeStateStr) throws TermServerScriptException {
+	private void checkForCncIndicatorAndInactivate(Concept c, Description d, String activeStateStr) throws TermServerScriptException {
 		InactivationIndicatorEntry iie = d.getFirstActiveInactivationIndicatorEntry();
 		if (iie != null && iie.getInactivationReasonId().equals(SCTID_INACT_CONCEPT_NON_CURRENT)) {
 			iie.setActive(false);

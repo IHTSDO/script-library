@@ -357,8 +357,9 @@ public class DuplicateLangInactAssocPlusCncFixPlusModFix extends BatchFix {
 						continue nextConcept;
 					}
 				
-					if ((!d.isActiveSafely() && hasConceptInactiveIndicator(d))
-					|| (c.isActiveSafely() && hasConceptInactiveIndicator(d, InactivationIndicator.CONCEPT_NON_CURRENT))) {
+					if (/*(!d.isActiveSafely() && hasConceptInactiveIndicator(d)) ||
+					 (c.isActiveSafely() && hasConceptInactiveIndicator(d, InactivationIndicator.CONCEPT_NON_CURRENT)) || */
+							(!c.isActiveSafely() && d.isActiveSafely() && !hasConceptInactiveIndicator(d, InactivationIndicator.CONCEPT_NON_CURRENT))) {
 						if (inScope(d)) {
 							processMe.add(c);
 							continue nextConcept;
