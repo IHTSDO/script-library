@@ -57,7 +57,7 @@ public class NormaliseConceptsDriven extends NormaliseConcepts {
 	}
 
 	@Override
-	protected int normaliseConcept(Task t, Concept c) throws TermServerScriptException {
+	public int normaliseConcept(Task t, Concept c) throws TermServerScriptException {
 		int changesMade = 0;
 
 		//Have we specified a ppp in the issues field?

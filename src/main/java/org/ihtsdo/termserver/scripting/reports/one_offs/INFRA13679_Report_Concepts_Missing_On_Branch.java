@@ -69,7 +69,7 @@ public class INFRA13679_Report_Concepts_Missing_On_Branch extends TermServerRepo
 			historicalAssociationsStr = "no target(s)";
 		}
 		//Recover the historical association targets
-		Set<Concept> targets = SnomedUtils.getHistoricalAssocationTargets(c, getGraphLoader());
+		Set<Concept> targets = SnomedUtils.getHistoricalAssociationTargets(c, getGraphLoader());
 		String associationETs = targets.stream().map(this::getEtOrNew).collect(Collectors.joining("\n"));
 		String associationDescriptions = targets.stream()
 				.flatMap(t -> t.getDescriptions(ActiveState.ACTIVE).stream())

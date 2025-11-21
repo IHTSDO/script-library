@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.jena.update.UpdateAction;
 import org.ihtsdo.otf.RF2Constants;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.utils.SnomedUtilsBase;
@@ -234,7 +233,7 @@ public class UpdateHistoricalAssociationsDriven extends DeltaGenerator implement
 		Set<Concept> updatedReplacements;
 		//Were we told to keep the existing association targets?
 		if (action.associationTargetsUnchanged) {
-			updatedReplacements = SnomedUtils.getHistoricalAssocationTargets(c, gl);
+			updatedReplacements = SnomedUtils.getHistoricalAssociationTargets(c, gl);
 		} else {
 			updatedReplacements = new HashSet<>(action.replacements);
 		}
@@ -494,9 +493,9 @@ public class UpdateHistoricalAssociationsDriven extends DeltaGenerator implement
 				continue;
 			}
 			if (targets.isEmpty()) {
-				targets = SnomedUtils.getHistoricalAssocationTargets(c, gl);
+				targets = SnomedUtils.getHistoricalAssociationTargets(c, gl);
 			} else {
-				Set<Concept> theseTargets = SnomedUtils.getHistoricalAssocationTargets(c, gl);
+				Set<Concept> theseTargets = SnomedUtils.getHistoricalAssociationTargets(c, gl);
 				if (!targets.equals(theseTargets)) {
 					return true;
 				}

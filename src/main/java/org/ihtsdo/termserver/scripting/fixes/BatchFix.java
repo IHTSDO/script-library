@@ -300,10 +300,16 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		//Did user specify that we're working in a particular task?  If so, we can only
 		//work within a single task
 		if (this.taskKey != null) {
+			task.setKey(this.taskKey);
 			if (batch.getTasks().size() > 1) {
 				throw new TermServerScriptException("Task key specified.  Cannot work with " + batch.getTasks().size() + " tasks.  Check number of concepts per task");
 			}
-			task.setBranchPath(this.getProject().getBranchPath());  //Project contains the task branch path at this point
+			String path = this.getProject().getBranchPath();
+			//Ensure that the path contains the task
+			if (!path.endsWith(this.taskKey)) {
+				path += "/" + this.taskKey;
+			}
+			task.setBranchPath(path);  //Project contains the task branch path at this point
 			task.setPreExistingTask(true);
 			String dryRunStr = (dryRun ? "Dry Run, p" : "P");
 			LOGGER.info("{}re-existing task specified: {}", dryRunStr, task.getBranchPath());
