@@ -17,8 +17,6 @@ public class NpuAttributePartMapManager extends AttributePartMapManager {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(NpuAttributePartMapManager.class);
 
-	private static final List<String> PLACEHOLDER_ELEMENTS = List.of("QU70500", "QU58906");
-
 	protected NpuAttributePartMapManager(ContentPipelineManager cpm, Map<String, Part> parts,
 			Map<String, String> partMapNotes) {
 		super(cpm, parts, partMapNotes);
@@ -27,21 +25,6 @@ public class NpuAttributePartMapManager extends AttributePartMapManager {
 	@Override
 	protected void populateKnownMappings() throws TermServerScriptException {
 		LOGGER.warn("NPU has no mapping overrides");
-	}
-
-	@Override
-	public List<RelationshipTemplate> getPartMappedAttributeForType(TemplatedConcept templatedConcept, String partNum, Concept attributeType) throws TermServerScriptException {
-		//Now if the partNum contains a placeholder, we'll strip that out and look for the rest
-		for (String placeholder : PLACEHOLDER_ELEMENTS) {
-			if (partNum.contains(placeholder)) {
-				partNum = partNum.replace(placeholder, "").trim();
-				if (partNum.endsWith(",")) {
-					partNum = partNum.substring(0, partNum.length() - 1);
-				}
-				break;
-			}
-		}
-		return super.getPartMappedAttributeForType(templatedConcept, partNum, attributeType);
 	}
 
 	@Override

@@ -15,6 +15,16 @@ public class Part implements Comparable<Part> {
 	public Part() {
 
 	}
+
+	public Part clone() {
+		Part clone = new Part();
+		clone.partNumber = partNumber;
+		clone.partTypeName = partTypeName;
+		clone.partName = partName;
+		clone.partStatus = partStatus;
+		clone.partCategory = partCategory;
+		return clone;
+	}
 	
 	public Part(String partNumber, String partTypeName, String partName) {
 		this.partNumber = partNumber;

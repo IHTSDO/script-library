@@ -21,6 +21,8 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 
 	private static final String TRAILING_IN = " in ";
 
+	private static final List<String> PLACEHOLDER_ELEMENTS = List.of("QU70500", "QU58906");
+
 	public static void initialise(ContentPipelineManager cpm,
 	                              Map<String, NpuDetail> npuDetailMap) throws TermServerScriptException {
 		TemplatedConcept.initialise(cpm);
@@ -71,11 +73,28 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 		NpuConcept npuConcept = getNpuConcept();
 		NpuDetail npuDetail = npuDetailMap.get(getExternalIdentifier());
 		for (Part part : npuDetail.getParts(npuConcept)) {
-			populatePart(part);
+			populatePart(normalise(part));
 		}
 
 		//Ensure attributes are unique (considering both type and value)
 		checkAndRemoveDuplicateAttributes();
+	}
+
+	private Part normalise(Part part) {
+		//Now if the partNum contains a placeholder, we'll strip that out
+		String partNum = part.getPartNumber();
+		for (String placeholder : PLACEHOLDER_ELEMENTS) {
+			if (partNum.contains(placeholder)) {
+				partNum = partNum.replace(placeholder, "").trim();
+				if (partNum.endsWith(",")) {
+					partNum = partNum.substring(0, partNum.length() - 1);
+				}
+				break;
+			}
+		}
+		Part normalisedPart = part.clone();
+		normalisedPart.setPartNumber(partNum);
+		return normalisedPart;
 	}
 
 	@Override
@@ -104,6 +123,8 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			if (otherPart != null) {
 				slotTermAppendMap.put(NPU_PART_UNIT, " with reference to " + otherPart.getPartName());
 			}
+			//In this case we don't need report the compound key as a missing mapping
+			cpm.removeMissingMapping(part);
 		}
 		return additionalAttributes;
 	}

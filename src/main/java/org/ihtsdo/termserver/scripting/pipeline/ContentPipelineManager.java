@@ -803,16 +803,41 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	public void addMissingMapping(String partNum, String externalIdentifier) {
 		Part part = partMap.get(partNum);
 		if (part == null) {
-			part = new Part(partNum, "Unknown Type", "Unknown to part input file.");
+			//Is this a compound key?
+			if (partNum.contains(",")) {
+				part = constructTypeAndNameForCompoundPartNum(partNum);
+			} else {
+				part = new Part(partNum, "Unknown Type", "Unknown to part input file.");
+			}
 		}
 		missingPartMappings.computeIfAbsent(part, key -> new HashSet<>())
 							.add(getExternalConcept(externalIdentifier));
 	}
 
-	public Map<String, ExternalConcept> getExternalConceptMap() {
-		return externalConceptMap;
+	public void removeMissingMapping(Part part) {
+		missingPartMappings.remove(part);
 	}
-	
+
+	private Part constructTypeAndNameForCompoundPartNum(String compoundPartNum) {
+
+		String[] partNums = compoundPartNum.split(",");
+		StringBuilder types = new StringBuilder();
+		StringBuilder names = new StringBuilder();
+
+		for (int i = 0; i < partNums.length; i++) {
+			String partNum = partNums[i].trim();
+			Part part = partMap.get(partNum);
+			types.append(part.getPartTypeName() == null ? "?" : part.getPartTypeName());
+			names.append(part.getPartName() == null ? "Unknown to part input file" : part.getPartName());
+			if (i < partNums.length - 1) {
+				types.append(" + ");
+				names.append(" + ");
+			}
+		}
+
+		return new Part(compoundPartNum, types.toString(), names.toString());
+	}
+
 	public AttributePartMapManager getAttributePartManager() {
 		return attributePartMapManager;
 	}
@@ -876,7 +901,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	protected void validateTemplatedConcept(TemplatedConcept templatedConcept) throws TermServerScriptException {
 		String externalIdentifier = templatedConcept.getExternalIdentifier();
-		if (templatedConcept == null || templatedConcept.getConcept() == null) {
+		if (templatedConcept.getConcept() == null) {
 			if (externalConceptMap.get(externalIdentifier) == null) {
 				report(getTab(TAB_MODELING_ISSUES),
 						externalIdentifier,
