@@ -22,7 +22,7 @@ public class UpdateHistoricalAssociationsDriven extends DeltaGenerator implement
 	private static final Logger LOGGER = LoggerFactory.getLogger(UpdateHistoricalAssociationsDriven.class);
 
 	private static final String UNKNOWN = "Unknown";
-	private static final int BATCH_SIZE = 20;
+	private static final int BATCH_SIZE = 50;
 
 	private Map<Concept, UpdateAction> replacementMap = new HashMap<>();
 	private Map<Concept, String> cathyNotes = new HashMap<>();
@@ -223,6 +223,8 @@ public class UpdateHistoricalAssociationsDriven extends DeltaGenerator implement
 			AssociationEntry assoc = AssociationEntry.create(c, associationTypeSCTID, replacement);
 			assoc.setDirty();
 			c.getAssociationEntries().add(assoc);
+			//Register this component so it gets set to clean once output
+			gl.registerConcept(c);
 		}
 		String newAssocStr = SnomedUtils.prettyPrintHistoricalAssociations(c, gl);
 		updatedConcepts.add(c);
