@@ -11,6 +11,7 @@ import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.reports.release.UnpromotedChangesHelper;
 import org.snomed.otf.scheduler.domain.JobRun;
+import org.snomed.otf.script.dao.ReportSheetManager;
 
 public abstract class TermServerReport extends TermServerScript {
 
@@ -21,7 +22,7 @@ public abstract class TermServerReport extends TermServerScript {
 	protected boolean includeLegacyIssues = false;
 	
 	protected UnpromotedChangesHelper unpromotedChangesHelper;
-	
+
 	@Override
 	protected void init (JobRun jobRun) throws TermServerScriptException {
 		super.init(jobRun);
@@ -233,5 +234,19 @@ public abstract class TermServerReport extends TermServerScript {
 
 	protected boolean isLegacySimple(Component c) {
 		return !(c.getEffectiveTime() == null || c.getEffectiveTime().isEmpty());
+	}
+
+	protected void standardExecution(String[] args, ExecutionOptions options) throws TermServerScriptException {
+		try {
+			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_REPORTS);
+			init(args);
+			if (options.isSnapshotImport()) {
+				loadProjectSnapshot(false);
+			}
+			postInit();
+			runJob();
+		} finally {
+			finish();
+		}
 	}
 }
