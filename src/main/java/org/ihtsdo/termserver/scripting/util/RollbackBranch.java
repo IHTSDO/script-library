@@ -43,16 +43,26 @@ public class RollbackBranch extends TermServerReport {
 		boolean userQuit = false;
 		boolean rollBackToBaseline = false;
 		while (!userQuit) {
-			Branch b = tsClient.getBranch(branchPath);
-			LocalDateTime head = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.getHeadTimestamp()), ZoneOffset.UTC);
-			LocalDateTime base = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.getBaseTimestamp()), ZoneOffset.UTC);
-			println( "\n" + b.getName() + " Head: " + head + " Base: " + base + " state: " + b.getState());
+			Branch branch = tsClient.getBranch(branchPath);
+			boolean forceFurtherRollback = false;
+			LocalDateTime head = LocalDateTime.ofInstant(Instant.ofEpochMilli(branch.getHeadTimestamp()), ZoneOffset.UTC);
+			LocalDateTime base = LocalDateTime.ofInstant(Instant.ofEpochMilli(branch.getBaseTimestamp()), ZoneOffset.UTC);
+			println( "\n" + branch.getName() + " Head: " + head + " Base: " + base + " state: " + branch.getState());
 			msg = "Rolled-Back";
 
-			if (b.getHeadTimestamp() <= b.getBaseTimestamp() || b.getState().equals("BEHIND")) {
-				userQuit = true;
+			if (branch.getHeadTimestamp() <= branch.getBaseTimestamp() || branch.getState().equals("BEHIND")) {
 				msg = "Final state - base timestamp reached / branch is behind parent";
-			} else if (!rollBackToBaseline) {
+				print("Force further rollback (F) or Quit (Q): ");
+				String choice = STDIN.nextLine().trim().toUpperCase();
+				if (choice.equals("F")) {
+					forceFurtherRollback = true;
+					rollBackToBaseline = false;
+				} else {
+					userQuit = true;
+				}
+			}
+
+			if (!rollBackToBaseline || forceFurtherRollback) {
 				print("Rollback (R), Rollback to Baseline (B) or Quit (Q): ");
 				String choice = STDIN.nextLine().trim().toUpperCase();
 				if (choice.equals("B")) {
@@ -61,14 +71,16 @@ public class RollbackBranch extends TermServerReport {
 					userQuit = true;
 					msg = "Final state";
 				} else if (choice.equals("R")) {
-					tsClient.adminRollbackCommit(b);
+					tsClient.adminRollbackCommit(branch);
+				} else {
+					throw new TermServerScriptException("Unknown Rollback choice: " + choice);
 				}
 			}
 
 			if (!userQuit && rollBackToBaseline) {
-				tsClient.adminRollbackCommit(b);
+				tsClient.adminRollbackCommit(branch);
 			}
-			report(PRIMARY_REPORT, "", head, base, b.getState(), msg);
+			report(PRIMARY_REPORT, "", head, base, branch.getState(), msg);
 		}
 	}
 
