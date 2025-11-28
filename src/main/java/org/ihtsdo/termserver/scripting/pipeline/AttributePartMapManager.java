@@ -29,7 +29,7 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 	protected ContentPipelineManager cpm;
 	protected GraphLoader gl;
 	protected Map<String, Part> parts;
-	protected Map<String, RelationshipTemplate> partToAttributeMap = new HashMap<>();
+	protected Map<String, List<Concept>> partToAttributeValueMap = new HashMap<>();
 	protected Map<String, List<Concept>> hardCodedMappings = new HashMap<>();
 	protected Map<Concept, Concept> knownReplacementMap = new HashMap<>();
 	protected Map<Concept, Concept> hardCodedTypeReplacementMap = new HashMap<>();
@@ -44,22 +44,16 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		this.partMapNotes = partMapNotes;
 	}
 
-	protected abstract void populateKnownMappings() throws TermServerScriptException;
+	protected abstract void populateConceptReplacements() throws TermServerScriptException;
 
 	public List<RelationshipTemplate> getPartMappedAttributeForType(TemplatedConcept tc, String partNum, Concept attributeType) throws TermServerScriptException {
 		if (SnomedUtils.isEmpty(partNum)) {
 			//Can't look up an unspecified part.
 			//In the case of, eg NPU Unit not being specified, this is fine.
 		} else if (hardCodedMappings.containsKey(partNum)) {
-			List<RelationshipTemplate> mappings = new ArrayList<>();
-			for (Concept attributeValue : hardCodedMappings.get(partNum)) {
-				mappings.add(new RelationshipTemplate(attributeType, attributeValue));
-			}
-			return mappings;
+			return extractPartMappingFromMapAsRelationshipTemplate(hardCodedMappings, partNum, attributeType);
 		} else if (containsMappingForPartNum(partNum)) {
-			RelationshipTemplate rt = partToAttributeMap.get(partNum).clone();
-			rt.setType(attributeType);
-			return new ArrayList<>(List.of(rt));
+			return extractPartMappingFromMapAsRelationshipTemplate(partToAttributeValueMap, partNum, attributeType);
 		} else if (!cpm.getMappingsAllowedAbsent().contains(partNum)) {
 			//Some special rules exist for certain parts, so we don't need to report if we have one of those.
 			String partStr = parts.get(partNum) == null ? "Part Not Known - " + partNum : parts.get(partNum).toString();
@@ -68,11 +62,19 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		}
 		return new ArrayList<>();
 	}
-	
+
+	private List<RelationshipTemplate> extractPartMappingFromMapAsRelationshipTemplate(Map<String, List<Concept>> map, String partNum, Concept attributeType) {
+		List<RelationshipTemplate> mappings = new ArrayList<>();
+		for (Concept attributeValue : map.get(partNum)) {
+			mappings.add(new RelationshipTemplate(attributeType, attributeValue));
+		}
+		return mappings;
+	}
+
 	public void populatePartAttributeMap(File attributeMapFile) throws TermServerScriptException {
 		// Output format from Snap2SNOMED is expected to be:
 		// Source code[0]   Source display  Status  PartTypeName    Target code[4]  Target display  Relationship type code  Relationship type display   No map flag[8] Status[9]
-		populateKnownMappings();
+		populateConceptReplacements();
 		populateHardCodedMappings();
 		int lineNum = 0;
 		Set<String> partsSeen = new HashSet<>();
@@ -96,17 +98,17 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 						// Header line - discover indexes
 						ColIdx.initialize(line);
 					} else if (!line.isEmpty()) {
-						processPartFileLine(line, partsSeen, mappingNotes);
+						processPartMapFileLine(line, partsSeen, mappingNotes);
 					}
 				}
 			}
-			LOGGER.info("Populated map of {} parts to attributes", partToAttributeMap.size());
+			LOGGER.info("Populated map of {} parts to attributes", partToAttributeValueMap.size());
 		} catch (Exception e) {
 			throw new TermServerScriptException("Failed to read " + attributeMapFile + " at line " + lineNum, e);
 		}
 	}
 
-	private void processPartFileLine(String line, Set<String> partsSeen, List<String> mappingNotes) throws TermServerScriptException {
+	private void processPartMapFileLine(String line, Set<String> partsSeen, List<String> mappingNotes) throws TermServerScriptException {
 		String[] items = line.split("\t");
 		String partNum = items[ColIdx.idx(COL_PART_NUM)];
 
@@ -124,7 +126,7 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 			if (attributeValue != null && attributeValue.isActive()) {
 				mappingNotes.add("Inactive concept");
 			}
-			partToAttributeMap.put(partNum, new RelationshipTemplate(null, attributeValue));
+			partToAttributeValueMap.computeIfAbsent(partNum, k -> new ArrayList<>()).add(attributeValue);
 		} else if (items[ColIdx.idx(COL_STATUS)].equals("UNMAPPED")) {
 			//Skip this one without mentioning it
 		} else {
@@ -185,7 +187,7 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 	}
 
 	public boolean containsMappingForPartNum(String loincPartNum) {
-		return partToAttributeMap.containsKey(loincPartNum);
+		return partToAttributeValueMap.containsKey(loincPartNum);
 	}
 
 	protected abstract void populateHardCodedMappings() throws TermServerScriptException;

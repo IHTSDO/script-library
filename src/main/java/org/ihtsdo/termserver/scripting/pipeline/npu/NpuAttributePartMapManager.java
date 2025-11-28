@@ -23,7 +23,7 @@ public class NpuAttributePartMapManager extends AttributePartMapManager {
 	}
 
 	@Override
-	protected void populateKnownMappings() throws TermServerScriptException {
+	protected void populateConceptReplacements() throws TermServerScriptException {
 		LOGGER.warn("NPU has no mapping overrides");
 	}
 
