@@ -19,7 +19,6 @@ public class InactivateDuplicateInactivationIndicators extends DeltaGenerator im
 	public static String SCTID_DUPLICATE = "900000000000482003";
 	
 	public static void main(String[] args) throws TermServerScriptException {
-		TermServerClient.supportsIncludeUnpublished = false;   //This code not yet available in MS
 		InactivateDuplicateInactivationIndicators delta = new InactivateDuplicateInactivationIndicators();
 		delta.tsRoot="MAIN/2017-01-31/SNOMEDCT-US/";
 		delta.standardExecution(args);

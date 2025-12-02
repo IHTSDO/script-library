@@ -1,11 +1,9 @@
 package org.ihtsdo.termserver.scripting.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.ExpressiveErrorHandler;
-import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Project;
 import org.ihtsdo.termserver.scripting.cis.CisBulkRegisterRequest;
 import org.ihtsdo.termserver.scripting.cis.CisBulkRequest;
 import org.ihtsdo.termserver.scripting.cis.CisRecord;
@@ -33,8 +31,6 @@ public class CisClient {
 
 	private final HttpHeaders headers;
 	private final RestTemplate restTemplate;
-	private String serverUrl;
-	ObjectMapper mapper = new ObjectMapper();
 	private static final String CONTENT_TYPE = "application/json";
 	private final String token;
 
@@ -42,7 +38,6 @@ public class CisClient {
 	static {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.setPrettyPrinting();
-		//gsonBuilder.excludeFieldsWithoutExposeAnnotation();
 		gson = gsonBuilder.create();
 	}
 
@@ -56,8 +51,6 @@ public class CisClient {
 				.additionalMessageConverters(new GsonHttpMessageConverter())
 				.errorHandler(new ExpressiveErrorHandler())
 				.build();
-
-		this.serverUrl = serverUrl;
 
 		//Add a ClientHttpRequestInterceptor to the RestTemplate
 		restTemplate.getInterceptors().add(new ClientHttpRequestInterceptor() {

@@ -16,7 +16,6 @@ public class InactivateLangRefsetMembersInWrongLanguage extends DeltaGenerator i
 		InactivateLangRefsetMembersInWrongLanguage delta = new InactivateLangRefsetMembersInWrongLanguage();
 		try {
 			delta.newIdsRequired = false; // We'll only be inactivating existing members
-			TermServerClient.supportsIncludeUnpublished = false;   //This code not yet available in MS
 			delta.init(args);
 			delta.loadProjectSnapshot(false);
 			delta.postInit(GFOLDER_ADHOC_UPDATES);

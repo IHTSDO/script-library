@@ -28,7 +28,6 @@ public class InactivateDuplicateInactivationIndicators_fail extends BatchFix imp
 		try {
 			fix.selfDetermining = true;
 			fix.populateEditPanel = false;
-			TermServerClient.supportsIncludeUnpublished = false;   //This code not yet available in MS
 			fix.tsRoot="MAIN/2017-01-31/SNOMEDCT-US/";
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts

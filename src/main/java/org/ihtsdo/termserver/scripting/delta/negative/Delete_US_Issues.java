@@ -34,7 +34,6 @@ public class Delete_US_Issues extends NegativeDeltaGenerator implements ScriptCo
 		Delete_US_Issues delta = new Delete_US_Issues();
 		try {
 			delta.newIdsRequired = false; // We'll only be reactivating exisiting langrefset entries
-			TermServerClient.supportsIncludeUnpublished = false;   //This code not yet available in MS
 			delta.tsRoot="MAIN/2017-01-31/SNOMEDCT-US/";
 			delta.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts

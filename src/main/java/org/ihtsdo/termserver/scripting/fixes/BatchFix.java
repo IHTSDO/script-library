@@ -23,8 +23,6 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.otf.scheduler.domain.JobParameters;
 import org.snomed.otf.scheduler.domain.JobRun;
 
-import us.monoid.json.*;
-
 /**
  * Reads in a file containing a list of concept SCTIDs and processes them in batches
  * in tasks created on the specified project
@@ -390,7 +388,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 				if (populateEditPanel) {
 					scaClient.setEditPanelUIState(project.getKey(), task.getKey(), task.toQuotedList());
 				}
-				scaClient.setSavedListUIState(project.getKey(), task.getKey(), convertToSavedListJson(task));
+				scaClient.setSavedListUIState(project.getKey(), task.getKey(), convertToSavedListMap(task));
 			} else if (populateEditPanel) {
 				LOGGER.debug("Unable to populate edit panel due to high task size: {}", task.size());
 			}
@@ -427,16 +425,6 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 	//Override if working with Refsets or Descriptions directly
 	protected int doFix(Task task, Component component, String info) throws TermServerScriptException {
 		throw new NotImplementedException("Override doFix in the Concrete Class - use components when working with refset members and descriptions directly.");
-	}
-
-	protected int ensureDefinitionStatus(Task t, Concept c, DefinitionStatus targetDefStat) throws TermServerScriptException {
-		int changesMade = 0;
-		if (!c.getDefinitionStatus().equals(targetDefStat)) {
-			report(t, c, Severity.MEDIUM, ReportActionType.CONCEPT_CHANGE_MADE, "Definition status changed to " + targetDefStat);
-			c.setDefinitionStatus(targetDefStat);
-			changesMade++;
-		}
-		return changesMade;
 	}
 
 	@Override
@@ -1155,27 +1143,32 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		}
 	}
 
-	private JSONObject convertToSavedListJson(Task task) throws JSONException {
-		JSONObject savedList = new JSONObject();
-		JSONArray items = new JSONArray();
+	private Map<String, Object> convertToSavedListMap(Task task) {
+		Map<String, Object> savedList = new HashMap<>();
+		List<Map<String, Object>> items = new ArrayList<>();
 		savedList.put("items", items);
+
 		for (Component c : task.getComponents()) {
-			items.put(convertToSavedListJson((Concept) c));
+			items.add(convertToSavedListMap((Concept) c));
 		}
+
 		return savedList;
 	}
 
-	private JSONObject convertToSavedListJson(Concept concept) throws JSONException {
-		JSONObject jsonObj = new JSONObject();
+	private Map<String, Object> convertToSavedListMap(Concept concept) {
+		Map<String, Object> jsonObj = new HashMap<>();
 		jsonObj.put("term", concept.getPreferredSynonym());
 		jsonObj.put("active", concept.isActiveSafely() ? "true" : "false");
-		JSONObject conceptObj = new JSONObject();
-		jsonObj.put("concept", conceptObj);
+
+		Map<String, Object> conceptObj = new HashMap<>();
 		conceptObj.put("active", concept.isActiveSafely() ? "true" : "false");
 		conceptObj.put("conceptId", concept.getConceptId());
 		conceptObj.put("fsn", concept.getFsn());
 		conceptObj.put("moduleId", concept.getModuleId());
-		conceptObj.put("defintionStatus", concept.getDefinitionStatus());
+		conceptObj.put("definitionStatus", concept.getDefinitionStatus());
+
+		jsonObj.put("concept", conceptObj);
+
 		return jsonObj;
 	}
 
