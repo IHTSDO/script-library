@@ -22,7 +22,7 @@ import java.util.zip.ZipInputStream;
 public class PublishSctids extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PublishSctids.class);
-	private static final String THIS_TICKET = "INFRA-15418";
+	private static final String THIS_TICKET = "XDS-86";
 	private enum ACTION {PUBLISH, REGISTER}
 
 	public static String AVAILABLE = "Available";
@@ -35,7 +35,7 @@ public class PublishSctids extends TermServerReport {
 	private Map<String, Set<String>> oldSctidsByNamespace = new HashMap<>();
 
 	private Set<String> namespaces = new HashSet<>();
-	private String targetET = "20250531"; //This is the ET we are interested in, which will be used to filter out old SCTIDs
+	private String targetET = "20251207"; //This is the ET we are interested in, which will be used to filter out old SCTIDs
 	private int batchSize = 200;
 	
 	private boolean processRelationshipsOnly = true;
@@ -139,7 +139,7 @@ public class PublishSctids extends TermServerReport {
 				CisBulkRegisterRequest cisBulkRegisterRequest = new CisBulkRegisterRequest(THIS_TICKET + " Bulk " + actionStr + " of " + batch.size() + " sctids",
 						Long.parseLong(namespace),
 						batch,
-						"Script-Engine");
+						"Script-Library");
 				requestStr = cisBulkRegisterRequest.toString();
 				response = cisClient.registerSctids(cisBulkRegisterRequest);
 				break;
@@ -147,7 +147,7 @@ public class PublishSctids extends TermServerReport {
 				CisBulkRequest cisBulkRequest = new CisBulkRequest(THIS_TICKET + " Bulk " + actionStr + " of " + batch.size() + " sctids",
 						Long.parseLong(namespace),
 						batch,
-						"Script-Engine");
+						"Script-Library");
 				requestStr = cisBulkRequest.toString();
 				response = cisClient.publishSctids(cisBulkRequest);
 				break;
