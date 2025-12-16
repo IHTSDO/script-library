@@ -1,4 +1,4 @@
-package org.ihtsdo.termserver.scripting.reports.one_offs;
+package org.ihtsdo.termserver.scripting.reports.drugs;
 
 import org.ihtsdo.otf.RF2Constants;
 import org.ihtsdo.otf.exception.TermServerScriptException;
@@ -8,6 +8,7 @@ import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
 import org.ihtsdo.termserver.scripting.reports.TermServerReport;
+import org.ihtsdo.termserver.scripting.util.DrugUtils;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.otf.scheduler.domain.*;
 import org.snomed.otf.scheduler.domain.Job.ProductionStatus;
@@ -18,28 +19,7 @@ import java.util.stream.Collectors;
 
 public class RP_1037_DescriptionsWithMg extends TermServerReport implements ReportClass {
 
-	private List<MatchingSet> targetTexts = List.of(
-			new MatchingSet("mg"),
-			new MatchingSet("g"),
-			new MatchingSet("ml"),
-			new MatchingSet("mcg"),
-			new MatchingSet("unit"),
-			new MatchingSet("units"),
-			new MatchingSet("IU"),
-			new MatchingSet("mEq"),
-			new MatchingSet("microgram"),
-			new MatchingSet("milligram"),
-			new MatchingSet("micrograms"),
-			new MatchingSet("milligrams"),
-			new MatchingSet("grams"),
-			new MatchingSet("milliliter"),
-			new MatchingSet("microliter"),
-			new MatchingSet("microlitre"),
-			new MatchingSet("mL"),
-			new MatchingSet("nanogram"),
-			new MatchingSet("MBq"),
-			new MatchingSet("ppm")
-	);
+
 	public static void main(String[] args) throws TermServerScriptException {
 		TermServerScript.run(RP_1037_DescriptionsWithMg.class, new HashMap<>(), args);
 	}
@@ -85,17 +65,17 @@ public class RP_1037_DescriptionsWithMg extends TermServerReport implements Repo
 			if (!c.isActiveSafely()) {
 				continue;
 			}
-			for (MatchingSet ms : targetTexts) {
+			for (DrugUtils.MatchingSet ms : DrugUtils.KNOWN_CASE_SENSITIVE_DRUG_UNITS) {
 				checkDescriptionsForTargetText(c, ms, drugsReported);
 			}
 		}
 		reportCDsNotPreviouslyReported(drugsReported);
 	}
 
-	private void checkDescriptionsForTargetText(Concept c, MatchingSet ms, List<Concept> drugsReported) throws TermServerScriptException {
+	private void checkDescriptionsForTargetText(Concept c, DrugUtils.MatchingSet ms, List<Concept> drugsReported) throws TermServerScriptException {
 		List<Description> descriptionsContainingTargetText = c.getDescriptions(ActiveState.ACTIVE)
 				.stream()
-				.filter(d -> containsTargetText(d, ms))
+				.filter(d -> DrugUtils.containsTargetText(d, ms))
 				.toList();
 		if (!descriptionsContainingTargetText.isEmpty()) {
 			String descriptions = descriptionsContainingTargetText.stream()
@@ -105,10 +85,10 @@ public class RP_1037_DescriptionsWithMg extends TermServerReport implements Repo
 					.map(d -> SnomedUtils.translateCaseSignificanceFromEnumSafely(d.getCaseSignificance()))
 					.collect(Collectors.joining(",\n"));
 			if (isMedicinalProduct(c)) {
-				report(PRIMARY_REPORT, c, ms.targetText, descriptions, caseSignificances);
+				report(PRIMARY_REPORT, c, ms.getTargetText(), descriptions, caseSignificances);
 				drugsReported.add(c);
 			} else {
-				report(TERTIARY_REPORT, c, ms.targetText, descriptions, caseSignificances);
+				report(TERTIARY_REPORT, c, ms.getTargetText(), descriptions, caseSignificances);
 			}
 			countIssue(c);
 		}
@@ -133,34 +113,6 @@ public class RP_1037_DescriptionsWithMg extends TermServerReport implements Repo
 			return c.getAncestors(RF2Constants.NOT_SET).contains(MEDICINAL_PRODUCT);
 		} catch (TermServerScriptException e) {
 			throw new IllegalStateException(e);
-		}
-	}
-
-	private boolean containsTargetText(Description d, MatchingSet ms) {
-		//To avoid matching within terms, we'll use the target text padded with spaces.
-		//But this doesn't work if it's the last word, so also check for ending
-		String term = d.getTerm();
-		String sp_term = " " + term;
-		return d.getTerm().contains(ms.targetTextSpSp)
-				|| d.getTerm().endsWith(ms.targetTextSp)
-				|| sp_term.contains(ms.targetTextSpSlash)
-				|| sp_term.contains(ms.targetTextSlashSp)
-				|| term.equals(ms.targetText);
-	}
-
-	class MatchingSet {
-		private String targetTextSpSp;
-		private String targetTextSp;
-		private String targetText;
-		private String targetTextSpSlash;
-		private String targetTextSlashSp;
-
-		public MatchingSet(String targetText) {
-			this.targetText = targetText;
-			this.targetTextSpSp = " " + targetText + " ";
-			this.targetTextSp = " " + targetText;
-			this.targetTextSpSlash = " " + targetText + "/";
-			this.targetTextSlashSp = "/" + targetText;
 		}
 	}
 
