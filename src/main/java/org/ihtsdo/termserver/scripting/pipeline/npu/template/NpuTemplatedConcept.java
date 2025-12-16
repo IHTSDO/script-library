@@ -12,11 +12,16 @@ import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuConcept;
 import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuDetail;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class NpuTemplatedConcept extends TemplatedConcept implements NpuScriptConstants {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(NpuTemplatedConcept.class);
+
 	private static Concept unitsAttribute;
 	private static RelationshipTemplate defaultUnitOfMeasureAttribute;
-	private static RelationshipTemplate fastingAttribute;
+	private static RelationshipTemplate fastingPreconditionAttribute;
 	private static Map<String, NpuDetail> npuDetailMap;
 
 	private static final String TRAILING_IN = " in ";
@@ -32,8 +37,8 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 		defaultUnitOfMeasureAttribute = new RelationshipTemplate(unitsAttribute, unitOfMeasure);
 
 		Concept precondition = gl.getConcept("704326004 |Precondition|");
-		Concept fasting = gl.getConcept("726054005 |After fasting (qualifier value)|");
-		defaultUnitOfMeasureAttribute = new RelationshipTemplate(precondition, fasting);
+		Concept fasting = gl.getConcept("726055006 |After calorie fasting (qualifier value)|");
+		fastingPreconditionAttribute = new RelationshipTemplate(precondition, fasting);
 	}
 
 		@Override
@@ -121,6 +126,8 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			//Do we also know about the other part?
 			Part otherPart = cpm.getPart(partialKeys[1].trim());
 			if (otherPart != null) {
+				//Check for additional modeling rules relating to this part
+				applyTemplateSpecificModellingRules(additionalAttributes, otherPart, null);
 				slotTermAppendMap.put(NPU_PART_UNIT, " with reference to " + otherPart.getPartName());
 			}
 			//In this case we don't need report the compound key as a missing mapping
@@ -154,18 +161,22 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 	protected void applyTemplateSpecificModellingRules(List<RelationshipTemplate> attributes, Part part, RelationshipTemplate rt) throws TermServerScriptException {
 		//If we're working with a Unit, and we haven't found a mapping for it, then use the name from the NPU part
 		//and make the concept primitive
-		if (part.getPartTypeName().equals(NPU_PART_UNIT) && attributes.isEmpty()) {
-			addProcessingFlag(ProcessingFlag.MARK_AS_PRIMITIVE);
-			slotTermMap.put(NPU_PART_UNIT, part.getPartName());
-		}
+		if (part != null && part.getPartTypeName() == null) {
+			LOGGER.warn("Part here without a part type? {}", part);
+		} else {
+			if (part.getPartTypeName().equals(NPU_PART_UNIT) && attributes.isEmpty()) {
+				addProcessingFlag(ProcessingFlag.MARK_AS_PRIMITIVE);
+				slotTermMap.put(NPU_PART_UNIT, part.getPartName());
+			}
 
-		if (part.getPartName().equals("System")) {
-			slotTermMap.put(NPU_PART_SYSTEM, "");
+			if (part.getPartName().equals("System")) {
+				slotTermMap.put(NPU_PART_SYSTEM, "");
+			}
 		}
 
 		if (part.getPartNumber().contains("QU65029")) {
 			//Add an extra attribute for a precondition of fasting
-			attributes.add(fastingAttribute);
+			attributes.add(fastingPreconditionAttribute);
 		}
 
 	}
