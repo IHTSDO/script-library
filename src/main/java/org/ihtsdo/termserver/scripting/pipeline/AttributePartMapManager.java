@@ -77,7 +77,9 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		populateConceptReplacements();
 		populateHardCodedMappings();
 		int lineNum = 0;
+		int problemsEncountered = 0;
 		Set<String> partsSeen = new HashSet<>();
+		boolean fileLoadedSuccessfully = true;
 		List<String> mappingNotes = new ArrayList<>();
 
 		try {
@@ -98,7 +100,13 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 						// Header line - discover indexes
 						ColIdx.initialize(line);
 					} else if (!line.isEmpty()) {
-						processPartMapFileLine(line, partsSeen, mappingNotes);
+						try {
+							processPartMapFileLine(line, partsSeen, mappingNotes);
+						} catch (TermServerScriptException e) {
+							fileLoadedSuccessfully = false;
+							problemsEncountered++;
+							LOGGER.warn("Problem processing line {}: {}", lineNum, e.getMessage());
+						}
 					}
 				}
 			}
@@ -106,16 +114,24 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		} catch (Exception e) {
 			throw new TermServerScriptException("Failed to read " + attributeMapFile + " at line " + lineNum, e);
 		}
+
+		if (!fileLoadedSuccessfully) {
+			//throw new TermServerScriptException("Failed to read " + attributeMapFile + ". See log for individual line issues, total issue count " + problemsEncountered);
+		}
 	}
 
 	private void processPartMapFileLine(String line, Set<String> partsSeen, List<String> mappingNotes) throws TermServerScriptException {
 		String[] items = line.split("\t");
 		String partNum = items[ColIdx.idx(COL_PART_NUM)];
 
-		if (partsSeen.contains(partNum)) {
-			//Have we seen this part before?  Map should now be unique
-			mappingNotes.add("Part / Attribute BaseFile contains duplicate entry for " + partNum);
-		} else if (items[ColIdx.idx(COL_NO_MAP)].equals("true")) {
+		//Quick check that the part we're talking about here is actually known to the input files
+		Part part = cpm.getPart(partNum);
+		if (part == null) {
+			throw new TermServerScriptException("Part " + partNum + " listed in map but not known to parts file. Target was " + items[ColIdx.idx(COL_STATUS)] + " as '" + items[ColIdx.idx(COL_TARGET)]  + "'");
+		}
+
+		//Note that we could have multiple lines for the same partNum in a 1:many mapping
+		if (items[ColIdx.idx(COL_NO_MAP)].equals("true")) {
 			//And we can have items that report being mapped, but with 'no map' - warn about those.
 			mappingNotes.add("Map indicates part mapped to 'No Map'");
 		} else if (items[ColIdx.idx(COL_STATUS)].equals("ACCEPTED") ||
