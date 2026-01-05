@@ -6,6 +6,7 @@ import java.util.*;
 import org.ihtsdo.otf.utils.ExceptionUtils;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.otf.exception.TermServerScriptException;
+import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
@@ -13,7 +14,6 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.script.dao.ReportSheetManager;
-import org.springframework.util.StringUtils;
 
 public class INFRA7013_Reterm_SubstanceGroupers extends BatchFix {
 
@@ -23,7 +23,7 @@ public class INFRA7013_Reterm_SubstanceGroupers extends BatchFix {
 		super(clone);
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
+	public static void main(String[] args) throws TermServerScriptException {
 		INFRA7013_Reterm_SubstanceGroupers fix = new INFRA7013_Reterm_SubstanceGroupers(null);
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
@@ -40,7 +40,8 @@ public class INFRA7013_Reterm_SubstanceGroupers extends BatchFix {
 			fix.finish();
 		}
 	}
-	
+
+	@Override
 	public void postInit() throws TermServerScriptException {
 
 		String[] columnHeadings = new String[] {

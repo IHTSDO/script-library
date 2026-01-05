@@ -20,7 +20,6 @@ public class InactivateDuplicateInactivationIndicators extends DeltaGenerator im
 	
 	public static void main(String[] args) throws TermServerScriptException {
 		InactivateDuplicateInactivationIndicators delta = new InactivateDuplicateInactivationIndicators();
-		delta.tsRoot="MAIN/2017-01-31/SNOMEDCT-US/";
 		delta.standardExecution(args);
 	}
 

@@ -389,14 +389,14 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		try {
 			if (task.size() < 25) {
 				if (populateEditPanel) {
-					scaClient.setEditPanelUIState(project.getKey(), task.getKey(), task.toQuotedList());
+					scaClient.setEditPanelUIState(project.getKey(), task.getKey(), task.getIds());
 				}
 				scaClient.setSavedListUIState(project.getKey(), task.getKey(), convertToSavedListMap(task));
 			} else if (populateEditPanel) {
 				LOGGER.debug("Unable to populate edit panel due to high task size: {}", task.size());
 			}
 		} catch (Exception e) {
-			String msg = "Failed to preload edit-panel ui state: " + e.getMessage();
+			String msg = "Failed to pre-populate edit-panel ui state: " + e.getMessage();
 			LOGGER.warn(msg);
 			report(task, null, Severity.LOW, ReportActionType.API_ERROR, msg);
 		}

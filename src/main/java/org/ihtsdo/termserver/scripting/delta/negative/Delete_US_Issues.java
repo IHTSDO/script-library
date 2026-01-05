@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.client.TermServerClient;
 
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -14,13 +13,13 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-/**
- * Class to reactivate langrefset entries when they have been inactivated after the international edition has activated ones for the same concept
- */
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Class to reactivate langrefset entries when they have been inactivated after the international edition has activated ones for the same concept
+ */
 public class Delete_US_Issues extends NegativeDeltaGenerator implements ScriptConstants {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Delete_US_Issues.class);
@@ -28,13 +27,12 @@ public class Delete_US_Issues extends NegativeDeltaGenerator implements ScriptCo
 	String[] refsets = new String[] {US_ENG_LANG_REFSET};
 
 	static final String deletionEffectiveTime = "20170901";
-	List<Concept> affectedConcepts = new ArrayList<Concept>();
+	List<Concept> affectedConcepts = new ArrayList<>();
 
 	public static void main(String[] args) throws TermServerScriptException {
 		Delete_US_Issues delta = new Delete_US_Issues();
 		try {
 			delta.newIdsRequired = false; // We'll only be reactivating exisiting langrefset entries
-			delta.tsRoot="MAIN/2017-01-31/SNOMEDCT-US/";
 			delta.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
 			delta.loadProjectSnapshot(false);  
@@ -67,7 +65,7 @@ public class Delete_US_Issues extends NegativeDeltaGenerator implements ScriptCo
 		try {
 			File affectedConceptFile = new File(fileName);
 			List<String> lines = Files.readLines(affectedConceptFile, Charsets.UTF_8);
-			LOGGER.info("Loading selected Concepts from " + fileName);
+			LOGGER.info("Loading selected Concepts from {}", fileName);
 			for (String line : lines) {
 				affectedConcepts.add(gl.getConcept(line));
 			}

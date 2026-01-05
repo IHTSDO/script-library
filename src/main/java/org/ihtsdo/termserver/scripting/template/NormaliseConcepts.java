@@ -35,7 +35,7 @@ public class NormaliseConcepts extends BatchFix {
 		NormaliseConcepts app = new NormaliseConcepts(null);
 		try {
 			ReportSheetManager.setTargetFolderId("1Ay_IwhPD1EkeIYWuU6q7xgWBIzfEf6dl");  // QI/Normalization
-			app.classifyTasks = false;
+			app.selfDetermining = true;  // NormaliseConceptsDriven sets this to false
 			app.init(args);
 			app.loadProjectSnapshot(false);  //Load all descriptions
 			app.postInit();
@@ -49,8 +49,8 @@ public class NormaliseConcepts extends BatchFix {
 
 	@Override
 	protected void init(String[] args) throws TermServerScriptException {
+		classifyTasks = false;
 		reportNoChange = false;
-		selfDetermining = true;
 		summaryTabIdx = SECONDARY_REPORT;
 		super.init(args);
 	}

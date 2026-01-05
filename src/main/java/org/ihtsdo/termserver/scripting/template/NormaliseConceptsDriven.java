@@ -21,7 +21,7 @@ public class NormaliseConceptsDriven extends NormaliseConcepts {
 		NormaliseConceptsDriven app = new NormaliseConceptsDriven(null);
 		try {
 			ReportSheetManager.setTargetFolderId(GFOLDER_QI_NORMALIZATION);
-			app.classifyTasks = false;
+			app.selfDetermining = false;  //We expect to be given a file for 'driven' classes
 			app.init(args);
 			app.loadProjectSnapshot(false);  //Load all descriptions
 			app.postInit();
@@ -31,13 +31,6 @@ public class NormaliseConceptsDriven extends NormaliseConcepts {
 		} finally {
 			app.finish();
 		}
-	}
-
-	@Override
-	protected void init(String[] args) throws TermServerScriptException {
-		reportNoChange = false;
-		summaryTabIdx = SECONDARY_REPORT;
-		super.init(args);
 	}
 
 	@Override

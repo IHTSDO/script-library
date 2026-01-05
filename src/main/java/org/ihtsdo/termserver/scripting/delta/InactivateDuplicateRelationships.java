@@ -21,7 +21,6 @@ public class InactivateDuplicateRelationships extends DeltaGenerator implements 
 		InactivateDuplicateRelationships delta = new InactivateDuplicateRelationships();
 		try {
 			delta.newIdsRequired = false; // We'll only be inactivating existing relationships
-			delta.tsRoot="MAIN/2017-01-31/SNOMEDCT-US/";
 			delta.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
 			delta.loadProjectSnapshot(true);  //Just FSN, not working with all descriptions here
