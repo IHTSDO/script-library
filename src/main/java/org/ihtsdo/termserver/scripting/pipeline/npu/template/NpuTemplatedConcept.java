@@ -23,6 +23,7 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 	private static RelationshipTemplate defaultUnitOfMeasureAttribute;
 	private static RelationshipTemplate fastingPreconditionAttribute;
 	private static Map<String, NpuDetail> npuDetailMap;
+	private static Set<String> knownBloodCells;
 
 	private static final String TRAILING_IN = " in ";
 
@@ -39,6 +40,19 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 		Concept precondition = gl.getConcept("704326004 |Precondition|");
 		Concept fasting = gl.getConcept("726055006 |After calorie fasting (qualifier value)|");
 		fastingPreconditionAttribute = new RelationshipTemplate(precondition, fasting);
+
+		knownBloodCells = Set.of(
+				"MSHD001491",  // Basophilocytes
+				"MSHD001792",  // Thrombocytes
+				"MSHD004804",  // Eosinophilocytes
+				"MSHD004912",  // Erythrocytes
+				"MSHD007962",  // Leukocytes
+				"MSHD008214",  // Lymphocytes
+				"MSHD009000",  // Monocytes
+				"MSHD009504",  // Neutrophilocytes
+				"QU60585"      // Reticulocytes
+		);
+
 	}
 
 		@Override
@@ -174,11 +188,32 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			}
 		}
 
+		//This will only apply when the blood cell is coming from the system
+		checkForBloodCellProcessing(attributes, part, rt);
+
 		if (part.getPartNumber().contains("QU65029")) {
 			//Add an extra attribute for a precondition of fasting
 			attributes.add(fastingPreconditionAttribute);
 		}
 
+	}
+
+	private void checkForBloodCellProcessing(List<RelationshipTemplate> attributes, Part part, RelationshipTemplate rt) throws TermServerScriptException {
+		if (!knownBloodCells.contains(part.getPartNumber())) {
+			return;
+		}
+
+		rt.setType(ScriptConstants.INHERES_IN);
+		//The particular cell eg (Leukocyte) will already be present
+		slotTermMap.put(NPU_PART_COMPONENT, rt.getTarget().getPreferredSynonym());
+
+		//Recover the specification and add that as the inherent location
+		//Not sure that I need to.  The fact that we've found a type of blood cell tells us we're in blood
+		RelationshipTemplate locationAttribute = new RelationshipTemplate(
+				INHERENT_LOCATION,
+				gl.getConcept("87612001 |Blood (substance)|")
+		);
+		attributes.add(locationAttribute);
 	}
 
 	@Override
