@@ -484,6 +484,10 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 	}
 
 	protected String tidyUpTerm(String term) {
+		if (term == null) {
+			LOGGER.error("Check what's going on here with a null term");
+			return term;
+		}
 		term = removeUnpopulatedTermSlot(term, " at [TIME]");
 		term = removeUnpopulatedTermSlot(term, " by [METHOD]");
 		term = removeUnpopulatedTermSlot(term, " in [SYSTEM]");
@@ -494,7 +498,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 	}
 
 	private String removeUnpopulatedTermSlot(String term, String str) {
-		if (term.contains(str)) {
+		if (term != null && term.contains(str)) {
 			//Need to make string regex safe
 			str = str.replaceAll("[\\[\\]]", "\\\\$0");
 			term = term.replaceAll(str, "");

@@ -67,6 +67,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 					createTemplateBasedOnProperties(externalConcept);
 			case "Susc" -> LoincTemplatedConceptWithSusceptibility.create(externalConcept);
 			case "{Measurement}" -> LoincTemplatedConceptForGrouper.create(externalConcept);
+			case "Imp" -> LoincTemplatedConceptWithImpression.create(externalConcept);
 			default -> TemplatedConceptNull.create(externalConcept);
 		};
 	}
@@ -140,8 +141,6 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		for (String loincNum : loincDetailMapOfMaps.keySet()) {
 			TemplatedConcept templatedConcept = modelExternalConcept(loincNum);
 			if (templatedConcept != null) {
-				templatedConcept.populateAlternateIdentifier();
-				validateTemplatedConcept(templatedConcept);
 				postModelling(templatedConcept);
 				if (conceptSufficientlyModeled("Observable", loincNum, templatedConcept)) {
 					successfullyModelled.add(templatedConcept);
@@ -152,8 +151,6 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		for (String panelLoincNum : panelLoincNums) {
 			LoincTemplatedConcept templatedConcept = doPanelModeling(panelLoincNum);
 			if (templatedConcept != null) {
-				templatedConcept.populateAlternateIdentifier();
-				validateTemplatedConcept(templatedConcept);
 				postModelling(templatedConcept);
 				if (conceptSufficientlyModeled("Panel", panelLoincNum, templatedConcept)) {
 					successfullyModelled.add(templatedConcept);

@@ -197,7 +197,6 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	
 	@Override
 	protected void populateTerms() throws TermServerScriptException {
-
 		super.populateTerms();
 		
 		//Add in the traditional colon form that we've previously used as the FSN
@@ -314,7 +313,9 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	}
 
 	protected void populateParts() throws TermServerScriptException {
-		prepareConceptDefaultedForModule(SCTID_LOINC_EXTENSION_MODULE);
+		if (concept == null) {
+			prepareConceptDefaultedForModule(SCTID_LOINC_EXTENSION_MODULE);
+		}
 
 		//Add additional check for LOINC Concept being deprecated
 		if (getLoincTerm().getStatus().equals("DEPRECATED")) {
@@ -615,7 +616,11 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 
 		Concept scaleAttribute = SnomedUtils.getTarget(getConcept(), typeMap.get(LOINC_PART_TYPE_SCALE), GROUP_1, CharacteristicType.STATED_RELATIONSHIP);
 		if (scaleAttribute == null) {
-			throw new TermServerScriptException("No scale attribute found for " + getExternalIdentifier());
+			String errMsg = "No scale attribute found when attempting to resolve FSN duplication";
+			LOGGER.error(errMsg);
+			getConcept().addIssue(errMsg);
+			addProcessingFlag(ProcessingFlag.DROP_OUT);
+			return getConcept().getFSNDescription().getTerm();
 		}
 
 		String scaleStr = scaleAttribute.getPreferredSynonym();
