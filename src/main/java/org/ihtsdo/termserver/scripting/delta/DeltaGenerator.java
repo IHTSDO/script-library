@@ -676,6 +676,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 			if (!dryRun) {
 				createOutputArchive(true, conceptsInLastBatch);
 			}
+			if (this instanceof DeltaGeneratorWithAutoImport thisAutoImport) {
+				thisAutoImport.importArchiveToNewTask(lastArchiveCreated);
+			}
 		} finally {
 			finish();
 		}
