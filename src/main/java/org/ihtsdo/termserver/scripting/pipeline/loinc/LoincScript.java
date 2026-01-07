@@ -27,12 +27,22 @@ public abstract class LoincScript extends ContentPipelineManager implements Loin
 	//Map of LoincNums to ldtColumnNames to details
 	protected static Map<String, Map<String, LoincDetail>> loincDetailMapOfMaps = new HashMap<>();
 
-	public static final String LOINC_PART_TIME = "LP6969-2";
+	public static final String LOINC_PART_TIME_XXX = "LP6969-2";
+	public static final String LOINC_PART_TIME_STAR = "LP6901-5";
+	public static final String LOINC_PART_METHOD_STAR = "LP28805-7";
+	public static final String LOINC_PART_SYSTEM_STAR = "LP6975-9";
+
+
 	public static final String LOINC_PART_OBSERVATION = "LP442509-8";
 	public static final String LOINC_PART_SPECIMEN_VOLUME = "LP19577-3";
 	public static final String LOINC_PART_SEDIMENTATION = "LP448341-0";
 
-	private static final List<String> ALLOW_ABSENT_MAPPING = Arrays.asList(LOINC_PART_TIME, LOINC_PART_OBSERVATION);
+	public static final List<String> ALLOW_ABSENT_MAPPING = Arrays.asList(
+			LOINC_PART_TIME_XXX,
+			LOINC_PART_OBSERVATION,
+			LOINC_PART_TIME_STAR,
+			LOINC_PART_METHOD_STAR,
+			LOINC_PART_SYSTEM_STAR);
 	
 	protected String[] getTabNames() {
 		throw new IllegalStateException("Please override getTabNames() in your script");

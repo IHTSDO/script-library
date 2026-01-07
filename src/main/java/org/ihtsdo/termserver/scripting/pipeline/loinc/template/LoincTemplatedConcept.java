@@ -368,7 +368,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			boolean attributeAdded = addAttributeFromDetail(attributesToAdd, loincDetail);
 			//Now if we didn't find a map, then for non-critical parts, we'll use the loinc part name anyway
 			if (!attributeAdded && useTypesInPrimitive.contains(loincDetail.getPartTypeName())) {
-				if (loincDetail.getPartNumber().equals(LoincScript.LOINC_PART_TIME)) {
+				if (ALLOW_ABSENT_MAPPING.contains(loincDetail.getPartNumber())) {
 					expectNullMap = true;
 				} else {
 					//We don't have a map here, but we're going to allow the LOINC term to be used.
@@ -541,12 +541,12 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		List<RelationshipTemplate> additionalAttributes = cpm.getAttributePartManager().getPartMappedAttributeForType(this, loincPartNum, attributeType);
 
 		if (additionalAttributes.isEmpty()) {
-			if (loincDetail.getPartNumber().equals(LoincScript.LOINC_PART_TIME)) {
+			if (ALLOW_ABSENT_MAPPING.contains(loincDetail.getPartNumber())) {
+				if (loincDetail.getPartNumber().equals(LOINC_PART_OBSERVATION)) {
+					//Rule 2d We're going to _expect_ the COMPONENT to be blank in this case
+					addProcessingFlag(ProcessingFlag.EXPECT_BLANK_COMPONENT);
+				}
 				//Rule xi if we have a time, then we don't need to populate that field
-				slotTermMap.put(loincDetail.getPartTypeName(), "");
-			} else if (loincDetail.getPartNumber().equals(LOINC_PART_OBSERVATION)) {
-				//Rule 2d We're going to _expect_ the COMPONENT to be blank in this case
-				addProcessingFlag(ProcessingFlag.EXPECT_BLANK_COMPONENT);
 				slotTermMap.put(loincDetail.getPartTypeName(), "");
 			} else if (loincDetail.getPartNumber().equals(LOINC_PART_SEDIMENTATION) ||
 					loincDetail.getPartNumber().equals(LOINC_PART_SPECIMEN_VOLUME)) {
