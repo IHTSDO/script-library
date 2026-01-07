@@ -29,6 +29,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	private static final String SPECIMEN = "specimen";
 
 	private static final Concept AUTOMATED_TECHNIQUE = new Concept("570101010000100", "Automated technique (qualifier value)");
+	private static final Concept CONFIRMATORY_TECHNIQUE = new Concept("703690001", "Confirmatory technique (qualifier value)");
 
 	private static final Set<String> skipSlotTermMapPopulation = new HashSet<>(Arrays.asList(
 			LOINC_PART_TYPE_PROPERTY,
@@ -159,7 +160,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			addProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN);
 		}
 
-		if (containsValue(AUTOMATED_TECHNIQUE, attributes)) {
+		if (containsValue(AUTOMATED_TECHNIQUE, attributes) || containsValue(CONFIRMATORY_TECHNIQUE, attributes)) {
 			addProcessingFlag(ProcessingFlag.ALLOW_TECHNIQUE);
 		}
 
@@ -296,7 +297,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 					continue;
 				}
 
-				//Rule 2.h.iii.2 We leave in 'technique' for automated techniques
+				//We leave in 'technique' for automated and confirmatory techniques
 				if (removal.equals("technique") && hasProcessingFlag(ProcessingFlag.ALLOW_TECHNIQUE)) {
 					continue;
 				}
