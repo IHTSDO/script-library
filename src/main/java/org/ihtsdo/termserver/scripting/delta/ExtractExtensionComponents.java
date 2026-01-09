@@ -188,7 +188,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		preProcessConcepts(conceptsToProcess, false);
 	}
 
-	private void preProcessConcepts(List<Component> componentsOfInterest, boolean viaReview) throws TermServerScriptException {
+	protected void preProcessConcepts(List<Component> componentsOfInterest, boolean viaReview) throws TermServerScriptException {
 		archiveBatches = new ArrayDeque<>();
 		Set<Component> excludeComponents = new HashSet<>();
 		Set<Component> componentsSeen = new HashSet<>();
