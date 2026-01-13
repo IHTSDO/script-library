@@ -66,9 +66,16 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	protected static Set<String> useTypesInPrimitive = new HashSet<>(Arrays.asList("SYSTEM", "METHOD", "SCALE", "TIME"));
 	protected static Set<String> skipLDTColumnNames = new HashSet<>(List.of("SYSTEMCORE_PN","TIMECORE_PN"));
 	protected static Set<String> columnsToCheckForUnknownIndicators = new HashSet<>(Arrays.asList(COMPNUM_PN, COMPDENOM_PN, SYSTEM_PN));
-	protected static Set<String> unknownIndicators = new HashSet<>(Arrays.asList("unidentified", "other", "NOS", "unk sub", "unknown", "unspecified", "abnormal", "total"));
 	protected static Set<String> allowSpecimenTermForLoincParts = new HashSet<>(Arrays.asList("LP7593-9", "LP7735-6", "LP189538-4"));
-	
+
+	protected static Set<String> unknownIndicators = new HashSet<>(Arrays.asList(
+			"unidentified", "other",
+			"NOS", "unk sub",
+			"unknown", "unspecified",
+			"abnormal", "total",
+			"Hemoglobin XXX", "tested for",
+			"actual/normal", "normal/actual"));
+
 	//Map of LoincNums to ldtColumnNames to details
 	protected static Map<String, Map<String, LoincDetail>> loincDetailMapAllTerms;
 	
