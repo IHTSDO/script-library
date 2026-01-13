@@ -35,8 +35,8 @@ public class DeleteAllTasksOnProject extends TermServerReport implements JobClas
 		for (Task t : client.listTasksOnProject(getProject().getKey())) {
 			if (!except.contains(t.getKey())) {
 				LOGGER.info("Deleting task {}", t.getKey());
-				t.setStatus("DELETED");
-				client.updateTask(getProject().getKey(), t);
+				t.setStatus(Task.TaskStatus.DELETED);
+				client.updateTask(t);
 				report(PRIMARY_REPORT, t);
 			}
 		}

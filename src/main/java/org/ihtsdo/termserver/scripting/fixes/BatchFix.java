@@ -407,7 +407,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		if (this instanceof BatchImport batchImport) {
 			taskDescription = batchImport.getAllNotes(task);
 		} else if (task.getComponents().size() <= MAX_CONCEPTS_IN_TASK_DESCRIPTION) {
-			taskDescription = populateTaskDescription ? task.getDescriptionHTML() : DEFAULT_TASK_DESCRIPTION;
+			taskDescription = populateTaskDescription ? task.getDescription() : DEFAULT_TASK_DESCRIPTION;
 		}
 
 		if (reportName != null) {
