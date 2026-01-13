@@ -26,9 +26,11 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 
 	private boolean reviewSettingsWithUser() throws TermServerScriptException {
 
+		//Let's output the processing report so the user can review it before making decisions
+		println("Processing Report: " + getReportManager().getUrl());
 		//Quite often forget to set a task prefix, so let's prompt for it
 		if (StringUtils.isEmpty(taskPrefix)) {
-			print("What INFRA/MSSP ticket are you working here: ");
+			print("What INFRA/MSSP/XDS ticket are you working here: ");
 			taskPrefix = STDIN.nextLine().trim();
 		}
 

@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExtractExtensionComponents.class);
-	private static final Integer CONCEPTS_PER_ARCHIVE = 1;
-	private static final boolean AUTO_IMPORT = false;
+	private static final Integer CONCEPTS_PER_ARCHIVE = Integer.MAX_VALUE;
+	private static final boolean AUTO_IMPORT = true;
 	private static final boolean EXCLUDE_NON_ENGLISH_TERMS = true;
 	private static final boolean CONTAINS_REPLACEMENT_FSNS = false;  //If true, extra column needed in input file!
 	private static final boolean INCLUDE_DEPENDENCIES = true;
@@ -253,8 +253,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		
 		//Concepts that have no ancestors to group in with can be placed in any set
 		Queue<Concept> footlooseConcepts = new ArrayDeque<>();
-		Set<Concept> requiresFirstPassLoad = new HashSet<>();
-		
+
 		for (Component component : componentsOfInterest) {
 			Concept c = (Concept)component;
 			assignConceptToBatch(c, componentsOfInterest, parentChildMap, allocatedConcepts, footlooseConcepts);
@@ -285,14 +284,16 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			thisBatch.add(footlooseConcepts.remove());
 			if (thisBatch.size() == CONCEPTS_PER_ARCHIVE) {
 				archiveBatches.add(thisBatch);
-				LOGGER.info(++batchNo + ": No Hierarchy - " + thisBatch.size());
+				batchNo++;
+				LOGGER.info("{}: No Hierarchy - {}", batchNo, thisBatch.size());
 				thisBatch = new ArrayList<>();
 			}
 		}
 		
 		if (!thisBatch.isEmpty()) {
 			archiveBatches.add(thisBatch);
-			LOGGER.info(++batchNo + ": No Hierarchy - " + thisBatch.size());
+			batchNo++;
+			LOGGER.info("{}: No Hierarchy - {}", batchNo, thisBatch.size());
 		}
 		
 		long totalConceptsInBatches = archiveBatches.stream()
@@ -980,7 +981,6 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 	private void moveRelationshipTarget(Relationship r, List<Component> componentsToProcess/*, Map<Concept, Concept> replacementsMadeMap*/) throws TermServerScriptException {
 		Concept target = r.getTarget();
-		Concept glTarget = gl.getConcept(target.getConceptId());
 		boolean isIsA = r.getType().equals(IS_A);
 		String charTypeStr = r.getCharacteristicType().equals(CharacteristicType.STATED_RELATIONSHIP)?"Stated":"Inferred";
 		//If we don't have a target, we'll assume that's a concrete value.  No need to check that.

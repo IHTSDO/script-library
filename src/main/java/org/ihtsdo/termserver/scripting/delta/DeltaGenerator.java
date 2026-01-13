@@ -210,13 +210,13 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 
 	private void checkSourceAndTargetModulesWithUser() throws TermServerScriptException {
-		print ("Targeting which namespace? [" + nameSpace + "]: ");
+		print("Targeting which namespace? [" + nameSpace + "]: ");
 		String response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
 			nameSpace = response;
 		}
 
-		print ("Considering which source moduleId(s)? [" + StringUtils.join(sourceModuleIds, ",") + "]: ");
+		print("Considering which source moduleId(s)? [" + StringUtils.join(sourceModuleIds, ",") + "]: ");
 		response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
 			sourceModuleIds = Set.of(response.split(COMMA));
@@ -227,22 +227,28 @@ public abstract class DeltaGenerator extends TermServerScript {
 		if (nameSpace.length() > 4 && firstSourceModule.contains(nameSpace)) {
 			println("Target namespace indicates that we're keeping the source module the same.");
 			targetModuleId = firstSourceModule;
+		} else {
+			print("Outputting with what targetModule? [" + targetModuleId + "]: ");
+			response = STDIN.nextLine().trim();
+			if (!response.isEmpty()) {
+				targetModuleId = response;
+			}
 		}
 
-		print ("Targeting which language code? [" + languageCode + "]: ");
+		print("Targeting which language code? [" + languageCode + "]: ");
 		response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
 			languageCode = response;
 		}
 
 		String langRefsetIdStr = StringUtils.join(targetLangRefsetIds, ",");
-		print ("Targeting which language refset(s)? [" + langRefsetIdStr + "]: ");
+		print("Targeting which language refset(s)? [" + langRefsetIdStr + "]: ");
 		response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
 			targetLangRefsetIds = response.split(COMMA);
 		}
 
-		print ("What's the Edition? [" + edition + "]: ");
+		print("What's the Edition? [" + edition + "]: ");
 		response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
 			edition = response;
