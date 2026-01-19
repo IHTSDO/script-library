@@ -678,7 +678,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 			loadProjectSnapshot(false);
 			postInit(GFOLDER_ADHOC_UPDATES);
 			process();
-			getRF2Manager().flushFiles(true);  //Flush and Close
+			flushFiles(false);
 			if (!dryRun) {
 				createOutputArchive(true, conceptsInLastBatch);
 			}

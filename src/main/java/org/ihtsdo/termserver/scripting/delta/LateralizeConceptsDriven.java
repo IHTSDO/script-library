@@ -11,13 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LateralizeConceptsDriven extends DeltaGenerator implements ScriptConstants, TermGenerationStrategy {
 
+	Set<String> whitelist = new HashSet<>();
 	private static final Logger LOGGER = LoggerFactory.getLogger(LateralizeConceptsDriven.class);
  	private ConceptLateralizer conceptLateralizer;
 	private Map<Concept, LateralizeInstruction> lateralizedInstructionMap = new HashMap<>();
@@ -34,6 +32,7 @@ public class LateralizeConceptsDriven extends DeltaGenerator implements ScriptCo
 
 	@Override
 	protected void process() throws TermServerScriptException {
+		populateWhitelist();
 		populateLateralizedInstructionMap();
 		List<Component> conceptsToLateralize = new ArrayList<>(lateralizedInstructionMap.keySet());
 		for (LateralizeInstruction li : lateralizedInstructionMap.values()) {
@@ -44,11 +43,23 @@ public class LateralizeConceptsDriven extends DeltaGenerator implements ScriptCo
 		}
 	}
 
+	private void populateWhitelist() throws TermServerScriptException {
+		try {
+			for (String line : Files.readAllLines(getInputFile(2).toPath(), Charset.defaultCharset())) {
+				whitelist.add(line.trim());
+			}
+			LOGGER.info("Populated whitelist with {} concepts", whitelist.size());
+		} catch (Exception e) {
+			throw new TermServerScriptException(e);
+		}
+	}
+
 	private void populateLateralizedInstructionMap() throws TermServerScriptException {
 		try {
 			for (String line : Files.readAllLines(getInputFile().toPath(), Charset.defaultCharset())) {
 				parseLateralizedInstructionMapLine(line);
 			}
+			LOGGER.info("Populated instruction map with {} concepts", lateralizedInstructionMap.size());
 		} catch (Exception e) {
 			throw new TermServerScriptException(e);
 		}
@@ -57,8 +68,11 @@ public class LateralizeConceptsDriven extends DeltaGenerator implements ScriptCo
 	private void parseLateralizedInstructionMapLine(String line) {
 		try {
 			String[] items = line.split(TAB);
-			LateralizeInstruction li = parseLateralityInstruction(gl, items);
-			lateralizedInstructionMap.put(li.concept, li);
+			//Is this one of the concepts we've been told is safe to lateralize?
+			if (whitelist.contains(items[0].trim())) {
+				LateralizeInstruction li = parseLateralityInstruction(gl, items);
+				lateralizedInstructionMap.put(li.concept, li);
+			}
 		} catch (Exception e) {
 			LOGGER.warn("Failed to parse line: {}", line);
 		}
