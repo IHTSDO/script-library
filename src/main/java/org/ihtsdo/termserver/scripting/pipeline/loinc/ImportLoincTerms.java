@@ -53,6 +53,11 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 
 	@Override
 	public TemplatedConcept getAppropriateTemplate(ExternalConcept externalConcept) throws TermServerScriptException {
+		//Is this a manually maintained concept?
+		if (MANUALLY_MAINTAINED_ITEMS.containsKey(externalConcept.getExternalIdentifier())) {
+			return LoincTemplatedConceptManuallyMaintained.create(externalConcept);
+		}
+
 		return switch (externalConcept.getProperty()) {
 			case "ARat", "ArVRat", "CRat", "MRat", "NRat", "SRat", "VRat", "Sedimentation Rate" -> LoincTemplatedConceptWithProcess.create(externalConcept);
 			case "RelTime", "Time", "Vel", "RelVel" -> LoincTemplatedConceptWithProcessNoOutput.create(externalConcept);
@@ -221,8 +226,8 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 	protected void postModelling(TemplatedConcept tc) throws TermServerScriptException {
 		super.postModelling(tc);
 
-		if (tc instanceof LoincTemplatedConcept ltc
-				&& !ltc.hasProcessingFlag(ProcessingFlag.DROP_OUT)) {
+		if ((tc instanceof LoincTemplatedConcept ltc
+				&& !ltc.hasProcessingFlag(ProcessingFlag.DROP_OUT))) {
 			checkForOrdObsRefsets(ltc);
 			checkForDiscouragement(ltc);
 			checkForDuplicateFSN(ltc);

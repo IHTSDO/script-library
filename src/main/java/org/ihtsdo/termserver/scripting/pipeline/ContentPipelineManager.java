@@ -18,7 +18,6 @@ import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincTerm;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConceptNull;
-import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConceptWithDefaultMap;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -194,7 +193,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		for (String externalIdentifier : getExternalConceptsToModel()) {
 			TemplatedConcept templatedConcept = modelExternalConcept(externalIdentifier);
 			postModelling(templatedConcept);
-			if (conceptSufficientlyModeled(getContentType(), externalIdentifier, templatedConcept)) {
+			if (conceptSufficientlyModeled(getContentType(), externalIdentifier, templatedConcept)
+				|| MANUALLY_MAINTAINED_ITEMS.containsKey(externalIdentifier)) {
 				recordSuccessfulModelling(templatedConcept);
 			}
 		}
@@ -205,20 +205,24 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check term capitalization");
 		}
 
-		if (externalIdentifier.equals("49959-0")) {
-			LOGGER.debug("Check compnum3");
+		if (externalIdentifier.equals("24318-8")) {
+			LOGGER.debug("Check Manually maintained");
 		}
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
 		if (!confirmExternalIdentifierExists(externalIdentifier) ||
-				containsObjectionableWord(externalConcept)) {
+				(containsObjectionableWord(externalConcept) && !MANUALLY_MAINTAINED_ITEMS.containsKey(externalIdentifier))) {
+			//Kick out things like panels, but only if we haven't said we're manually maintaining them
 			return null;
 		}
 
 		//Is this a transformed concept that's being maintained manually?  Return what is already there if so.
 		if (MANUALLY_MAINTAINED_ITEMS.containsKey(externalIdentifier)) {
-			TemplatedConcept tc = TemplatedConceptWithDefaultMap.create(externalConcept, scheme.getId(), "(observable entity)");
-			tc.setConcept(gl.getConcept(MANUALLY_MAINTAINED_ITEMS.get(externalIdentifier)));
+			TemplatedConcept tc = getAppropriateTemplate(externalConcept);
+			//We need to assign a clone of the concept, so that anything we do to it - like add an annotation -
+			//can be detected as a change to the existing concept
+			Concept originalState = gl.getConcept(MANUALLY_MAINTAINED_ITEMS.get(externalIdentifier)).cloneWithIds();
+			tc.setConcept(originalState);
 			tc.setIterationIndicator(TemplatedConcept.IterationIndicator.MANUAL);
 			tc.populateAlternateIdentifier();
 			//If we don't already have this alt identifier, we'll output it now, as we don't output changes for manually maintained items
@@ -291,26 +295,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		
 		for (TemplatedConcept tc : sortedModelled) {
 			incrementSummaryCount("Counts per template", tc.getClass().getSimpleName());
-			//Skip any concepts that are externally maintained
-			if (!MANUALLY_MAINTAINED_ITEMS.containsKey(tc.getExternalIdentifier())){
-				determineChanges(tc, externalIdentifiersProcessed);
-			} else {
-				//We'll minimally report the manually maintained concepts
-				Concept mmc = gl.getConcept(MANUALLY_MAINTAINED_ITEMS.get(tc.getExternalIdentifier()));
-				String scg = mmc.toExpression(CharacteristicType.STATED_RELATIONSHIP);
-				String descStr = SnomedUtils.getDescriptionsToString(mmc);
-
-				report(getTab(TAB_PROPOSED_MODEL_COMPARISON),
-						tc.getExternalIdentifier(),
-						tc.getConcept().getId(),
-						tc.getIterationIndicator(),
-						tc.getClass().getSimpleName(),
-						"N/A",
-						"N/A",
-						descStr,
-						"N/A",
-						scg);
-			}
+			determineChanges(tc, externalIdentifiersProcessed);
 		}
 
 		determineInactivations(sortedModelled);
@@ -379,6 +364,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	private void determineChanges(TemplatedConcept tc, Set<String> externalIdentifiersProcessed) throws TermServerScriptException {
 		Concept concept = tc.getConcept();
 		externalIdentifiersProcessed.add(tc.getExternalIdentifier());
+
+		if (tc.getExternalIdentifier().equals("24318-8")) {
+			LOGGER.info("Determining changes for 24318-8, check output");
+		}
 
 		//Do we already have this concept?  Also, it might use freshly modelled concepts internally which need to have IDs assigned
 		//before we can compare their axioms
@@ -730,7 +719,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			"49541-6", "580241010000104 |Fasting status - Reported (observable entity)|",
 			"14155-6", "580261010000100 |Cholesterol in LDL [Percentile] (observable entity)|",
 			"9322-9", "580251010000102 |Cholesterol.total/Cholesterol in HDL [Percentile] (observable entity)| ",
-			"56888-1", "570211010000106 |Presence of Human immunodeficiency virus 1 antibody and/or Human immunodeficiency virus 2 antibody and/or Human immunodeficiency virus 1 protein 24 antigen in serum or plasma at point in time by immunoassay (observable entity)| "
+			"56888-1", "570211010000106 |Presence of Human immunodeficiency virus 1 antibody and/or Human immunodeficiency virus 2 antibody and/or Human immunodeficiency virus 1 protein 24 antigen in serum or plasma at point in time by immunoassay (observable entity)| ",
+			"24318-8", "513641010000108 |Manual Differential panel - Blood (observable entity)|"
 	);
 
 	public static String getSpecialInterestIndicator(String externameIdentifer) {
