@@ -10,6 +10,8 @@ public interface LoincScriptConstants extends ContentPipeLineConstants {
 
 	String NO_VALUE_SPECIFIED = "-";
 
+	String LOINC_CLASS_COAGULATION = "COAG";
+
 	String LOINC_PART_TYPE_ADJUSTMENT = "ADJUSTMENT";
 	String LOINC_PART_TYPE_CHALLENGE = "CHALLENGE";
 	String LOINC_PART_TYPE_CLASS = "CLASS";

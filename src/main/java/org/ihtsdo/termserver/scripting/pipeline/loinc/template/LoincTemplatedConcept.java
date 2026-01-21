@@ -76,7 +76,21 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			"Hemoglobin XXX", "tested for",
 			"actual/normal", "normal/actual"));
 
-	//Map of LoincNums to ldtColumnNames to details
+	//These currently only apply to the COAG class, but wait until we have another requirement
+	//for another class before constructing this as a map
+	protected static Set<String> knownPrimitiveIndicators = new HashSet<>(Arrays.asList(
+			"high dose", "low dose", "atp secretion",
+			"xxx", "post incubation", "immediately",
+			"ug/ml", "mg/ml", "u/ml", "umol/l",
+			"mmol/l", "control prp induced",
+			"control ppp induced",
+			"surface induced circulating inhibitor",
+			"la control", "thrombin factor induced",
+			"inr", "us.", "ristocetin inhibitor",
+			"no addition of heparin", "prostaglandin induced"));
+
+
+			//Map of LoincNums to ldtColumnNames to details
 	protected static Map<String, Map<String, LoincDetail>> loincDetailMapAllTerms;
 	
 	//Map of Loinc Details for this concept
@@ -162,6 +176,8 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			addProcessingFlag(ProcessingFlag.SPLIT_TO_GROUP_PER_COMPONENT);
 		}
 
+		doCheckForCoagulationRules(loincDetail);
+
 		if ((loincDetail.getPartTypeName().contentEquals("SYSTEM") && allowSpecimenTermForLoincParts.contains(loincDetail.getPartNumber()))
 				|| (loincDetail.getLDTColumnName().equals(COMPNUM_PN) && loincDetail.getPartNumber().equals(LOINC_PART_OBSERVATION))) {
 			addProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN);
@@ -181,6 +197,20 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			//then LOINC Method -> SNOMED 424226004 |Using device (attribute)|.
 			if (gl.getDescendantsCache().getDescendants(DEVICE).contains(rt.getTarget())) {
 				rt.setType(USING_DEVICE);
+			}
+		}
+	}
+
+	protected void doCheckForCoagulationRules(LoincDetail loincDetail) {
+		//Check for Coagulation rules
+		if (getLoincTerm().getLoincClass().equals(LOINC_CLASS_COAGULATION)) {
+			String partNameLower = loincDetail.getPartName().toLowerCase();
+			for (String primitiveIndicator : knownPrimitiveIndicators) {
+				if (partNameLower.contains(primitiveIndicator)) {
+					addProcessingFlag(ProcessingFlag.MARK_AS_PRIMITIVE);
+					slotTermMap.put(loincDetail.getPartTypeName(), loincDetail.getPartName());
+					break;
+				}
 			}
 		}
 	}
@@ -224,7 +254,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		} else if (templateItem.equals(LOINC_PART_TYPE_DIVISORS)
 				&& hasProcessingFlag(ProcessingFlag.SUPPRESS_DIVISOR_TERM)) {
 			ptTemplateStr = ptTemplateStr.replaceAll(regex, "");
-			//Patch up the to in "to [DIVISORS]" since we removed the slot
+			//Patch up the 'to' in "to [DIVISORS]" since we removed the slot
 			ptTemplateStr = ptTemplateStr.replace(" to  in", " in");
 		} else if (templateItem.equals(LOINC_PART_TYPE_COMPONENT)
 				&& hasProcessingFlag(ProcessingFlag.EXPECT_BLANK_COMPONENT)) {
