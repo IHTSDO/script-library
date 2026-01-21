@@ -1,23 +1,45 @@
 package org.ihtsdo.termserver.scripting.pipeline.loinc;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.ihtsdo.otf.RF2Constants;
 import org.ihtsdo.otf.exception.TermServerScriptException;
+import org.ihtsdo.termserver.scripting.delta.LateralizeConceptsDriven;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
 import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincTerm;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoincUtils implements RF2Constants {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(LateralizeConceptsDriven.class);
 
 	public static final String LOINC_NUM_PREFIX = "LOINC Unique ID:";
 	public static final String CORRELATION_PREFIX = "Correlation ID:";
 
 	private LoincUtils() {
 		throw new IllegalStateException("Utility class");
+	}
+
+	public static void main(String[] args) throws IOException {
+		//Quick routine to validate maps to import to Snap2Snomed
+		int lineNum = 0;
+		for (String line : Files.readAllLines(Paths.get(args[0]), Charset.defaultCharset())) {
+			lineNum++;
+			String[] items = line.split("\t");
+			if (items.length != 6) {
+				throw new IllegalArgumentException("Incorrect number of columns (" + items.length + " - expected 6) at line: " + lineNum);
+			}
+		}
+		LOGGER.info("File {} validated with {} lines", args[0], lineNum);
 	}
 
 	public static String getLoincNumFromDescription(Concept c) {
