@@ -205,8 +205,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check term capitalization");
 		}
 
-		if (externalIdentifier.equals("24318-8")) {
-			LOGGER.debug("Check Manually maintained");
+		if (externalIdentifier.equals("44950-4")) {
+			LOGGER.debug("Check primitive indicators in Method");
 		}
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
@@ -365,10 +365,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		Concept concept = tc.getConcept();
 		externalIdentifiersProcessed.add(tc.getExternalIdentifier());
 
-		if (tc.getExternalIdentifier().equals("24318-8")) {
-			LOGGER.info("Determining changes for 24318-8, check output");
-		}
-
 		//Do we already have this concept?  Also, it might use freshly modelled concepts internally which need to have IDs assigned
 		//before we can compare their axioms
 		Concept existingConcept = getExistingConceptAndPopulateReferencedConcepts(tc);
@@ -455,6 +451,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	 * @return true if changes are detected
 	 */
 	private void determineChangesWithExistingConcept(TemplatedConcept tc) throws TermServerScriptException {
+		if (tc.getExternalIdentifier().equals("24318-8")) {
+			LOGGER.debug("Check no change in Axiom");
+		}
+
 		SnomedUtils.getAllComponents(tc.getConcept()).forEach(c -> {
 			c.setClean();
 			//Normalise module
@@ -483,6 +483,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 				tc.setIterationIndicator(TemplatedConcept.IterationIndicator.MODIFIED);
 			} else {
 				tc.setIterationIndicator(TemplatedConcept.IterationIndicator.REACTIVATED);
+				reactivateConcept(tc.getConcept());
 			}
 		} else {
 			tc.setIterationIndicator(TemplatedConcept.IterationIndicator.UNCHANGED);
@@ -492,6 +493,15 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		for (ComponentComparisonResult componentComparisonResult : componentComparisonResults) {
 			processComponentComparison(tc, componentComparisonResult);
 		}
+	}
+
+	private void reactivateConcept(Concept c) {
+		c.setActive(true);
+		//Inactivate inactivation indicators and historical associations
+		c.getInactivationIndicatorEntries().stream()
+				.forEach(ii -> ii.setActive(false));
+		c.getAssociationEntries().stream()
+				.forEach(a -> a.setActive(false));
 	}
 
 	private void processComponentComparison(TemplatedConcept tc, ComponentComparisonResult componentComparisonResult) throws TermServerScriptException {
