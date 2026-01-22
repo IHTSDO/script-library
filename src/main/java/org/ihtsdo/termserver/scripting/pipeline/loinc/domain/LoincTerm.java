@@ -46,7 +46,8 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 	private String associatedObservations;
 	private String versionFirstReleased;
 	private String validHL7AttachmentRequest;
-	private String shortDisplayName;
+	private String displayName;
+
 	
 	private LoincTerm() {
 	}
@@ -313,12 +314,12 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 		return getLongCommonName();
 	}
 
-	public void setShortDisplayName(String shortDisplayName) {
-		this.shortDisplayName = shortDisplayName;
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
 	}
 
 	public String getShortDisplayName() {
-		return this.shortDisplayName;
+		return this.shortName;
 	}
 
 	public static LoincTerm parse(String[] items) {
@@ -343,7 +344,7 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 		//loincTerm.setSurveyQuestSrc(items[17])
 		//loincTerm.setUnitsRequired(items[18])
 		//loincTerm.setRelatedNames2(items[19])
-		//loincTerm.setShortName(items[20])
+		loincTerm.setShortName(items[20]);
 		loincTerm.setOrderObs(items[21]);
 		//loincTerm.setHl7FieldSubfieldId(items[22])
 		//loincTerm.setExternalCopyrightNotice(items[23])
@@ -363,7 +364,7 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 		//loincTerm.setAssociatedObservations(items[37])
 		//loincTerm.setVersionFirstReleased(items[38])
 		//loincTerm.setValidHL7AttachmentRequest(items[39])
-		loincTerm.setShortDisplayName(items[40]);
+		//loincTerm.setDisplayName(items[40]);
 		return loincTerm;
 	}
 	
@@ -389,7 +390,7 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 		//loincTerm.setSurveyQuestSrc(csv.get(17))
 		//loincTerm.setUnitsRequired(csv.get(18))
 		//loincTerm.setRelatedNames2(csv.get(19))
-		//loincTerm.setShortName(csv.get(20))
+		loincTerm.setShortName(csv.get(20));
 		loincTerm.setOrderObs(csv.get(21));
 		//loincTerm.setHl7FieldSubfieldId(csv.get(22))
 		//loincTerm.setExternalCopyrightNotice(csv.get(23))
@@ -412,8 +413,6 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 		//loincTerm.setVersionFirstReleased(csv.get(38))
 		//loincTerm.setValidHL7AttachmentRequest(csv.get(39))
 		//loincTerm.setDisplayName(csv.get(40))
-		
-		
 		//loincTerm.setHl7AttachmentStructure(csv.get(32))
 		//loincTerm.setExternalCopyrightLink(csv.get(33))
 		//loincTerm.setPanelType(csv.get(34))
@@ -421,7 +420,7 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 		//loincTerm.setAssociatedObservations(csv.get(36))
 		//loincTerm.setVersionFirstReleased(csv.get(37))
 		//loincTerm.setValidHL7AttachmentRequest(csv.get(38))
-		loincTerm.setShortDisplayName(csv.get(39));
+		//loincTerm.setDisplayName(csv.get(39));
 		return loincTerm;
 	}
 	
