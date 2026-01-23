@@ -286,9 +286,21 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 
 	private void addExternalTermAsSynonym(String externalTerm, Map<String, Acceptability> acceptabilityMap) throws TermServerScriptException {
 		Description extDesc = Description.withDefaults(externalTerm, DescriptionType.SYNONYM, acceptabilityMap);
-		//Override the case significance for these
-		extDesc.addIssue(CaseSensitivityUtils.FORCE_CS);
-		concept.addDescription(extDesc);
+		//Now sometimes shortnames and long names might be the same, so check we might not need to add
+		if (!hasDescription(concept, externalTerm)) {
+			//Override the case significance for these
+			extDesc.addIssue(CaseSensitivityUtils.FORCE_CS);
+			concept.addDescription(extDesc);
+		} else {
+			//Couple of things we might need here
+			//1.  The existing description might be inactive so we'd need to reactivate
+			//2.  We might need to merge the acceptability map on an existing description
+			LOGGER.debug("Check {} already has description {}", concept, externalTerm);
+		}
+	}
+
+	private boolean hasDescription(Concept concept, String term) {
+		return concept.getDescriptions().stream().anyMatch(d -> d.getTerm().equals(term));
 	}
 
 	private void reviewCaseSensitivity(Concept c) throws TermServerScriptException {

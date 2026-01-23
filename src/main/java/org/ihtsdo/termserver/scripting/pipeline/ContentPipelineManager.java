@@ -18,6 +18,7 @@ import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincTerm;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConceptNull;
+import org.ihtsdo.termserver.scripting.util.ComponentComparisonHelper;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -455,6 +456,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check no change in Axiom");
 		}
 
+		if (tc.getExternalIdentifier().equals("20891-8")) {
+				LOGGER.debug("Check no id in description");
+		}
+
 		SnomedUtils.getAllComponents(tc.getConcept()).forEach(c -> {
 			c.setClean();
 			//Normalise module
@@ -477,7 +482,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		convertStatedRelationshipsToAxioms(tc.getConcept(), true, true);
 		c.setAxiomEntries(AxiomUtils.convertClassAxiomsToAxiomEntries(tc.getConcept()));
 
-		List<ComponentComparisonResult> componentComparisonResults = SnomedUtils.compareComponents(tc.getExistingConcept(), tc.getConcept(), skipForComparison);
+		List<ComponentComparisonResult> componentComparisonResults = ComponentComparisonHelper.compareComponents(tc.getExistingConcept(), tc.getConcept(), skipForComparison);
 		if (ComponentComparisonResult.hasChanges(componentComparisonResults)) {
 			if (tc.getExistingConcept().isActiveSafely()) {
 				tc.setIterationIndicator(TemplatedConcept.IterationIndicator.MODIFIED);
@@ -546,6 +551,12 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			//and prepare to output
 			conceptCreator.populateComponentId(tc.getExistingConcept(), newlyModelledComponent, externalContentModuleId);
 			newlyModelledComponent.setDirty();
+		}
+
+		//If we don't have an ID at this point, we've gone wrong somewhere
+		if ((newlyModelledComponent != null && newlyModelledComponent.getId() == null)
+				|| (existingComponent != null && existingComponent.getId() == null)) {
+			throw new IllegalStateException("Component encountered without Id " + newlyModelledComponent);
 		}
 	}
 
