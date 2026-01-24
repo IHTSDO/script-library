@@ -4,7 +4,6 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.ihtsdo.termserver.scripting.pipeline.nuva.NuvaConstants;
 import org.ihtsdo.termserver.scripting.pipeline.nuva.NuvaOntologyLoader;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -43,7 +42,7 @@ public class NuvaVaccine extends NuvaConcept implements Comparable<NuvaVaccine>,
 	}
 
 	@Override
-	public int compareTo(@NotNull NuvaVaccine o) {
+	public int compareTo(NuvaVaccine o) {
 		return o.externalIdentifier.compareTo(this.externalIdentifier);
 	}
 

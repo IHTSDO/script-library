@@ -3,7 +3,6 @@ package org.ihtsdo.termserver.scripting.pipeline.loinc.domain;
 import org.apache.commons.csv.CSVRecord;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.LoincUtils;
-import org.jetbrains.annotations.NotNull;
 
 public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> {
 
@@ -481,7 +480,7 @@ public class LoincTerm extends ExternalConcept implements Comparable<LoincTerm> 
 	}
 
 	@Override
-	public int compareTo(@NotNull LoincTerm l) {
+	public int compareTo(LoincTerm l) {
 		return getCommonTestRankNormalized().compareTo(l.getCommonTestRankNormalized());
 	}
 

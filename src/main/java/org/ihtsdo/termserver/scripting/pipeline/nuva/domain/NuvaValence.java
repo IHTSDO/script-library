@@ -3,7 +3,6 @@ package org.ihtsdo.termserver.scripting.pipeline.nuva.domain;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.ihtsdo.termserver.scripting.pipeline.nuva.NuvaOntologyLoader;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +63,7 @@ public class NuvaValence extends NuvaConcept implements Comparable<NuvaValence> 
 	}
 
 	@Override
-	public int compareTo(@NotNull NuvaValence o) {
+	public int compareTo(NuvaValence o) {
 		return o.externalIdentifier.compareTo(this.externalIdentifier);
 	}
 

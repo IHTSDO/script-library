@@ -2,7 +2,6 @@ package org.ihtsdo.termserver.scripting.pipeline.nuva.domain;
 
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.jetbrains.annotations.NotNull;
 
 public class NuvaDisease extends NuvaConcept implements Comparable<NuvaDisease> {
 
@@ -23,7 +22,7 @@ public class NuvaDisease extends NuvaConcept implements Comparable<NuvaDisease> 
 	}
 
 	@Override
-	public int compareTo(@NotNull NuvaDisease o) {
+	public int compareTo(NuvaDisease o) {
 		return o.externalIdentifier.compareTo(this.externalIdentifier);
 	}
 

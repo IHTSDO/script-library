@@ -1,7 +1,5 @@
 package org.ihtsdo.termserver.scripting.pipeline.domain;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Part implements Comparable<Part> {
 
 	public enum PartStatus {ACTIVE, DEPRECATED}
@@ -100,7 +98,7 @@ public class Part implements Comparable<Part> {
 	}
 
 	@Override
-	public int compareTo(@NotNull Part o) {
+	public int compareTo(Part o) {
 		return this.getNumberCategoryCombo().compareTo(o.getNumberCategoryCombo());
 	}
 }

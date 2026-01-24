@@ -120,7 +120,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		termTweakingMap.put("4421005", "cell"); //4421005 |Cell structure (cell structure)|
 		
 		//Populate removals into specific maps depending on how that removal will be processed.
-		List<String> removals = Arrays.asList("submitted as specimen", SPECIMEN, "structure", "of", "at", "from");
+		List<String> removals = Arrays.asList("submitted as specimen", "process", SPECIMEN, "structure", "of", "at", "from");
 		typeValueTermRemovalMap.put(DIRECT_SITE, removals);
 		
 		removals = Arrays.asList("technique");

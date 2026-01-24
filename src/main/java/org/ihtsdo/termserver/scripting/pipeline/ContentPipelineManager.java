@@ -74,9 +74,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	private  Map<String, Map<String, Integer>> summaryCountsByCategory = new HashMap<>();
 
 	protected Set<ComponentType> skipForComparison = Set.of(
-			ComponentType.INFERRED_RELATIONSHIP,
-			ComponentType.SIMPLE_REFSET_MEMBER,
-			ComponentType.LANGREFSET);
+			ComponentType.INFERRED_RELATIONSHIP);
 
 	protected List<TemplatedConcept.IterationIndicator> activeIndicators = List.of(
 			TemplatedConcept.IterationIndicator.NEW,
@@ -452,14 +450,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	 * @return true if changes are detected
 	 */
 	private void determineChangesWithExistingConcept(TemplatedConcept tc) throws TermServerScriptException {
-		if (tc.getExternalIdentifier().equals("24318-8")) {
-			LOGGER.debug("Check no change in Axiom");
-		}
-
-		if (tc.getExternalIdentifier().equals("20891-8")) {
-				LOGGER.debug("Check no id in description");
-		}
-
 		SnomedUtils.getAllComponents(tc.getConcept()).forEach(c -> {
 			c.setClean();
 			//Normalise module
