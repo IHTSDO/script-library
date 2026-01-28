@@ -126,7 +126,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 				createOutputArchive();
 			}
 			if (AUTO_IMPORT) {
-				importArchiveToNewTask(getLastArchiveCreated());
+				importArchiveToTask(getLastArchiveCreated());
 			}
 		} finally {
 			finish();

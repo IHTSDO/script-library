@@ -34,7 +34,7 @@ public class RP1013_CS_terms_starting_with_number_should_be_cI extends DeltaGene
 			delta.process();
 			delta.flushFilesWithWait(false);
 			File archive = SnomedUtils.createArchive(new File(delta.outputDirName));
-			delta.importArchiveToNewTask(archive);
+			delta.importArchiveToTask(archive);
 		} finally {
 			delta.finish();
 		}

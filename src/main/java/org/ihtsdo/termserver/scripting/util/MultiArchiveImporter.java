@@ -98,6 +98,7 @@ public class MultiArchiveImporter extends BatchFix {
 		try {
 			if (task == null) {
 				task = new Task(null, getNextAuthor(), getNextReviewer());
+				task.setProjectKey(project.getKey());
 				lastTaskCreated = task;
 				task.setSummary("Import " + thisArchive.getName());
 				taskHelper.createTask(task);

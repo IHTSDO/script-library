@@ -13,7 +13,7 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 	private File archive;
 
 
-	protected void importArchiveToNewTask(File archive) throws TermServerScriptException {
+	protected void importArchiveToTask(File archive) throws TermServerScriptException {
 		this.archive = archive;
 		importer = new MultiArchiveImporter(this);
 		boolean proceed = reviewSettingsWithUser();
@@ -56,7 +56,7 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 			print ("Please enter the task ID to import onto: ");
 			response = STDIN.nextLine().trim();
 			if (!StringUtils.isEmpty(response)) {
-				importer.setLastTaskCreated(STDIN.nextLine().trim());
+				importer.setLastTaskCreated(response);
 				importer.setMode(MultiArchiveImporter.MODE.ALL_ARCHIVES_IN_ONE_TASK);
 			}
 		}

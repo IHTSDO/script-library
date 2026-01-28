@@ -38,7 +38,7 @@ public class ReassertPublishedComponentState extends DeltaGeneratorWithAutoImpor
 			delta.getReportManager().flushFiles(false);
 			if (!delta.dryRun) {
 				File archive = SnomedUtils.createArchive(new File(delta.outputDirName));
-				delta.importArchiveToNewTask(archive);
+				delta.importArchiveToTask(archive);
 			}
 		} finally {
 			delta.finish();
