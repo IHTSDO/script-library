@@ -43,6 +43,10 @@ public class LoincAttributePartMapManager extends AttributePartMapManager implem
 				gl.getConcept("67517005 |25-hydroxyergocalciferol (substance)")));*/
 		hardCodedMappings.put("LP447904-6", List.of(
 				gl.getConcept("685451010000100 |Measurement property (qualifier value)|")));
+		hardCodedMappings.put("LP28812-3", List.of(
+				gl.getConcept("814341010000101 |Free 6-acetylmorphine (substance)|")));
+		hardCodedMappings.put("LP449186-8", List.of(
+				gl.getConcept("814351010000104 |Immunoglobulin E antibody to Cucumis melo variety inodorus (substance)|")));
 	}
 
 }

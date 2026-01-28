@@ -188,6 +188,9 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		}
 
 		if (rt != null) {
+			if (rt.getTarget().getFsn() == null) {
+				throw new TermServerScriptException("No FSN for map target " + rt.getTarget() + " has non-existant concept been used?");
+			}
 			//Exception viii.2.c.  Where the SNOMED attribute contains "obtained by", then also keep the word specimen
 			if (rt.getTarget().getFsn().contains("obtained by")) {
 				addProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN);
