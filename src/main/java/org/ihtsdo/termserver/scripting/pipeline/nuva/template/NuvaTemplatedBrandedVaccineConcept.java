@@ -7,7 +7,7 @@ import org.ihtsdo.termserver.scripting.pipeline.nuva.domain.NuvaVaccine;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-public class NuvaTemplatedBrandedVaccineConcept extends NuvaTemplatedVaccineConcept{
+public class NuvaTemplatedBrandedVaccineConcept extends NuvaTemplatedVaccineConcept {
 
 	protected NuvaTemplatedBrandedVaccineConcept(ExternalConcept externalConcept) {
 		super(externalConcept);

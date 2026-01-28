@@ -58,19 +58,6 @@ public class LoincTemplatedConceptWithInheres extends LoincTemplatedConcept {
 			}
 		}
 
-		//Rule 9 for Prid Observations
-		if (getExternalConcept().getProperty().equals("Prid")
-				&& detailPresent(COMPNUM_PN)
-				&& getLoincDetailOrThrow(COMPNUM_PN).getPartNumber().equals(LOINC_PART_OBSERVATION)) {
-			if (this instanceof LoincTemplatedConceptWithInheresNoComponent) {
-				slotTermMap.put(LOINC_PART_TYPE_PROPERTY, "Microscopic observation of finding");
-				setPreferredTermTemplate("[PROPERTY] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
-			} else {
-				slotTermMap.put(LOINC_PART_TYPE_PROPERTY, "Microscopic observation");
-				slotTermMap.put(LOINC_PART_TYPE_COMPONENT, "finding");
-			}
-		}
-
 		if (!expectNullMap) {
 			ensureComponentMappedOrRepresentedInTerm(attributes);
 		}

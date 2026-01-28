@@ -180,7 +180,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 				cpm.incrementSummaryCount(ContentPipelineManager.HIGHEST_USAGE_COUNTS,"Highest Usage In Scope");
 			}
 		}
-
+		applyConceptLevelRules();
 		populateParts();
 		populateTerms();
 		reviewCaseSensitivity(concept);
@@ -192,6 +192,10 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		if (hasProcessingFlag(ProcessingFlag.SPLIT_TO_GROUP_PER_COMPONENT)) {
 			splitComponentsIntoDistinctGroups();
 		}
+	}
+
+	protected void applyConceptLevelRules() throws TermServerScriptException {
+		//Override to apply any concept level rules
 	}
 
 

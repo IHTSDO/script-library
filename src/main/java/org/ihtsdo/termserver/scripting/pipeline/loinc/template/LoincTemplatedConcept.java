@@ -246,6 +246,23 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	}
 
 	@Override
+	protected void applyConceptLevelRules() throws TermServerScriptException {
+		//Rule 9 for Prid & PrHrObservations
+		if ((getExternalConcept().getProperty().equals("Prid")
+				|| getExternalConcept().getProperty().equals("PrThr"))
+			&& detailPresent(COMPNUM_PN)
+			&& getLoincDetailOrThrow(COMPNUM_PN).getPartNumber().equals(LOINC_PART_OBSERVATION)) {
+			if (this instanceof LoincTemplatedConceptWithInheresNoComponent) {
+				slotTermMap.put(LOINC_PART_TYPE_PROPERTY, "Microscopic observation of finding");
+				setPreferredTermTemplate("[PROPERTY] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+			} else {
+				slotTermMap.put(LOINC_PART_TYPE_PROPERTY, "Microscopic observation");
+				slotTermMap.put(LOINC_PART_TYPE_COMPONENT, "finding");
+			}
+		}
+	}
+
+	@Override
 	protected String populateTemplateItem(String templateItem, String ptTemplateStr) throws TermServerScriptException {
 		String regex = "\\[" + templateItem + "\\]";
 		if (templateItem.equals(LOINC_PART_TYPE_METHOD)
