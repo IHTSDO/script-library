@@ -106,7 +106,7 @@ public class MultiArchiveImporter extends BatchFix {
 			if (!dryRun) {
 				tsClient.importArchive(task.getBranchPath(), ImportType.DELTA, thisArchive);
 				if (!existingTaskBeingUsed) {
-					updateTask(task, getReportName(), getReportManager().getUrl());
+					updateTask(task);
 				}
 				if (classifyTasks && mode == MODE.TASK_PER_ARCHIVE) {
 					classify(task);

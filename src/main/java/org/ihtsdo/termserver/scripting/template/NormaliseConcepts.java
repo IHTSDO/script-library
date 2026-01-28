@@ -73,23 +73,26 @@ public class NormaliseConcepts extends BatchFix {
 	@Override
 	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
 		Concept loadedConcept = loadConcept(concept, task.getBranchPath());
+		String before = loadedConcept.toExpression(CharacteristicType.STATED_RELATIONSHIP);
 		if ((loadedConcept.getGciAxioms() != null && !loadedConcept.getGciAxioms().isEmpty())
 				|| (loadedConcept.getAdditionalAxioms() != null && !loadedConcept.getAdditionalAxioms().isEmpty())) {
 			throw new ValidationFailure(task, loadedConcept, "Concept uses axioms");
 		}
 		int changesMade = removeRedundandRelationships(task, loadedConcept);
-		changesMade += normaliseConcept(task, loadedConcept);
+		changesMade += normaliseConcept(task, loadedConcept, ppp);
 		changesMade += removeRedundandGroups(task, loadedConcept);
 		if (changesMade > 0) {
+			String after = loadedConcept.toExpression(CharacteristicType.STATED_RELATIONSHIP);
 			updateConcept(task, loadedConcept, info);
+			report(task, concept, Severity.NONE, ReportActionType.INFO, before, after);
 		}
 		return changesMade;
 	}
 
-	protected int normaliseConcept(Task t, Concept c) throws TermServerScriptException {
+	protected int normaliseConcept(Task t, Concept c, Concept newPPP) throws TermServerScriptException {
 		int changesMade = 0;
 
-		changesMade += checkAndSetProximalPrimitiveParent(t, c, ppp, false, false);
+		changesMade += checkAndSetProximalPrimitiveParent(t, c, newPPP, false, true);
 		
 		//Remove any redundant relationships, or they'll be missing from the inferred view
 		changesMade += removeRedundandRelationships(t,c);
@@ -179,7 +182,7 @@ public class NormaliseConcepts extends BatchFix {
 		for (Concept concept : findConcepts(ECL, true, charType)) {
 			//Make changes to a clone of the concept so we don't affect our local copy
 			Concept clone = concept.cloneWithIds();
-			int changesMade = normaliseConcept(null, clone);
+			int changesMade = normaliseConcept(null, clone, ppp);
 			if (changesMade > 0) {
 				changesRequired.add(concept);
 			} else {

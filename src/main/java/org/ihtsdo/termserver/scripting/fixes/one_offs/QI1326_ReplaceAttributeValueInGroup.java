@@ -91,7 +91,7 @@ public class QI1326_ReplaceAttributeValueInGroup extends BatchFix {
 			//Some of these relationships only exist in the inferred form, so we'll need to normalise the concept first
 			//But if we process for both Inflammation and Effusion, we don't want to do it twice!
 			if (!conceptsNormalised.contains(c)) {
-				changesMade = conceptNormaliser.normaliseConcept(t, loadedConcept);
+				changesMade = conceptNormaliser.normaliseConcept(t, loadedConcept, null);
 				conceptsNormalised.add(c);
 			}
 			changesMade += switchValues(t, loadedConcept);

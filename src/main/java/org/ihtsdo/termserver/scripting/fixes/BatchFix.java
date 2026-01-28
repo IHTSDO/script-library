@@ -23,14 +23,13 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.otf.scheduler.domain.JobParameters;
 import org.snomed.otf.scheduler.domain.JobRun;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Reads in a file containing a list of concept SCTIDs and processes them in batches
  * in tasks created on the specified project
  */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public abstract class BatchFix extends TermServerScript implements ScriptConstants {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BatchFix.class);
@@ -265,7 +264,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		//Don't update Editpanel or assign task if we're using a pre-existing one
 		if (!dryRun && !task.isPreExistingTask()) {
 			populateEditPanel(task);
-			updateTask(task, getReportName(), getReportManager().getUrl());
+			updateTask(task);
 
 			Classification classification = null;
 			if (classifyTasks) {
@@ -310,12 +309,14 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 			if (!path.endsWith(this.taskKey)) {
 				path += "/" + this.taskKey;
 			}
-			task.setBranchPath(path);  //Project contains the task branch path at this point
+			task.setBranchPath(path);  //Project contains the. task branch path at this point
 			task.setPreExistingTask(true);
 			String dryRunStr = (dryRun ? "Dry Run, p" : "P");
 			LOGGER.info("{}re-existing task specified: {}", dryRunStr, task.getBranchPath());
 		} else {
 			//Create a task for this batch of concepts
+			task.setProjectKey(getProject().getKey());
+			setTaskSummaryAndDescription(task);
 			taskHelper.createTask(task);
 			String msg = (dryRun ? "Dry Run " : "Created ") + "task (" + xOfY + "): " + task.getBranchPath();
 			LOGGER.info(msg);
@@ -343,7 +344,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 	}
 
 	protected void onNewTask(Task task) {
-		// Override to do some processing for each new task;
+		// Override to do some processing for each new task
 	}
 
 	private void processComponent(Task task, Component component, int conceptInTask, String xOfY) throws TermServerScriptException {
@@ -402,8 +403,21 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		}
 	}
 
-	protected void updateTask(Task task, String reportName, String reportURL) throws Exception {
+	protected void updateTask(Task task) throws Exception {
+		String taskDescription = setTaskSummaryAndDescription(task);
+
+		//Reassign the task to the intended author.  Set at task or processing level
+		String reviewMsg = task.getReviewer() == null ? "" : " into review for " + task.getReviewer();
+		LOGGER.debug("Assigning {} to {}{}", task, task.getAssignedAuthor(),reviewMsg);
+		scaClient.updateTask(project.getKey(), task.getKey(), null, taskDescription, task.getAssignedAuthor(), task.getReviewer());
+	}
+
+	protected String setTaskSummaryAndDescription(Task task) throws TermServerScriptException {
+		String reportName = getReportName();
+		String reportURL = getReportManager().getUrl();
 		String taskDescription = DEFAULT_TASK_DESCRIPTION;
+
+		task.setSummary(getReportName() + " " + task.getUniqueTaskId());
 		if (this instanceof BatchImport batchImport) {
 			taskDescription = batchImport.getAllNotes(task);
 		} else if (task.getComponents().size() <= MAX_CONCEPTS_IN_TASK_DESCRIPTION) {
@@ -418,11 +432,8 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 			String separator = populateTaskDescription ? " as per " : ": ";
 			taskDescription += separator + link;
 		}
-
-		//Reassign the task to the intended author.  Set at task or processing level
-		String reviewMsg = task.getReviewer() == null ? "" : " into review for " + task.getReviewer();
-		LOGGER.debug("Assigning {} to {}{}", task, task.getAssignedAuthor(),reviewMsg);
-		scaClient.updateTask(project.getKey(), task.getKey(), null, taskDescription, task.getAssignedAuthor(), task.getReviewer());
+		task.setDescription(taskDescription);
+		return taskDescription;
 	}
 
 	//Override if working with Refsets or Descriptions directly
@@ -596,10 +607,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 
 
 	/**
-	 * Validate that that any attribute with that attribute type is a descendant of the target Value
-	 *
-	 * @param cardinality
-	 * @throws TermServerScriptException
+	 * Validate that any attribute with that attribute type is a descendant of the target Value
 	 */
 	protected int validateAttributeValues(Task task, Concept concept,
 										  Concept attributeType, Concept descendantsOfValue, CardinalityExpressions cardinality) throws TermServerScriptException {
@@ -1384,7 +1392,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		return checkAndSetProximalPrimitiveParent(t, c, newPPP, false, false);
 	}
 
-	protected int checkAndSetProximalPrimitiveParent(Task t, Concept c, Concept newPPP, boolean checkOnly, boolean allowCompromise) throws TermServerScriptException {
+	protected int checkAndSetProximalPrimitiveParent(Task t, Concept c, Concept newPPP, boolean checkOnly, boolean acceptExistingCalculatedPPP) throws TermServerScriptException {
 		int changesMade = 0;
 
 		//If we're not told the new Prox Prim Parent, then work it out from the hierarchy or semantic tag
@@ -1411,40 +1419,46 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		}
 
 		List<Concept> ppps = determineProximalPrimitiveParents(c);
-		if (ppps.size() != 1) {
-			String pppsStr = ppps.stream()
-					.map(Object::toString)
-					.collect(Collectors.joining(",\n"));
-			report(t, c, Severity.MEDIUM, ReportActionType.VALIDATION_CHECK, "Concept found to have " + ppps.size() + " proximal primitive parents.  Cannot state parent as: " + newPPP, pppsStr);
+		if (acceptExistingCalculatedPPP) {
+			changesMade += setProximalPrimitiveParents(t, c, ppps);
 		} else {
-			Concept ppp = ppps.iterator().next();
-			//We need to either calculate the ppp as the intended one, or higher than it eg calculated PPP of Disease is OK if we're setting the more specific "Complication"
-			if (allowCompromise || ppp.equals(newPPP) || gl.getAncestorsCache().getAncestors(newPPP).contains(ppp)) {
-				if (allowCompromise) {
-					report(t, c, Severity.MEDIUM, ReportActionType.INFO, "Calculated PPP " + ppp + " allowed (compromise flag set).");
-					newPPP = ppp;
-				}
-
-				if (!checkOnly) {
-					changesMade += setProximalPrimitiveParent(t, c, newPPP);
-				} else {
-					//If we're just checking, then yes, we think we'd have made changes here
-					return CHANGE_MADE;
-				}
+			if (ppps.size() != 1) {
+				String pppsStr = ppps.stream()
+						.map(Object::toString)
+						.collect(Collectors.joining(",\n"));
+				report(t, c, Severity.MEDIUM, ReportActionType.VALIDATION_CHECK, "Concept found to have " + ppps.size() + " proximal primitive parents.  Cannot state parent as: " + newPPP, pppsStr);
 			} else {
-				report(t, c, Severity.MEDIUM, ReportActionType.VALIDATION_CHECK, "Calculated PPP " + ppp + " does not match that requested: " + newPPP + ", cannot remodel.");
+				Concept ppp = ppps.iterator().next();
+				//We need to either calculate the ppp as the intended one, or higher than it eg calculated PPP of Disease is OK if we're setting the more specific "Complication"
+				if (ppp.equals(newPPP) || gl.getAncestorsCache().getAncestors(newPPP).contains(ppp)) {
+					if (!checkOnly) {
+						changesMade += setProximalPrimitiveParent(t, c, newPPP);
+					} else {
+						//If we're just checking, then yes, we think we'd have made changes here
+						return CHANGE_MADE;
+					}
+				} else {
+					report(t, c, Severity.MEDIUM, ReportActionType.VALIDATION_CHECK, "Calculated PPP " + ppp + " does not match that requested: " + newPPP + ", cannot remodel.");
+				}
 			}
 		}
 		return changesMade;
 	}
 
 	private int setProximalPrimitiveParent(Task t, Concept c, Concept newParent) throws TermServerScriptException {
+		return setProximalPrimitiveParents(t, c, List.of(newParent));
+	}
+
+	private int setProximalPrimitiveParents(Task t, Concept c, List<Concept> newParents) throws TermServerScriptException {
 		int changesMade = 0;
 		Set<Relationship> parentRels = c.getRelationships(CharacteristicType.STATED_RELATIONSHIP, IS_A, ActiveState.ACTIVE);
 		//Do we in fact need to do anything?
-		if (parentRels.size() == 1 && parentRels.iterator().next().getTarget().equals(newParent)) {
-			report(t, c, Severity.NONE, ReportActionType.NO_CHANGE, "Concept already has template PPP: " + newParent);
-		} else {
+		if (SnomedUtils.containsRelsWithTargets(parentRels, newParents)) {
+			report(t, c, Severity.NONE, ReportActionType.NO_CHANGE, "Concept already has stated parents as required: " + newParents);
+			return NO_CHANGES_MADE;
+		}
+
+		for (Concept newParent : newParents) {
 			boolean doAddition = true;
 			for (Relationship r : parentRels) {
 				if (r.getTarget().equals(newParent)) {

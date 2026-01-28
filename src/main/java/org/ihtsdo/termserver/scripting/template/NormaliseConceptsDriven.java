@@ -33,40 +33,12 @@ public class NormaliseConceptsDriven extends NormaliseConcepts {
 		}
 	}
 
-	@Override
-	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
-		Concept loadedConcept = loadConcept(concept, task.getBranchPath());
-		if ((loadedConcept.getGciAxioms() != null && !loadedConcept.getGciAxioms().isEmpty())
-				|| (loadedConcept.getAdditionalAxioms() != null && !loadedConcept.getAdditionalAxioms().isEmpty())) {
-			throw new ValidationFailure(task, loadedConcept, "Concept uses additional or GCI axioms");
-		}
-		int changesMade = removeRedundandRelationships(task, loadedConcept);
-		changesMade += normaliseConcept(task, loadedConcept);
-		changesMade += removeRedundandGroups(task, loadedConcept);
-		if (changesMade > 0) {
-			updateConcept(task, loadedConcept, info);
-		}
-		return changesMade;
-	}
 
 	@Override
-	public int normaliseConcept(Task t, Concept c) throws TermServerScriptException {
-		int changesMade = 0;
-
+	public int normaliseConcept(Task t, Concept c, Concept newPPP) throws TermServerScriptException {
 		//Have we specified a ppp in the issues field?
-		Concept newPPP = checkConceptForSpecifiedPPP(c);
-		changesMade += checkAndSetProximalPrimitiveParent(t, c, newPPP, false, false);
-
-		//Remove any redundant relationships, or they'll be missing from the inferred view
-		changesMade += removeRedundandRelationships(t,c);
-		
-		//Restate inferred relationships as stated where required
-		changesMade += restateInferredRelationships(t,c);
-		
-		//Remove stated ungrouped relationships where they're not also inferred
-		changesMade += removeUngroupedRelationships(t,c);
-		
-		return changesMade;
+		newPPP = checkConceptForSpecifiedPPP(c);
+		return super.normaliseConcept(t, c, newPPP);
 	}
 
 	protected Concept checkConceptForSpecifiedPPP(Concept loadedConcept) throws TermServerScriptException {
@@ -83,41 +55,6 @@ public class NormaliseConceptsDriven extends NormaliseConcepts {
 			}
 		}
 		return newPPP;
-	}
-
-	@Override
-	public int restateInferredRelationships(Task t, Concept c) throws TermServerScriptException {
-		//Work through all inferred groups and collect any that aren't also stated, to state
-		int changesMade = 0;
-		List<RelationshipGroup> toBeStated = new ArrayList<>();
-		Collection<RelationshipGroup> inferredGroups = c.getRelationshipGroups(CharacteristicType.INFERRED_RELATIONSHIP);
-		Collection<RelationshipGroup> statedGroups = c.getRelationshipGroups(CharacteristicType.STATED_RELATIONSHIP);
-		
-		nextInferredGroup:
-		for (RelationshipGroup inferredGroup : inferredGroups) {
-			for (RelationshipGroup statedGroup : statedGroups) {
-				if (inferredGroup.equals(statedGroup)) {
-					continue nextInferredGroup;
-				}
-			}
-			toBeStated.add(inferredGroup);
-		}
-		changesMade += stateRelationshipGroups(t, c, toBeStated);
-		if (changesMade == 0) {
-			report(t, c, Severity.NONE, ReportActionType.NO_CHANGE, "Stated/Inferred groups already matched " + statedGroups.size() + "/" + inferredGroups.size());
-		}
-		return changesMade;
-	}
-
-	@Override
-	protected int stateRelationshipGroups(Task t, Concept c, List<RelationshipGroup> toBeStated) throws TermServerScriptException {
-		int changesMade = 0;
-		for (RelationshipGroup g : toBeStated) {
-			//Group 0 must remain group 0.  Otherwise, find an available group number
-			int freeGroup = g.getGroupId()==0?0:SnomedUtils.getFirstFreeGroup(c);
-			changesMade += stateRelationshipGroup(t, c, g, freeGroup);
-		}
-		return changesMade;
 	}
 
 }
