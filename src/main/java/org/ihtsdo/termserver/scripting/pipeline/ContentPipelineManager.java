@@ -200,8 +200,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	}
 
 	protected TemplatedConcept modelExternalConcept(String externalIdentifier) throws TermServerScriptException {
-		if (externalIdentifier.equals("20695-3")) {
-			LOGGER.debug("Check term capitalization");
+		if (externalIdentifier.equals("40593-6")) {
+			LOGGER.debug("Check Aggregometer term capitalization");
 		}
 
 		if (externalIdentifier.equals("44950-4")) {

@@ -208,7 +208,8 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			for (String primitiveIndicator : knownPrimitiveIndicators) {
 				if (partNameLower.contains(primitiveIndicator)) {
 					addProcessingFlag(ProcessingFlag.MARK_AS_PRIMITIVE);
-					slotTermMap.put(loincDetail.getPartTypeName(), loincDetail.getPartName());
+					String partName = StringUtils.deCapitalize(loincDetail.getPartName());
+					slotTermMap.put(loincDetail.getPartTypeName(), partName);
 					break;
 				}
 			}
