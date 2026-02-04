@@ -200,8 +200,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	}
 
 	protected TemplatedConcept modelExternalConcept(String externalIdentifier) throws TermServerScriptException {
-		if (externalIdentifier.equals("40593-6")) {
-			LOGGER.debug("Check Aggregometer term capitalization");
+		if (externalIdentifier.equals("111822-3")) {
+			LOGGER.debug("New Descriptions also added to old concept?");
 		}
 
 		if (externalIdentifier.equals("44950-4")) {
@@ -323,6 +323,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			} else {
 				//If the existing concept is already inactive, we just need to record that.
 				remainsInactive = true;
+				checkRemainsInactiveConcept(existingConcept);
 			}
 		}
 
@@ -360,9 +361,30 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		}
 	}
 
+	private void checkRemainsInactiveConcept(Concept c) throws TermServerScriptException {
+		if (c.isActiveSafely()) {
+			throw new IllegalStateException("Concept " + c + " expected to be inactive but is active");
+		}
+		boolean changesMade = false;
+		for (AxiomEntry ax : c.getAxiomEntries(ActiveState.ACTIVE, true)) {
+			if (ax.isActiveSafely()) {
+				ax.setActive(false);
+				changesMade = true;
+			}
+		}
+
+		if (changesMade) {
+			conceptCreator.outputRF2Inactivation(c);
+		}
+	}
+
 	private void determineChanges(TemplatedConcept tc, Set<String> externalIdentifiersProcessed) throws TermServerScriptException {
 		Concept concept = tc.getConcept();
 		externalIdentifiersProcessed.add(tc.getExternalIdentifier());
+
+		if (tc.getExternalIdentifier().equals("107367-5")) {
+			LOGGER.debug("Check comparison of langrefset entries");
+		}
 
 		//Do we already have this concept?  Also, it might use freshly modelled concepts internally which need to have IDs assigned
 		//before we can compare their axioms
@@ -563,21 +585,32 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	}
 
 	private void alignLangRefsetEntries(Description newDesc, Description oldDesc) {
-		//For each refsetId, pinch the ID from the existing description and apply it to the new one
-		for (LangRefsetEntry lre : oldDesc.getLangRefsetEntries(ActiveState.ACTIVE)) {
-			List<LangRefsetEntry> newLres = newDesc.getLangRefsetEntries(ActiveState.ACTIVE, lre.getRefsetId());
-			//The new description might not have an entry for this refsetId, eg if we've removed en-gb
-			if (newLres.isEmpty()) {
-				//If we've removed the en-gb lang refset or similar, then we need to inactivate the existing one
-				lre.setActive(false);
-				lre.setDirty();
-			} else {
-				LangRefsetEntry newLre = newLres.get(0);
-				newLre.setId(lre.getId());
-				newLre.setReferencedComponentId(oldDesc.getId());
-				//But, has the acceptability changed?  If so, we need to output this as a change
-				if (!newLre.getAcceptabilityId().equals(lre.getAcceptabilityId())) {
-					newLre.setDirty();
+		//Now if the oldDesc didn't have a lang refset entry, we need to bring the new one into play
+		//Might need to also handle the case where we're reactivating inactive lang refset entries
+		List<LangRefsetEntry> oldLres = oldDesc.getLangRefsetEntries(ActiveState.ACTIVE);
+		if (oldLres.isEmpty()) {
+			for (LangRefsetEntry newLre : newDesc.getLangRefsetEntries(ActiveState.ACTIVE)) {
+				//This is a new lang refset entry, we need to assign it an ID
+				newLre.setReferencedComponentId(newDesc.getId());
+				newLre.setDirty();
+			}
+		} else {
+			//For each refsetId, pinch the ID from the existing description and apply it to the new one
+			for (LangRefsetEntry lre : oldLres) {
+				List<LangRefsetEntry> newLres = newDesc.getLangRefsetEntries(ActiveState.ACTIVE, lre.getRefsetId());
+				//The new description might not have an entry for this refsetId, eg if we've removed en-gb
+				if (newLres.isEmpty()) {
+					//If we've removed the en-gb lang refset or similar, then we need to inactivate the existing one
+					lre.setActive(false);
+					lre.setDirty();
+				} else {
+					LangRefsetEntry newLre = newLres.get(0);
+					newLre.setId(lre.getId());
+					newLre.setReferencedComponentId(oldDesc.getId());
+					//But, has the acceptability changed?  If so, we need to output this as a change
+					if (!newLre.getAcceptabilityId().equals(lre.getAcceptabilityId())) {
+						newLre.setDirty();
+					}
 				}
 			}
 		}

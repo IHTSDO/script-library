@@ -7,10 +7,7 @@ import java.util.UUID;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.termserver.scripting.TermServerScript;
-import org.ihtsdo.termserver.scripting.domain.AlternateIdentifier;
-import org.ihtsdo.termserver.scripting.domain.Concept;
-import org.ihtsdo.termserver.scripting.domain.Description;
-import org.ihtsdo.termserver.scripting.domain.Relationship;
+import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
 public class Rf2ConceptCreator extends DeltaGenerator {
@@ -97,6 +94,7 @@ public class Rf2ConceptCreator extends DeltaGenerator {
 			case CONCEPT : setConceptId(c);
 				break;
 			case DESCRIPTION : setDescriptionId(concept.getId(), c);
+				alignLangRefsetEntries((Description)c);
 				break;
 			case INFERRED_RELATIONSHIP :
 				setRelationshipId(c);
@@ -109,6 +107,13 @@ public class Rf2ConceptCreator extends DeltaGenerator {
 			case ALTERNATE_IDENTIFIER :
 				break;  //Has its own ID.  RefCompId will be set once concept id is known.
 			default: c.setId(UUID.randomUUID().toString());
+		}
+	}
+
+	private void alignLangRefsetEntries(Description d) {
+		for (LangRefsetEntry l : d.getLangRefsetEntries()){
+			l.setReferencedComponentId(d.getId());
+			l.setDirty();
 		}
 	}
 
