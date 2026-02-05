@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component.ComponentType;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.termserver.scripting.AxiomUtils;
 import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.delta.Rf2ConceptCreator;
@@ -200,12 +201,9 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	}
 
 	protected TemplatedConcept modelExternalConcept(String externalIdentifier) throws TermServerScriptException {
-		if (externalIdentifier.equals("111822-3")) {
-			LOGGER.debug("New Descriptions also added to old concept?");
-		}
 
-		if (externalIdentifier.equals("44950-4")) {
-			LOGGER.debug("Check primitive indicators in Method");
+		if (externalIdentifier.equals("88171-4")) {
+			LOGGER.debug("Should result in Microscopic observation of");
 		}
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
@@ -382,9 +380,18 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		Concept concept = tc.getConcept();
 		externalIdentifiersProcessed.add(tc.getExternalIdentifier());
 
-		if (tc.getExternalIdentifier().equals("107367-5")) {
-			LOGGER.debug("Check comparison of langrefset entries");
+		if (tc.getExternalIdentifier().equals("49024-3")) {
+			LOGGER.debug("Check comparison of simple refset members");
 		}
+
+		if (tc.getExternalIdentifier().equals("111822-3")) {
+			LOGGER.debug("New Descriptions also added to old concept?");
+		}
+
+		if (tc.getExternalIdentifier().equals("56888-1")) {
+			LOGGER.debug("Shows axiom change but can't see difference?");
+		}
+
 
 		//Do we already have this concept?  Also, it might use freshly modelled concepts internally which need to have IDs assigned
 		//before we can compare their axioms
@@ -550,6 +557,12 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 					newDesc.setConceptId(tc.getExistingConcept().getId());
 					alignLangRefsetEntries(newDesc, (Description)existingComponent);
 					break;
+				case SIMPLE_REFSET_MEMBER:
+				case COMPONENT_ANNOTATION:
+					alignRefsetMember(componentComparisonResult.isMatch(), (RefsetMember)newlyModelledComponent, (RefsetMember)existingComponent);
+					TemplatedConcept.IterationIndicator indicator = componentComparisonResult.isMatch() ? TemplatedConcept.IterationIndicator.UNCHANGED : TemplatedConcept.IterationIndicator.MODIFIED;
+					recordRefsetMemberSummaryCount(newlyModelledComponent, indicator);
+					break;
 				default:
 					break;
 			}
@@ -558,17 +571,35 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			existingComponent.setActive(false);
 			existingComponent.setDirty();
 			tc.setExistingConceptHasInactivations(true);
+			recordRefsetMemberSummaryCount(existingComponent, TemplatedConcept.IterationIndicator.REMOVED);
 		} else {
 			//If we only have a newly modelled component, give it an id
 			//and prepare to output
 			conceptCreator.populateComponentId(tc.getExistingConcept(), newlyModelledComponent, externalContentModuleId);
 			newlyModelledComponent.setDirty();
+			recordRefsetMemberSummaryCount(newlyModelledComponent, TemplatedConcept.IterationIndicator.NEW);
 		}
 
 		//If we don't have an ID at this point, we've gone wrong somewhere
 		if ((newlyModelledComponent != null && newlyModelledComponent.getId() == null)
 				|| (existingComponent != null && existingComponent.getId() == null)) {
 			throw new IllegalStateException("Component encountered without Id " + newlyModelledComponent);
+		}
+	}
+
+	private void recordRefsetMemberSummaryCount(Component c, TemplatedConcept.IterationIndicator iterationIndicator) throws TermServerScriptException {
+		if (c.getComponentType().equals(ComponentType.SIMPLE_REFSET_MEMBER) || c.getComponentType().equals(ComponentType.COMPONENT_ANNOTATION)) {
+			Concept refset = gl.getConcept(((RefsetMember)c).getRefsetId());
+			incrementSummaryCount("Refset Changes since last iteration", refset.getPreferredSynonym() + " " + iterationIndicator);
+		}
+	}
+
+	private void alignRefsetMember(boolean isMatch, RefsetMember newlyModelledComponent, RefsetMember existingComponent) {
+		newlyModelledComponent.setId(existingComponent.getId());
+		if (isMatch) {
+			newlyModelledComponent.setClean();
+		} else {
+			newlyModelledComponent.setDirty();
 		}
 	}
 
@@ -941,12 +972,14 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 						externalIdentifier,
 						ContentPipelineManager.getSpecialInterestIndicator(externalIdentifier),
 						"N/A",
+						templatedConcept.getClass().getSimpleName(),
 						"Critical: External identifier not found in external concept map");
 			} else {
 				report(getTab(TAB_MODELING_ISSUES),
 						externalIdentifier,
 						ContentPipelineManager.getSpecialInterestIndicator(externalIdentifier),
 						externalConceptMap.get(externalIdentifier).getLongDisplayName(),
+						templatedConcept.getClass().getSimpleName(),
 						"Concept not created");
 			}
 			return;
@@ -961,6 +994,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 					ContentPipelineManager.getSpecialInterestIndicator(externalConcept.getExternalIdentifier()),
 					externalConcept.getLongDisplayName(),
 					"Does not meet criteria for template match",
+					templatedConcept.getClass().getSimpleName(),
 					"Property: " + externalConcept.getProperty());
 		} else {
 			String fsn = concept.getFsn();
@@ -972,11 +1006,11 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			}
 
 			if (concept.hasIssues() ) {
-				concept.addIssue("Template used: " + templatedConcept.getClass().getSimpleName());
 				report(getTab(TAB_MODELING_ISSUES),
 						externalConcept.getExternalIdentifier(),
 						ContentPipelineManager.getSpecialInterestIndicator(externalConcept.getExternalIdentifier()),
 						externalConcept.getLongDisplayName(),
+						templatedConcept.getClass().getSimpleName(),
 						templatedConcept.getConcept().getIssues(",\n"));
 			}
 		}
@@ -1004,6 +1038,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 						externalConcept.getExternalIdentifier(),
 						ContentPipelineManager.getSpecialInterestIndicator( externalConcept.getExternalIdentifier()),
 						externalConcept.getLongDisplayName(),
+						"",
 						"Contains objectionable word - " + objectionableWord);
 				return true;
 			}
@@ -1021,6 +1056,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			report(getTab(TAB_MODELING_ISSUES),
 					externalIdentifier,
 					ContentPipelineManager.getSpecialInterestIndicator(externalIdentifier),
+					"N/A",
 					"N/A",
 					"Failed integrity. Identifier " + externalIdentifier + " from detail file, not known in main external concept file.");
 			return false;

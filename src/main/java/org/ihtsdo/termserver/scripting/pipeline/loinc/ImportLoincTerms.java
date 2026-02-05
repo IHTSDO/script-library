@@ -111,7 +111,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		String[] columnHeadings = new String[] {
 				"Item, Info, Details, ,",
 				"LoincPartNum, LoincPartName, PartType, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
-				"LoincNum, Item of Special Interest, LoincName, Issues, details",
+				"LoincNum, Item of Special Interest, LoincName, Template, Issues, details",
 				"LoincNum, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, "  + COMMON_LOINC_COLUMNS,
 				"PartNum, PartName, PartType, Needed for High Usage Mapping, Needed for Highest Usage Mapping, PriorityIndex, Usage Count,Top Priority Usage, Higest Rank, HighestUsageCount",
 				"Concept, FSN, SemTag, Severity, Action, LoincNum, Descriptions, Expression, Status, , ",
@@ -234,14 +234,14 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		}
 	}
 
-	private void checkForOrdObsRefsets(LoincTemplatedConcept ltc) throws TermServerScriptException {
+	private void checkForOrdObsRefsets(LoincTemplatedConcept ltc) {
 		LoincTerm loincTerm = ltc.getLoincTerm();
 		switch (loincTerm.getOrderObs()) {
-			case "Order" -> createNewRefsetMemberIfRequired(ltc, ORD_REFSET);
-			case "Observation" -> createNewRefsetMemberIfRequired(ltc, OBS_REFSET);
+			case "Order" -> addToSimpleRefset(ltc, ORD_REFSET);
+			case "Observation" -> addToSimpleRefset(ltc, OBS_REFSET);
 			case "Both" -> {
-				createNewRefsetMemberIfRequired(ltc, ORD_REFSET);
-				createNewRefsetMemberIfRequired(ltc, OBS_REFSET);
+				addToSimpleRefset(ltc, ORD_REFSET);
+				addToSimpleRefset(ltc, OBS_REFSET);
 			}
 			default -> {
 				//Do nothing
@@ -249,14 +249,10 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		}
 	}
 
-	private void createNewRefsetMemberIfRequired(LoincTemplatedConcept ltc, Concept refset) {
-		//Does this concept already appear in this refset?
-		Concept c = ltc.getConcept();
-		if (c.appearsInRefset(refset)) {
-			incrementSummaryCount(ContentPipelineManager.REFSET_COUNT, refset.getFsn() + " unchanged");
-			return;
-		}
-
+	private void addToSimpleRefset(LoincTemplatedConcept ltc, Concept refset) {
+		//At this point in the process we haven't connected back to any existing concept.
+		//So we'll add the concept to the refset, and the reconcile later if the existing
+		//concept is already in there, or if changes need to be made
 		RefsetMember rm = new RefsetMember();
 		rm.setModuleId(externalContentModuleId);
 		rm.setReferencedComponentId(ltc.getConcept().getId());
@@ -264,24 +260,15 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		rm.setRefsetId(refset.getId());
 		rm.setId(UUID.randomUUID().toString());
 		rm.setDirty();
-		c.addOtherRefsetMember(rm);
-		incrementSummaryCount(ContentPipelineManager.REFSET_COUNT, refset.getFsn() + " created");
+		ltc.getConcept().addOtherRefsetMember(rm);
 	}
 
 	private void checkForDiscouragement(LoincTemplatedConcept ltc) {
 		LoincTerm loincTerm = ltc.getLoincTerm();
-		if (loincTerm.getStatus().equals("DISCOURAGED")) {
-			//Does this concept already have an annotation?
-			if (ltc.getConcept().getComponentAnnotationEntries().isEmpty()) {
-				incrementSummaryCount("Annotations", "New");
-				ComponentAnnotationEntry cae = ComponentAnnotationEntry.withDefaults(ltc.getConcept(), discouragementAnnotationType, "Discouraged");
-				cae.setModuleId(RF2Constants.SCTID_LOINC_EXTENSION_MODULE);
-				ltc.getConcept().addComponentAnnotationEntry(cae);
-			} else {
-				incrementSummaryCount("Annotations", "Unchanged");
-			}
-		} else if (!ltc.getConcept().getComponentAnnotationEntries().isEmpty()) {
-			throw new NotImplementedException();
+		if (loincTerm.getStatus().equals("DISCOURAGED") && ltc.getConcept().getComponentAnnotationEntries().isEmpty()) {
+			ComponentAnnotationEntry cae = ComponentAnnotationEntry.withDefaults(ltc.getConcept(), discouragementAnnotationType, "Discouraged");
+			cae.setModuleId(RF2Constants.SCTID_LOINC_EXTENSION_MODULE);
+			ltc.getConcept().addComponentAnnotationEntry(cae);
 		}
 	}
 
