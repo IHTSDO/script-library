@@ -7,6 +7,7 @@ import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
+import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class LoincTemplatedConceptWithProcess extends LoincTemplatedConcept {
 		super(externalConcept);
 	}
 
-	public static LoincTemplatedConcept create(ExternalConcept externalConcept) throws TermServerScriptException {
+	public static TemplatedConcept create(ExternalConcept externalConcept) throws TermServerScriptException {
 		LoincTemplatedConceptWithProcess templatedConcept = new LoincTemplatedConceptWithProcess(externalConcept);
 		templatedConcept.populateTypeMapCommonItems();
 		if (processOutput == null) {

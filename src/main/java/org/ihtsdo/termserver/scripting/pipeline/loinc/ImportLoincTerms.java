@@ -60,7 +60,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 
 		return switch (externalConcept.getProperty()) {
 			case "ARat", "ArVRat", "CRat", "MRat", "NRat", "SRat", "VRat", "Sedimentation Rate" -> LoincTemplatedConceptWithProcess.create(externalConcept);
-			case "RelTime", "Time", "Vel", "RelVel" -> LoincTemplatedConceptWithProcessNoOutput.create(externalConcept);
+			case "RelTime", "Time", "Vel", "RelAcnc", "RelVel" -> LoincTemplatedConceptWithProcessNoOutput.create(externalConcept);
 			case "NFr", "MFr", "CFr", "AFr",  "SFr", "VFr" -> LoincTemplatedConceptWithRelative.create(externalConcept);
 			case "ACnc", "ACnt", "Angle", "CCnc", "CCnt", "Diam", "EntCat", "EntLen", "EntMass", "EntNum", "EntSub",
 				 "LaCnc", "Len", "LnCnc", "LsCnc", "Mass", "MCnc", "MCnt", "MoM", "MSCnc", "Naric", "NCnc", "Num",
