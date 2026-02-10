@@ -47,6 +47,13 @@ public class LoincAttributePartMapManager extends AttributePartMapManager implem
 				gl.getConcept("814341010000101 |Free 6-acetylmorphine (substance)|")));
 		hardCodedMappings.put("LP449186-8", List.of(
 				gl.getConcept("814351010000104 |Immunoglobulin E antibody to Cucumis melo variety inodorus (substance)|")));
+		hardCodedMappings.put("LP450035-3", List.of(
+				gl.getConcept("1381338005 |Antigen of folate receptor alpha (substance)|")));
+		hardCodedMappings.put("LP450030-4", List.of(
+				gl.getConcept("1381442009 |Antigen of transcription factor SOX-11 (substance)|")));
+		hardCodedMappings.put("LP450074-2", List.of(
+				gl.getConcept("1381418005 |Antigen of mismatch repair endonuclease PMS2 (substance)|")));
+
 	}
 
 }
