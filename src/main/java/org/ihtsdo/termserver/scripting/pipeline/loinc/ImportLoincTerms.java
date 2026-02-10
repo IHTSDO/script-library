@@ -125,6 +125,29 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		namespace = "1010000";
 		discouragementAnnotationType = gl.getConcept("665161010000107 |LOINC comment (attribute)| ", false, true);
 		getReportManager().disableTab(getTab(TAB_IMPORT_STATUS));
+
+		ITEMS_OF_INTEREST.addAll(List.of("882-1","881-3","61151-7","1751-7","9318-7","1759-0","33037-3","41276-7","10466-1",
+				"5767-9","33511-7","5769-5","11555-0","24321-2","1968-7","925-8","933-2","936-5",
+				"62292-8","14155-6","9830-1","9322-9","2106-3","14979-9","5902-2","6301-6","38875-1",
+				"50553-7","24323-8","35591-7","49024-3","39004-7","5787-7","11277-1","33219-7","12258-0",
+				"788-0","30384-2","30385-9","21000-5","785-6","28539-5","786-4","28540-3","787-2",
+				"30428-7","6742-1","4537-7","30341-2","58413-6","19048-8","27353-2","53553-4","49541-6",
+				"48058-2","33914-3","77147-7","62238-1","48643-1","48642-3","51584-1","53115-2","34165-1",
+				"38518-7","71695-1","4544-3","31100-1","56888-1","2500-7","2502-3","2532-0","24318-8",
+				"26485-3","53797-7","664-3","2695-5","2708-6","32623-1","28542-9","2890-2","8251-1",
+				"2965-2","5811-5","50562-8","53326-5","66746-9","3097-3","44734-2"));
+
+		HARDCODED_DROP_OUT.add("49959-0");
+
+		MANUALLY_MAINTAINED_ITEMS.putAll(Map.of(
+				"8251-1", "580221010000109 |Service comment (observable entity)|",
+				"49024-3", "580231010000107 |Differential cell count method - Blood (observable entity)|",
+				"49541-6", "580241010000104 |Fasting status - Reported (observable entity)|",
+				"14155-6", "580261010000100 |Cholesterol in LDL [Percentile] (observable entity)|",
+				"9322-9", "580251010000102 |Cholesterol.total/Cholesterol in HDL [Percentile] (observable entity)|",
+				"56888-1", "570211010000106 |Presence of HIV 1/2 Ab and/or p24 Ag (observable entity)|",
+				"24318-8", "513641010000108 |Manual Differential panel - Blood (observable entity)|"
+		));
 	}
 
 	@Override
