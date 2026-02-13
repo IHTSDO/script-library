@@ -232,7 +232,7 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 			Description d = Description.withDefaults(definitionInDialect, DescriptionType.TEXT_DEFINITION, Acceptability.PREFERRED);
 			d.setCaseSignificance(CaseSignificance.ENTIRE_TERM_CASE_SENSITIVE);
 			//Remove the GB acceptability
-			d.removeAcceptability(RF2Constants.GB_ENG_LANG_REFSET, true);
+			d.removeAcceptability(RF2Constants.GB_ENG_LANG_REFSET, false);
 			d.setConceptId(c.getId());
 			d.setId(descIdGenerator.getSCTID());
 			c.addDescription(d);
@@ -247,7 +247,7 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 		Description d = Description.withDefaults(definitionInDialect, DescriptionType.TEXT_DEFINITION, Acceptability.PREFERRED);
 		d.setCaseSignificance(CaseSignificance.ENTIRE_TERM_CASE_SENSITIVE);
 		if (replacementContainsVariance) {
-			d.removeAcceptability(RF2Constants.US_ENG_LANG_REFSET, true);
+			d.removeAcceptability(RF2Constants.US_ENG_LANG_REFSET, false);
 		}
 		d.setConceptId(c.getId());
 		d.setId(descIdGenerator.getSCTID());

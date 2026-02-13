@@ -14,13 +14,12 @@ import org.ihtsdo.termserver.scripting.fixes.SplitRoleGroupsWithRepeatedAttribut
 import org.ihtsdo.termserver.scripting.reports.TermServerReport;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-/**
- * QI-4 Reports a number of quality measures across the 870 sub-hierarchies listed.
- * */
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * QI-4 Reports a number of quality measures across the 870 sub-hierarchies listed.
+ * */
 public class GnarlyFactorCalculation extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GnarlyFactorCalculation.class);

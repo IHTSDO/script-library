@@ -9,14 +9,13 @@ import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.SplitRoleGroupsWithRepeatedAttributes;
 import org.ihtsdo.termserver.scripting.reports.TermServerReport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * QI-4 Reports a number of quality measures across a set of concepts selected via 
  * an ECL constraint.
  * */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class GnarlyFactorCalculationECL extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GnarlyFactorCalculationECL.class);
@@ -59,14 +58,13 @@ public class GnarlyFactorCalculationECL extends TermServerReport {
 			int expansionSize = expansion.size();
 			Relationship optimalECL =  ecl;
 			if ( expansionSize == 0) {
-				LOGGER.warn (ecl + " matched no concepts.  Skipping");
-				continue;
+				LOGGER.warn("{} matched no concepts.  Skipping", ecl);
 			} else if ( expansionSize > lowerLimit) {
-				LOGGER.warn (ecl + " already has " + expansionSize + " members.  Adding.");
+				LOGGER.warn("{} already has {} members.  Adding.", ecl , expansionSize);
 			} else {
 				optimalECL = findOptimalECL(ecl, 0);
 				if (optimalECL == null || optimalECL.getTarget() == null) {
-					LOGGER.warn ("Failed to find optimal grouper from " + ecl); 
+					LOGGER.warn("Failed to find optimal grouper from {}", ecl);
 				} 
 			}
 		}
@@ -92,7 +90,7 @@ public class GnarlyFactorCalculationECL extends TermServerReport {
 				bestParent = parent;
 				bestParentCount = descCount;
 			} else if (descCount == 0) {
-				LOGGER.warn ("ECL found no concepts for " + r + ", returning");
+				LOGGER.warn("ECL found no concepts for {}, returning", r);
 				return null;
 			}
 		}
@@ -111,7 +109,7 @@ public class GnarlyFactorCalculationECL extends TermServerReport {
 				modified.setTarget(parent);
 				//Do we already have this ECL mapped?  No need to request again if so.
 				if (expansionMap.containsKey(modified)) {
-					LOGGER.info("Have already recovered " + modified);
+					LOGGER.info("Have already recovered {}", modified);
 					return modified;
 				}
 				Relationship thisAncestorRel = findOptimalECL(modified, hopCount + 1);
@@ -142,7 +140,7 @@ public class GnarlyFactorCalculationECL extends TermServerReport {
 	}
 
 	private void run() throws TermServerScriptException {
-		LOGGER.info("Calculating Gnarly Factor in " + expansionMap.size() + " ECLs");
+		LOGGER.info("Calculating Gnarly Factor in {} ECLs", expansionMap.size());
 		int x = 0;
 		for (Relationship ecl : expansionMap.keySet()) {
 			Set<Concept> eclConcepts = new HashSet<>(expansionMap.get(ecl));
@@ -153,14 +151,14 @@ public class GnarlyFactorCalculationECL extends TermServerReport {
 			splitRoleGroupsWithRepeatedAttributes.setSubHierarchy(concepts);
 			
 			intermediatePrimitivesReport.reportConceptsAffectedByIntermediatePrimitives();
-			String fDsUnderIPs = calculateTotalFDsUnderIPs(concepts, intermediatePrimitivesReport.intermediatePrimitives.keySet());
+			String fDsUnderIPs = calculateTotalFDsUnderIPs(concepts, intermediatePrimitivesReport.getIntermediatePrimitives().keySet());
 			int groupDiff = inferredGroupsNotStatedReport.runCheckForInferredGroupsNotStated();
 			int repeatedAttributes = splitRoleGroupsWithRepeatedAttributes.identifyComponentsToProcess().size();
 			
 			report((Relationship)ecl, 
 					"N/A",
 					concepts.size(), 
-					Integer.toString(intermediatePrimitivesReport.intermediatePrimitives.size()),
+					Integer.toString(intermediatePrimitivesReport.getIntermediatePrimitives().size()),
 					fDsUnderIPs,
 					Integer.toString(groupDiff),
 					Integer.toString(repeatedAttributes));
