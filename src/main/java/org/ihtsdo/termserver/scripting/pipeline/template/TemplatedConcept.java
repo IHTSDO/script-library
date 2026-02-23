@@ -134,7 +134,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 				.collect(Collectors.joining(",\n"));
 	}
 
-	public void addDifferenceFromExistingConcept(String differenceFromExistingConcept) {
+	public void recordDifferenceFromExistingConcept(String differenceFromExistingConcept) {
 		this.differencesFromExistingConcept.add(differenceFromExistingConcept);
 	}
 

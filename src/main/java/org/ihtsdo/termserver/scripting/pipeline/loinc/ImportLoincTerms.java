@@ -60,7 +60,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 
 		return switch (externalConcept.getProperty()) {
 			case "ARat", "ArVRat", "CRat", "MRat", "NRat", "SRat", "VRat", "Sedimentation Rate" -> LoincTemplatedConceptWithProcess.create(externalConcept);
-			case "RelTime", "Time", "Vel", "RelAcnc", "RelVel" -> LoincTemplatedConceptWithProcessNoOutput.create(externalConcept);
+			case "RelTime", "Time", "Vel", "RelACnc", "RelVel" -> LoincTemplatedConceptWithProcessNoOutput.create(externalConcept);
 			case "NFr", "MFr", "CFr", "AFr",  "SFr", "VFr" -> LoincTemplatedConceptWithRelative.create(externalConcept);
 			case "ACnc", "ACnt", "Angle", "CCnc", "CCnt", "Diam", "EntCat", "EntLen", "EntMass", "EntNum", "EntSub",
 				 "LaCnc", "Len", "LnCnc", "LsCnc", "Mass", "MCnc", "MCnt", "MoM", "MSCnc", "Naric", "NCnc", "Num",
@@ -137,7 +137,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 				"26485-3","53797-7","664-3","2695-5","2708-6","32623-1","28542-9","2890-2","8251-1",
 				"2965-2","5811-5","50562-8","53326-5","66746-9","3097-3","44734-2"));
 
-		HARDCODED_DROP_OUT.add("49959-0");
+		HARDCODED_DROP_OUT.addAll( List.of("53564-1", "53563-3", "53565-8"));  //Last 3 duplicate with 5992-3
 
 		MANUALLY_MAINTAINED_ITEMS.putAll(Map.of(
 				"8251-1", "580221010000109 |Service comment (observable entity)|",

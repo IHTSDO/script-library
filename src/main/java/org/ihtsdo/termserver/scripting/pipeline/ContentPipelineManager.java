@@ -75,7 +75,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	private  Map<String, Map<String, Integer>> summaryCountsByCategory = new HashMap<>();
 
 	protected Set<ComponentType> skipForComparison = Set.of(
-			ComponentType.INFERRED_RELATIONSHIP);
+			ComponentType.INFERRED_RELATIONSHIP,
+			ComponentType.LANGREFSET);
 
 	protected List<TemplatedConcept.IterationIndicator> activeIndicators = List.of(
 			TemplatedConcept.IterationIndicator.NEW,
@@ -380,16 +381,16 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		Concept concept = tc.getConcept();
 		externalIdentifiersProcessed.add(tc.getExternalIdentifier());
 
-		if (tc.getExternalIdentifier().equals("49024-3")) {
-			LOGGER.debug("Check comparison of simple refset members");
+		if (tc.getExternalIdentifier().equals("77338-2")) {
+			LOGGER.debug("Check Langreset comparison");
 		}
 
-		if (tc.getExternalIdentifier().equals("56888-1")) {
-			LOGGER.debug("Check output of simple refset members");
+		if (tc.getExternalIdentifier().equals("100437-3")) {
+			LOGGER.debug("Check recording of simple refset");
 		}
 
-		if (tc.getExternalIdentifier().equals("1744-2")) {
-			LOGGER.debug("Check comparison of alternate identifiers");
+		if (tc.getExternalIdentifier().equals("15360-1")) {
+			LOGGER.debug("Check annotation counted");
 		}
 
 		//Do we already have this concept?  Also, it might use freshly modelled concepts internally which need to have IDs assigned
@@ -410,6 +411,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			}
 			convertStatedRelationshipsToAxioms(concept, true, true);
 			concept.setAxiomEntries(AxiomUtils.convertClassAxiomsToAxiomEntries(concept));
+			//If we're not comparing with the exisnig concept, we need to count those new annotations and refset members
+			for (Component c : SnomedUtils.getAllComponents(tc.getConcept())) {
+				recordRefsetMemberSummaryCount(c, TemplatedConcept.IterationIndicator.NEW);
+			}
 		} else {
 			determineChangesWithExistingConcept(tc);
 		}
@@ -505,12 +510,13 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			if (tc.getExistingConcept().isActiveSafely()) {
 				tc.setIterationIndicator(TemplatedConcept.IterationIndicator.MODIFIED);
 			} else {
+				//TODO Axiom not being recreated here
 				tc.setIterationIndicator(TemplatedConcept.IterationIndicator.REACTIVATED);
 				reactivateConcept(tc.getConcept());
 			}
 		} else {
 			tc.setIterationIndicator(TemplatedConcept.IterationIndicator.UNCHANGED);
-			tc.addDifferenceFromExistingConcept("All Unchanged");
+			tc.recordDifferenceFromExistingConcept("All Unchanged");
 		}
 
 		for (ComponentComparisonResult componentComparisonResult : componentComparisonResults) {
@@ -521,10 +527,12 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	private void reactivateConcept(Concept c) {
 		c.setActive(true);
 		//Inactivate inactivation indicators and historical associations
-		c.getInactivationIndicatorEntries().stream()
+		c.getInactivationIndicatorEntries()
 				.forEach(ii -> ii.setActive(false));
-		c.getAssociationEntries().stream()
+		c.getAssociationEntries()
 				.forEach(a -> a.setActive(false));
+		c.getAxiomEntries()
+				.forEach(ax -> ax.setActive(true));
 	}
 
 	private void processComponentComparison(TemplatedConcept tc, ComponentComparisonResult componentComparisonResult) throws TermServerScriptException {
@@ -532,7 +540,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		Component newlyModelledComponent = componentComparisonResult.getRight();
 
 		if (!componentComparisonResult.isMatch()) {
-			tc.addDifferenceFromExistingConcept(componentComparisonResult.getComponentTypeStr());
+			tc.recordDifferenceFromExistingConcept(componentComparisonResult.getComponentTypeStr());
 		}
 
 		//If we have both, then just output the change
@@ -548,8 +556,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			switch (existingComponent.getComponentType()) {
 				case CONCEPT:
 					alignAlternateIdentifier(tc.getConcept(), tc.getExistingConcept());
-					//Copy any simple refset members from the existing concept to the new one eg  ORD/OBS refset
-					tc.getConcept().setOtherRefsetMembers(tc.getExistingConcept().getOtherRefsetMembers());
 					break;
 				case DESCRIPTION:
 					Description newDesc = (Description)newlyModelledComponent;
@@ -571,6 +577,15 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			existingComponent.setDirty();
 			tc.setExistingConceptHasInactivations(true);
 			recordRefsetMemberSummaryCount(existingComponent, TemplatedConcept.IterationIndicator.REMOVED);
+			switch (existingComponent.getComponentType()) {
+				case DESCRIPTION:
+					((Description)existingComponent).getLangRefsetEntries().forEach(lre -> {
+						lre.setActive(false);  //Will set dirty if not already
+					});
+					break;
+				default:
+					break;
+			}
 		} else {
 			//If we only have a newly modelled component, give it an id
 			//and prepare to output
@@ -637,6 +652,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 					LangRefsetEntry newLre = newLres.get(0);
 					newLre.setId(lre.getId());
 					newLre.setReferencedComponentId(oldDesc.getId());
+					newLre.setClean();
 					//But, has the acceptability changed?  If so, we need to output this as a change
 					if (!newLre.getAcceptabilityId().equals(lre.getAcceptabilityId())) {
 						newLre.setDirty();
@@ -695,6 +711,13 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		for (AxiomEntry a : c.getAxiomEntries(ActiveState.ACTIVE, true)) {
 			a.setActive(false);
 			differencesList.add("AXIOM");
+		}
+
+		for (RefsetMember rm : c.getOtherRefsetMembers()) {
+			if (rm.isActiveSafely()) {
+				rm.setActive(false);
+				differencesList.add("REFSET_MEMBER " + rm.getRefsetId());
+			}
 		}
 		return differencesList;
 	}
