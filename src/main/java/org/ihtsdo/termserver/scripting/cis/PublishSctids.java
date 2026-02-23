@@ -17,28 +17,30 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * In this case, the cookie passed in will not be the usual ims cookie, but the cis token
+ * In this case, the cookie passed in will not be the usual ims cookie,
+ * but the cis token.  So removed the ihtsdo= prefix and use the token value directly.
  */
 public class PublishSctids extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PublishSctids.class);
-	private static final String THIS_TICKET = "XDS-86";
+	private static final String THIS_TICKET = "XDS-158";
 	private enum ACTION {PUBLISH, REGISTER}
 
-	public static String AVAILABLE = "Available";
-	public static String RESERVED = "Reserved";
-	public static String DEPRECATED = "Deprecated";
-	public static String ASSIGNED = "Assigned";
-	public static String PUBLISHED = "Published";
+	public static final String AVAILABLE = "Available";
+	public static final String RESERVED = "Reserved";
+	public static final String DEPRECATED = "Deprecated";
+	public static final String ASSIGNED = "Assigned";
+	public static final String PUBLISHED = "Published";
 
 	private Map<String, Set<String>> newSctidsByNamespace = new HashMap<>();
 	private Map<String, Set<String>> oldSctidsByNamespace = new HashMap<>();
 
-	private Set<String> namespaces = new HashSet<>();
-	private String targetET = "20251207"; //This is the ET we are interested in, which will be used to filter out old SCTIDs
+	private List<String> targetNamespaces = List.of("1000036");
+	private Set<String> detectedNamespaces = new HashSet<>();
+	private String targetET = null; //This is the ET we are interested in, which will be used to filter out old SCTIDs
 	private int batchSize = 200;
 	
-	private boolean processRelationshipsOnly = true;
+	private boolean processRelationshipsOnly = false;
 	private boolean includeLegacySCTIDS = true;
 	private boolean publishInternationalSCTIDS = false;
 
@@ -160,27 +162,28 @@ public class PublishSctids extends TermServerReport {
 			incrementSummaryInformation("SCTIDs " + actionStr + "ed namespace " + namespace);
 			report(TERTIARY_REPORT, record.getSctid(), response.getId(), "", record.getStatus());
 		}
-		LOGGER.info(StringUtils.capitalizeFirstLetter(actionStr) + "ed {} SCTIDS for namespace {}", records.size(), namespace);
+		String actioned = StringUtils.capitalizeFirstLetter(actionStr) + "ed";
+		LOGGER.info("{} {} SCTIDS for namespace {}", actioned, records.size(), namespace);
 	}
 
 	private List<String> removeAndReportReserved(String namespace, List<String> batch) throws TermServerScriptException {
 		//We need to recover the current state so we can 'Assign' SCTIDs that are currently only at Status 'Reserved'
 		List<CisRecord> currentStatus = cisClient.getSCTIDs(batch);
 		List<String> availableSCTIDs = new ArrayList<>();
-		for (CisRecord record : currentStatus) {
-			if (record.getStatus().equals(RESERVED)) {
+		for (CisRecord cisRecord : currentStatus) {
+			if (cisRecord.getStatus().equals(RESERVED)) {
 				incrementSummaryInformation("SCTIDs stuck at reserved");
-				report(TERTIARY_REPORT, record.getSctid(), "", "SCTID is currently reserved. Cannot assign without calculating systemId", record);
-				batch.remove(record.getSctid().toString());
-			} else if (record.getStatus().equals(PUBLISHED)) {
+				report(TERTIARY_REPORT, cisRecord.getSctid(), "", "SCTID is currently reserved. Cannot assign without calculating systemId", cisRecord);
+				batch.remove(cisRecord.getSctid().toString());
+			} else if (cisRecord.getStatus().equals(PUBLISHED)) {
 				incrementSummaryInformation("SCTIDs already published");
-				report(TERTIARY_REPORT, record.getSctid(), "", "SCTID is already published.", record);
-				batch.remove(record.getSctid().toString());
-			} else if (record.getStatus().equals(AVAILABLE)) {
+				report(TERTIARY_REPORT, cisRecord.getSctid(), "", "SCTID is already published.", cisRecord);
+				batch.remove(cisRecord.getSctid().toString());
+			} else if (cisRecord.getStatus().equals(AVAILABLE)) {
 				//We'll move AVAILABLE SCTIDs to ASSIGNED here, and then allow them to follow on to be published by the calling method
-				incrementSummaryInformation("SCTIDs state " + record.getStatus());
-				report(TERTIARY_REPORT, record.getSctid(), "", "SCTID status: " + record.getStatus() + " moving to be ASSIGNED (prior to publishing)", record);
-				availableSCTIDs.add(record.getSctid().toString());
+				incrementSummaryInformation("SCTIDs state " + cisRecord.getStatus());
+				report(TERTIARY_REPORT, cisRecord.getSctid(), "", "SCTID status: " + cisRecord.getStatus() + " moving to be ASSIGNED (prior to publishing)", cisRecord);
+				availableSCTIDs.add(cisRecord.getSctid().toString());
 			}
 		}
 
@@ -191,59 +194,100 @@ public class PublishSctids extends TermServerReport {
 		return batch;
 	}
 
-	private void registerSCTIDS(List<CisRecord> records) {
-		//We just need the IDs of those records that are reserved
-	}
-
 	private void groupSCTIDsByNamespace(String fileType, boolean findNewSCTIDs) {
 		Map<String, Set<String>> sctidsByNamespace = findNewSCTIDs ? newSctidsByNamespace : oldSctidsByNamespace;
-		try {
-			InputStream is = new FileInputStream("releases/" + projectName);
+
+		try (InputStream is = new FileInputStream("releases/" + projectName);
+			 ZipInputStream zis = new ZipInputStream(is)) {
+
 			LOGGER.info("Processing : {} for {} files", projectName, fileType);
-			ZipInputStream zis = new ZipInputStream(is);
-			ZipEntry entry;
-			while ((entry = zis.getNextEntry()) != null) {
-				if (entry.getName().endsWith(".txt")
-						&& (!processRelationshipsOnly || entry.getName().contains("Relationship"))
-						&& entry.getName().contains(fileType)
-						&& !entry.getName().contains("Readme")) {
-					LOGGER.info("Processing {}", entry.getName());
-					BufferedReader br = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8));
-					String line;
-					while ((line = br.readLine()) != null) {
-						String[] parts = line.split("\t");
-						String sctid = parts[0];
-						String effectiveTime = parts[1];
+			processZipEntries(zis, fileType, findNewSCTIDs, sctidsByNamespace);
 
-						//If we're looking for new SCTIDs we're interested in them matching the ET
-						//If we're looking for old SCTIDs, then we're interested in them NOT matching the ET
-						if (!includeLegacySCTIDS && findNewSCTIDs != effectiveTime.equals(this.targetET)) {
-							continue;
-						}
-
-						if (sctid.equals("id") || sctid.contains("-")) {
-							continue;
-						}
-						String namespace = null;
-						for (String knownNamespace : namespaces) {
-							if (sctid.contains(knownNamespace)) {
-								namespace = knownNamespace;
-								break;
-							}
-						}
-						if (namespace == null) {
-							namespace = SnomedUtilsBase.getNamespace(sctid);
-						}
-						if (!sctidsByNamespace.containsKey(namespace)) {
-							sctidsByNamespace.put(namespace, new HashSet<>());
-						}
-						sctidsByNamespace.get(namespace).add(sctid);
-					}
-				}
-			}
 		} catch (IOException e) {
 			LOGGER.error("Failed to process {}", projectName, e);
 		}
 	}
+
+	private void processZipEntries(ZipInputStream zis,
+									String fileType,
+									boolean findNewSCTIDs,
+									Map<String, Set<String>> sctidsByNamespace) throws IOException {
+
+		ZipEntry entry;
+		while ((entry = zis.getNextEntry()) != null) {
+			if (shouldProcessEntry(entry, fileType)) {
+				LOGGER.info("Processing {}", entry.getName());
+				processZipEntryContent(zis, findNewSCTIDs, sctidsByNamespace);
+			}
+		}
+	}
+
+	private boolean shouldProcessEntry(ZipEntry entry, String fileType) {
+		String name = entry.getName();
+
+		return name.endsWith(".txt")
+				&& (!processRelationshipsOnly || name.contains("Relationship"))
+				&& name.contains(fileType)
+				&& !name.contains("Readme");
+	}
+
+	private void processZipEntryContent(ZipInputStream zis,
+										boolean findNewSCTIDs,
+										Map<String, Set<String>> sctidsByNamespace) throws IOException {
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8));
+		String line;
+
+		while ((line = br.readLine()) != null) {
+			processLine(line, findNewSCTIDs, sctidsByNamespace);
+		}
+	}
+
+	private void processLine(String line,
+							 boolean findNewSCTIDs,
+							 Map<String, Set<String>> sctidsByNamespace) {
+
+		String[] parts = line.split("\t");
+		String sctid = parts[0];
+		String effectiveTime = parts[1];
+
+		if (shouldSkipLine(sctid, effectiveTime, findNewSCTIDs)) {
+			return;
+		}
+		String namespace = resolveNamespace(sctid);
+		if (targetNamespaces != null && !targetNamespaces.contains(namespace)) {
+			return;
+		}
+		
+		addSctidToNamespaceMap(namespace, sctid, sctidsByNamespace);
+	}
+
+	private boolean shouldSkipLine(String sctid, String effectiveTime, boolean findNewSCTIDs) {
+
+		if (!includeLegacySCTIDS && findNewSCTIDs != effectiveTime.equals(this.targetET)) {
+			return true;
+		}
+
+		return sctid.equals("id") || sctid.contains("-");
+	}
+
+	private String resolveNamespace(String sctid) {
+		for (String knownNamespace : detectedNamespaces) {
+			if (sctid.contains(knownNamespace)) {
+				return knownNamespace;
+			}
+		}
+		return SnomedUtilsBase.getNamespace(sctid);
+	}
+
+	private void addSctidToNamespaceMap(String namespace,
+										String sctid,
+										Map<String, Set<String>> sctidsByNamespace) {
+
+		sctidsByNamespace
+				.computeIfAbsent(namespace, k -> new HashSet<>())
+				.add(sctid);
+	}
+
 
 }
