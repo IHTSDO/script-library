@@ -122,6 +122,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		//Populate removals into specific maps depending on how that removal will be processed.
 		List<String> removals = Arrays.asList("submitted as specimen", "process", SPECIMEN, "structure", "of", "at", "from");
 		typeValueTermRemovalMap.put(DIRECT_SITE, removals);
+		typeValueTermRemovalMap.put(CHARACTERIZES, removals);
 		
 		removals = Arrays.asList("technique");
 		typeValueTermRemovalMap.put(TECHNIQUE, removals);
