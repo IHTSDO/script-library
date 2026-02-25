@@ -54,13 +54,13 @@ public class DeleteLangRefsetsOnInactiveDescs extends BatchFix {
 	private int inactivateLangRefsetEntries(Task t, Concept c) throws TermServerScriptException {
 		int changesMade = 0;
 		for (Description d : c.getDescriptions(ActiveState.INACTIVE)) {
-			changesMade += inativateLangRefsetEntriesOnDesc(t, c, d);
+			changesMade += inactivateLangRefsetEntriesOnDesc(t, c, d);
 			incrementSummaryInformation("LangRefsetEntries checked", d.getLangRefsetEntries().size());
 		}
 		return changesMade;
 	}
 
-	private int inativateLangRefsetEntriesOnDesc(Task t, Concept c, Description d) throws TermServerScriptException {
+	private int inactivateLangRefsetEntriesOnDesc(Task t, Concept c, Description d) throws TermServerScriptException {
 		int changesMade = 0;
 		if (inScope(d)) {
 			for (LangRefsetEntry l : d.getLangRefsetEntries(ActiveState.ACTIVE)) {

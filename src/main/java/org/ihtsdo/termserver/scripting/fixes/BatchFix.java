@@ -25,6 +25,7 @@ import org.snomed.otf.scheduler.domain.JobRun;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * Reads in a file containing a list of concept SCTIDs and processes them in batches
@@ -1682,4 +1683,32 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 	public void setTaskPrefix(String taskPrefix) {
 		this.taskPrefix = taskPrefix;
 	}
+
+	protected void standardExecution(String[] args, ExecutionOptions options) throws TermServerScriptException {
+		try {
+			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_UPDATES);
+			selfDetermining = true;
+			populateEditPanel = false;
+			runStandAlone = false;  //Need to look up the project for MS extensions
+			getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			init(args);
+			if (options.isSnapshotImport()) {
+				loadProjectSnapshot(false);
+			}
+			postInit();
+			processFile();
+		} finally {
+			finish();
+		}
+	}
+
+	protected void deleteDescriptionWithLangRefsets(Task t, Concept c, Description d) throws TermServerScriptException {
+		for (LangRefsetEntry l : d.getLangRefsetEntries()) {
+			deleteRefsetMember(t, l.getId(), false);
+			report(t, c, Severity.LOW, ReportActionType.LANG_REFSET_DELETED, l);
+		}
+		deleteDescription(t, d);
+		report(t, c, Severity.LOW, ReportActionType.DESCRIPTION_DELETED, d);
+	}
+
 }
