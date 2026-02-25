@@ -53,7 +53,8 @@ public class LoincAttributePartMapManager extends AttributePartMapManager implem
 				gl.getConcept("1381442009 |Antigen of transcription factor SOX-11 (substance)|")));
 		hardCodedMappings.put("LP450074-2", List.of(
 				gl.getConcept("1381418005 |Antigen of mismatch repair endonuclease PMS2 (substance)|")));
-
+		hardCodedMappings.put("LP450681-4", List.of(
+				gl.getConcept("813831010000100|Aggregometer (physical object)|")));
 	}
 
 }
