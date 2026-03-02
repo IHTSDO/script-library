@@ -23,7 +23,7 @@ import java.util.zip.ZipInputStream;
 public class PublishSctids extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PublishSctids.class);
-	private static final String THIS_TICKET = "XDS-158";
+	private static final String THIS_TICKET = "XDS-30";
 	private enum ACTION {PUBLISH, REGISTER}
 
 	public static final String AVAILABLE = "Available";
@@ -35,7 +35,7 @@ public class PublishSctids extends TermServerReport {
 	private Map<String, Set<String>> newSctidsByNamespace = new HashMap<>();
 	private Map<String, Set<String>> oldSctidsByNamespace = new HashMap<>();
 
-	private List<String> targetNamespaces = List.of("1000036");
+	private List<String> targetNamespaces = null; // List.of("1000036")
 	private Set<String> detectedNamespaces = new HashSet<>();
 	private String targetET = null; //This is the ET we are interested in, which will be used to filter out old SCTIDs
 	private int batchSize = 200;
@@ -228,6 +228,7 @@ public class PublishSctids extends TermServerReport {
 		return name.endsWith(".txt")
 				&& (!processRelationshipsOnly || name.contains("Relationship"))
 				&& name.contains(fileType)
+				&& !name.contains("Identifier")
 				&& !name.contains("Readme");
 	}
 
