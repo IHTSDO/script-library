@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
+import org.ihtsdo.otf.utils.SnomedUtilsBase;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -20,9 +21,9 @@ import org.snomed.otf.script.dao.ReportSheetManager;
  * RP-605 List any concepts (which will almost certainly be inactive) where the FSN
  * does not contain a currently valid semantic tag.
  */
-public class MissingSemanticTags extends BatchFix {
+public class ReplaceInvalidSemanticTags extends BatchFix {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(MissingSemanticTags.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ReplaceInvalidSemanticTags.class);
 
 	private List<String> historicallyAcceptableSemTags = List.of("(administrative concept)",
 			"(context-dependent category)",
@@ -37,12 +38,12 @@ public class MissingSemanticTags extends BatchFix {
 
 	private Set<String> validSemTags = new HashSet<>();
 
-	protected MissingSemanticTags(BatchFix clone) {
+	protected ReplaceInvalidSemanticTags(BatchFix clone) {
 		super(clone);
 	}
 
 	public static void main(String[] args) throws TermServerScriptException, IOException {
-		MissingSemanticTags fix = new MissingSemanticTags(null);
+		ReplaceInvalidSemanticTags fix = new ReplaceInvalidSemanticTags(null);
 		try {
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
@@ -54,18 +55,21 @@ public class MissingSemanticTags extends BatchFix {
 			fix.finish();
 		}
 	}
-	
+
+	@Override
 	public void init (JobRun run) throws TermServerScriptException {
-		ReportSheetManager.targetFolderId = "1F-KrAwXrXbKj5r-HBLM0qI5hTzv-JgnU"; //Ad-hoc
+		ReportSheetManager.setTargetFolderId("1F-KrAwXrXbKj5r-HBLM0qI5hTzv-JgnU"); //Ad-hoc
+		additionalReportColumns =  "Found,EffectiveTime,Issue,Last Known Position,Historical Relationships,Replacement,,";
 		super.init(run);
 	}
 
+	@Override
 	public void postInit() throws TermServerScriptException {
 		//Work through all top level hierarchies and list semantic tags
 		for (Concept topLevel : ROOT_CONCEPT.getDescendants(IMMEDIATE_CHILD)) {
 			Set<Concept> descendants = topLevel.getDescendants(NOT_SET);
 			for (Concept thisDescendent : descendants) {
-				validSemTags.add(SnomedUtils.deconstructFSN(thisDescendent.getFsn())[1]);
+				validSemTags.add(SnomedUtilsBase.deconstructFSN(thisDescendent.getFsn())[1]);
 			}
 		}
 		super.postInit();
@@ -74,7 +78,7 @@ public class MissingSemanticTags extends BatchFix {
 	@Override
 	public int doFix(Task t, Concept c, String info) throws TermServerScriptException {
 		int changesMade = 0;
-		String semTag = SnomedUtils.deconstructFSN(c.getFsn())[1];
+		String semTag = SnomedUtilsBase.deconstructFSN(c.getFsn())[1];
 		if (c.getId().equals("138297002")) {
 			LOGGER.debug("here");
 		}
