@@ -177,6 +177,13 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			addProcessingFlag(ProcessingFlag.SPLIT_TO_GROUP_PER_COMPONENT);
 		}
 
+		if (part.getPartNumber().equals("LP450076-7")) {
+			//viii.2.d Keep “specimen” in the FSN and descriptions in concepts that are modeled with LP450076-7 Specimen collection
+			addProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN_EXCEPT_CHARACTERIZES);
+			String tweakedFsnTemplate = getPreferredTermTemplate().replace("in [SYSTEM]", "of [SYSTEM]");
+			setPreferredTermTemplate(tweakedFsnTemplate);
+		}
+
 		doCheckForCoagulationRules(loincDetail);
 
 		if ((loincDetail.getPartTypeName().contentEquals("SYSTEM") && allowSpecimenTermForLoincParts.contains(loincDetail.getPartNumber()))
@@ -346,29 +353,36 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	}
 
 	private String checkTypeTermRemovalMap(IRelationship r, String term) {
-		//Are we making any removals based on the type?
-		if (typeValueTermRemovalMap.containsKey(r.getType())) {
-			//Add a space to ensure we do whole word removal
-			term = " " + term + " ";
-			for (String removal : typeValueTermRemovalMap.get(r.getType())) {
-				//Rule 2a. We sometimes allow 'specimen' to be used, for certain loinc parts
-				if ((removal.equals(SPECIMEN) || removal.equals("from")) && hasProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN)) {
-					continue;
-				}
-
-				//We leave in 'technique' for automated and confirmatory techniques
-				if (removal.equals("technique") && hasProcessingFlag(ProcessingFlag.ALLOW_TECHNIQUE)) {
-					continue;
-				}
-				String removalWithSpaces = " " + removal + " ";
-				term = term.replace(removalWithSpaces, " ");
-
-				//Try again capitalised
-				removalWithSpaces = " " + StringUtils.capitalizeFirstLetter(removal) + " ";
-				term = term.replace(removalWithSpaces, " ");
-			}
-			term = term.trim();
+		if (!typeValueTermRemovalMap.containsKey(r.getType())) {
+			return term;
 		}
+
+		term = " " + term + " ";
+		for (String removal : typeValueTermRemovalMap.get(r.getType())) {
+			if (shouldSkipRemoval(r, removal)) {
+				continue;
+			}
+			// Remove with spaces to match whole words
+			term = removeTermWithSpaces(term, removal);
+		}
+		return term.trim();
+	}
+
+	private boolean shouldSkipRemoval(IRelationship r, String removal) {
+		return switch (removal) {
+			case SPECIMEN, "from" -> hasProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN) ||
+					(hasProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN_EXCEPT_CHARACTERIZES) &&
+							!r.getType().equals(CHARACTERIZES));
+			case "technique" -> hasProcessingFlag(ProcessingFlag.ALLOW_TECHNIQUE);
+			default -> false;
+		};
+	}
+
+	private String removeTermWithSpaces(String term, String removal) {
+		// Normal case
+		term = term.replace(" " + removal + " ", " ");
+		// Capitalized
+		term = term.replace(" " + StringUtils.capitalizeFirstLetter(removal) + " ", " ");
 		return term;
 	}
 
