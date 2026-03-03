@@ -59,7 +59,6 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 	@Override
 	public void init (JobRun run) throws TermServerScriptException {
 		ReportSheetManager.setTargetFolderId("1F-KrAwXrXbKj5r-HBLM0qI5hTzv-JgnU"); //Ad-hoc
-		additionalReportColumns =  "Found,EffectiveTime,Issue,Last Known Position,Historical Relationships,Replacement,,";
 		super.init(run);
 	}
 
@@ -72,6 +71,7 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 				validSemTags.add(SnomedUtilsBase.deconstructFSN(thisDescendent.getFsn())[1]);
 			}
 		}
+		additionalReportColumns =  "EffectiveTime,Proposed SemTag,Issue,Last Known Position,Historical Relationships,, ,";
 		super.postInit();
 	}
 
@@ -89,26 +89,27 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 			isReplacement = true;
 		} else {
 			//What are the valid replacements for this semtag?
-			List<String> replacementSemTags = getAssocSemTags(c);
+			Set<String> replacementSemTags = getAssocSemTags(c);
 			if (replacementSemTags.size() == 1) {
-				replacementSemTag = replacementSemTags.get(0);
+				replacementSemTag = replacementSemTags.iterator().next();
 			} else if (replacementSemTags.size() > 1) {
 				//If we have a disorder and a finding, pick the finding
 				if (replacementSemTags.contains("(disorder)") && replacementSemTags.contains("(finding)")) {
 					replacementSemTag = "(finding)";
 				} else {
-					throw new TermServerScriptException("Unable to determine replacement for " + semTag + " in " + c);
+					String replacementsString = replacementSemTags.stream().collect(Collectors.joining(","));
+					report(t,c, Severity.HIGH, ReportActionType.VALIDATION_CHECK, c.getEffectiveTime(), "Can't pick between: " + replacementsString);
+					return NO_CHANGES_MADE;
 				}
 			}
 		}
-		List<String> replacementSemTags = getAssocSemTags(c);
 		String isA = c.getRelationships(CharacteristicType.INFERRED_RELATIONSHIP, IS_A, ActiveState.BOTH)
 				.stream()
 				.map(Relationship::toString)
 				.collect(Collectors.joining(",\n"));
 		String histAssocs = SnomedUtils.prettyPrintHistoricalAssociations(c, gl);
 		changesMade += replaceSemTag(t, c, semTag, replacementSemTag, isReplacement);
-		report(c, c.getEffectiveTime(), replacementSemTag, isA, histAssocs);
+		report(t,c, Severity.NONE, ReportActionType.INFO, c.getEffectiveTime(), replacementSemTag, isA, histAssocs);
 		return changesMade;
 	}
 
@@ -123,10 +124,10 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 		return CHANGE_MADE;
 	}
 
-	private List<String> getAssocSemTags(Concept c) throws TermServerScriptException {
-		List<String> replacementSemTags = new ArrayList<>();
+	private Set<String> getAssocSemTags(Concept c) throws TermServerScriptException {
+		Set<String> replacementSemTags = new HashSet<>();
 		for (AssociationEntry assoc : c.getAssociationEntries())  {
-			if (assoc.isActive()) {
+			if (assoc.isActiveSafely()) {
 				Concept target = gl.getConcept(assoc.getTargetComponentId());
 				replacementSemTags.add(SnomedUtils.deconstructFSN(target.getFsn())[1]);
 			}
@@ -134,6 +135,7 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 		return replacementSemTags;
 	}
 
+	@Override
 	protected List<Component> identifyComponentsToProcess() throws TermServerScriptException {
 		List<Component> process = new ArrayList<>();
 		nextConcept:
