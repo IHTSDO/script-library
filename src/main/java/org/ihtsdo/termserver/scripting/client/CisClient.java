@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.ExpressiveErrorHandler;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Namespace;
 import org.ihtsdo.termserver.scripting.cis.CisBulkRegisterRequest;
 import org.ihtsdo.termserver.scripting.cis.CisBulkRequest;
 import org.ihtsdo.termserver.scripting.cis.CisRecord;
@@ -12,10 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpRequest;
+import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
@@ -32,7 +30,7 @@ public class CisClient {
 	private final HttpHeaders headers;
 	private final RestTemplate restTemplate;
 	private static final String CONTENT_TYPE = "application/json";
-	private final String token;
+	private String token;
 
 	protected static Gson gson;
 	static {
@@ -42,7 +40,7 @@ public class CisClient {
 	}
 
 	public CisClient(String serverUrl, String token) {
-		this.token = token;
+		setToken(token);
 		headers = new HttpHeaders();
 		headers.add("Accept", CONTENT_TYPE);
 
@@ -60,6 +58,18 @@ public class CisClient {
 				return execution.execute(request, body);
 			}
 		});
+	}
+
+	private void setToken(String token) {
+		if (token == null || token.isEmpty()) {
+			throw new IllegalArgumentException("Token must not be null or empty");
+		}
+		//Now the token used by CIS is just raw, not the environment specific cookie, so trim that off if present
+		int tokenStart = token.indexOf("ihtsdo=");
+		if (tokenStart > 0) {
+			token = token.substring(tokenStart + "ihtsdo=".length());
+		}
+		this.token = token;
 	}
 
 	public CisResponse publishSctids(CisBulkRequest cisBulkRequest) {
@@ -112,9 +122,16 @@ public class CisClient {
 		}
 	}
 
-	public List<CisRecord> getSCTIDs(List<String> sctids) throws TermServerScriptException {
+	public List<CisRecord> getSCTIDs(List<String> sctids) {
 		ParameterizedTypeReference<List<CisRecord>> type = new ParameterizedTypeReference<>(){};
 		String url = "/api/sct/bulk/ids?sctids=" + String.join(",", sctids) + "&token=" + token;
 		return restTemplate.exchange(url, HttpMethod.GET, null, type).getBody();
+	}
+
+	public Namespace getNamespace(String namespace) {
+		String url = "/api/sct/namespaces/" + namespace + "?token=" + token;
+		ResponseEntity<Namespace> response =
+				restTemplate.exchange(url, HttpMethod.GET, HttpEntity.EMPTY, Namespace.class);
+		return response.getBody();
 	}
 }

@@ -18,7 +18,7 @@ public class MAINT2904_InactivateCNCIndicators extends DeltaGeneratorWithAutoImp
 
 	public void process() throws TermServerScriptException {
 		for (Concept c : gl.getAllConcepts()) {
-			//We won't check that concepts are inactive, just incase we have some innappropriate CNC indicators to mop up
+			//We won't check that concepts are inactive, just in case we have some inappropriate CNC indicators to mop up
 			for (Description d : c.getDescriptions())	{
 				for (InactivationIndicatorEntry rm : d.getInactivationIndicatorEntries(ActiveState.ACTIVE)) {
 					if (rm.isActiveSafely() && rm.getInactivationReasonId().equals(SCTID_INACT_CONCEPT_NON_CURRENT)) {
