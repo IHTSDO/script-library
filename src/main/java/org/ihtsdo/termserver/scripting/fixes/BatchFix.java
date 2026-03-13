@@ -16,6 +16,7 @@ import org.ihtsdo.termserver.scripting.*;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate.Mode;
 import org.ihtsdo.termserver.scripting.fixes.batch_import.BatchImport;
+import org.ihtsdo.termserver.scripting.snapshot.ArchiveManager;
 import org.ihtsdo.termserver.scripting.util.AcceptabilityMode;
 import org.ihtsdo.termserver.scripting.util.DialectChecker;
 import org.ihtsdo.termserver.scripting.util.HistAssocUtils;
@@ -1690,8 +1691,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 			selfDetermining = true;
 			populateEditPanel = false;
 			runStandAlone = false;  //Need to look up the project for MS extensions
-			getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			init(args);
+			processExecutionOptions(options, args);
 			if (options.isSnapshotImport()) {
 				loadProjectSnapshot(false);
 			}
@@ -1701,6 +1701,16 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 			finish();
 		}
 	}
+
+	private void processExecutionOptions(ExecutionOptions options, String[] args) throws TermServerScriptException {
+		ArchiveManager am = getArchiveManager();
+		am.setEnsureSnapshotPlusDeltaLoad(true);
+		init(args);
+		am.setRunIntegrityChecks(options.isIntegrityChecking());
+		am.setLoadOtherReferenceSets(options.isImportAllRefsets());
+	}
+
+
 
 	protected void deleteDescriptionWithLangRefsets(Task t, Concept c, Description d) throws TermServerScriptException {
 		for (LangRefsetEntry l : d.getLangRefsetEntries()) {

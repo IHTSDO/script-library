@@ -41,12 +41,7 @@ public class DeleteUnpublishedInactiveDescriptions extends BatchFix implements S
 		for (Description d : c.getDescriptions()) {
 			if (!d.isActiveSafely() 
 					&& !d.isReleasedSafely()) {
-				//Delete the refset members first
-				for (LangRefsetEntry l : d.getLangRefsetEntries()) {
-					deleteRefsetMember(t, l.getId(), false);
-				}
-				deleteDescription(t, d);
-				report(t, c, Severity.LOW, ReportActionType.DESCRIPTION_DELETED, d);
+				deleteDescriptionWithLangRefsets(t, c, d);
 			}
 		}
 		return CHANGE_MADE;
