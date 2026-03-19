@@ -40,6 +40,7 @@ public class RetermIllegalCharacters extends BatchFix {
 		}
 	}
 
+	@Override
 	public void postInit() throws TermServerScriptException {
 		illegalReplacementMap.put(EN_DASH, "-");
 		illegalReplacementMap.put(EM_DASH, "-");
@@ -66,7 +67,7 @@ public class RetermIllegalCharacters extends BatchFix {
 		return changesMade;
 	}
 
-	private int reterm(Task t, Concept c) throws TermServerScriptException, ValidationFailure {
+	private int reterm(Task t, Concept c) throws TermServerScriptException {
 		int changesMade = 0;
 		for (Map.Entry<String,String> entry : illegalReplacementMap.entrySet()) {
 			String find = entry.getKey();
@@ -77,7 +78,7 @@ public class RetermIllegalCharacters extends BatchFix {
 				}
 				//In this case we're looking for an entire match
 				if (d.getTerm().contains(find)) {
-					if (!d.isReleased()) {
+					if (!d.isReleasedSafely()) {
 						report(t, c, Severity.MEDIUM, ReportActionType.INFO, "New description this cycle");
 					}
 					String replacement = d.getTerm().replaceAll(find, replace);
