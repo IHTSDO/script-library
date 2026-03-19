@@ -528,7 +528,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 
 		//For batch fixes we generally need to know if the components we're modifying have been
 		//released or not, so set this by default
-		getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 
 		try {
 			super.init(args);
@@ -1706,7 +1706,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 			runStandAlone = false;  //Need to look up the project for MS extensions
 			processExecutionOptions(options, args);
 			if (options.isSnapshotImport()) {
-				loadProjectSnapshot(false);
+				loadProjectSnapshot();
 			}
 			postInit();
 			processFile();
@@ -1716,14 +1716,13 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 	}
 
 	private void processExecutionOptions(ExecutionOptions options, String[] args) throws TermServerScriptException {
-		ArchiveManager am = getArchiveManager();
 		//If we're doing batch fixes, we generally need to know if a component is published or not, so build new snapshot each time
-		am.setEnsureSnapshotPlusDeltaLoad(true);
+		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		//And if we're going to do that, there's no point in saving the snapshot to disk
 		ArchiveImporter.setSkipSave(true);
 		init(args);
-		am.setRunIntegrityChecks(options.isIntegrityChecking());
-		am.setLoadOtherReferenceSets(options.isImportAllRefsets());
+		getSnapshotConfiguration().setRunIntegrityChecks(options.isIntegrityChecking());
+		getSnapshotConfiguration().setLoadOtherReferenceSets(options.isImportAllRefsets());
 	}
 
 	protected void deleteDescriptionWithLangRefsets(Task t, Concept c, Description d) throws TermServerScriptException {

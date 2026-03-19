@@ -46,7 +46,7 @@ public class ConceptsWithOrTargetsOfAttribute extends TermServerReport {
 			report.additionalReportColumns = "FSN, Reason";
 			report.secondaryReportColumns = "FSN, Reason, Example source";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.populateSourceTargetMaps();
 			report.runModifiedNotLeaf();

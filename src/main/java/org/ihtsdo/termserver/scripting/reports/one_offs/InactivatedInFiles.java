@@ -29,7 +29,7 @@ public class InactivatedInFiles extends TermServerReport {
 		InactivatedInFiles report = new InactivatedInFiles();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.analyzeFiles();
 		} catch (Exception e) {

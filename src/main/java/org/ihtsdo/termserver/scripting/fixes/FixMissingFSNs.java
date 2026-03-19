@@ -33,7 +33,7 @@ public class FixMissingFSNs extends BatchFix implements ScriptConstants{
 			fix.init(args);
 			fix.additionalReportColumns = "Active, Details";
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

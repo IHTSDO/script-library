@@ -33,7 +33,7 @@ public class INFRA9963_DeleteLangRefsetInDelta extends BatchFix {
 			fix.runStandAlone = true;
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

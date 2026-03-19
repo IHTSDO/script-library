@@ -38,7 +38,7 @@ public class GnarlyFactorCalculation extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN, Depth, Descendants Stated/Inferred, IntermediatePrimitives, FDs under IPs, Mismatched Groups, RepeatedAttributes";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //just FSNs
+			report.loadProjectSnapshot();  //just FSNs
 			report.postLoadInit();
 			report.subHierarchies = report.identifyGroupersByAttribute(report.processFile());
 			report.run();

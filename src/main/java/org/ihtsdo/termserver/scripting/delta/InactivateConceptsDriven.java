@@ -26,7 +26,7 @@ public class InactivateConceptsDriven extends DeltaGenerator implements ScriptCo
 			delta.targetModuleId = "57101000202106";  //NO
 			delta.newIdsRequired = false; 
 			delta.init(args);
-			delta.loadProjectSnapshot(false); 
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
 			delta.flushFiles(false); //Need to flush files before zipping

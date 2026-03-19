@@ -37,7 +37,7 @@ public class ReplaceDescriptionIds extends BatchFix implements ScriptConstants{
 			fix.populateTaskDescription = false;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.processFile();
 		} finally {
 			fix.finish();

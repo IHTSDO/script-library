@@ -32,9 +32,9 @@ public class DuplicateSimpleRefsetEntriesFix extends BatchFix {
 			fix.selfDetermining = true;
 			fix.populateEditPanel = false;
 			fix.runStandAlone = false;  //Need to look up the project for MS extensions
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
-			fix.loadProjectSnapshot(false);  //Load all descriptions
+			fix.loadProjectSnapshot();  //Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {

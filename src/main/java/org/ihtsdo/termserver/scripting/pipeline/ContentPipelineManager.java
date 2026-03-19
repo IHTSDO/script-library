@@ -82,11 +82,11 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		try {
 			runStandAlone = false;
 			getGraphLoader().setExcludedModules(new HashSet<>());
-			getArchiveManager().setLoadOtherReferenceSets(true);
-			getArchiveManager().setRunIntegrityChecks(false);
-			getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);  //Needed for working out if we're deleteing or inactivating
+			getSnapshotConfiguration().setLoadOtherReferenceSets(true);
+			getSnapshotConfiguration().setRunIntegrityChecks(false);
+			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);  //Needed for working out if we're deleteing or inactivating
 			init(args);
-			loadProjectSnapshot(false);
+			loadProjectSnapshot();
 			postInit();
 			conceptCreator = Rf2ConceptCreator.build(this, args);
 			conceptCreator.initialiseDeltaGeneratorSpecifics(new String[]{"-nS",this.getNamespace(), "-m", getExternalContentModuleId()});

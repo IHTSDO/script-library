@@ -33,7 +33,7 @@ public class RetermConceptsDriven extends BatchFix {
 			fix.selfDetermining = false;
 			fix.runStandAlone = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

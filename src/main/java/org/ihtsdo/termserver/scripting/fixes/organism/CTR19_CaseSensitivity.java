@@ -53,7 +53,7 @@ public class CTR19_CaseSensitivity extends BatchFix implements ScriptConstants{
 			fix.selfDetermining = true;
 			fix.init(args);
 			//fix.testAS();
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.processFile();
 		} finally {
 			fix.finish();

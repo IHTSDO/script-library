@@ -37,7 +37,7 @@ public class SelfGroupAttributes extends BatchFix implements ScriptConstants{
 			fix.validateConceptOnUpdate = false;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

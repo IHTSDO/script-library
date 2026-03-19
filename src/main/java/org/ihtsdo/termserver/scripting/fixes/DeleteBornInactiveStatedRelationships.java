@@ -36,7 +36,7 @@ public class DeleteBornInactiveStatedRelationships extends BatchFix implements S
 			fix.reportNoChange = false;
 			fix.worksWithConcepts = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

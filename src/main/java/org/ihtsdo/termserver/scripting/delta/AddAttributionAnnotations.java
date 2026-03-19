@@ -30,7 +30,7 @@ public class AddAttributionAnnotations extends DeltaGenerator implements ScriptC
 			delta.newIdsRequired = false; // We'll only be modifying existing descriptions
 			delta.init(args);
 			delta.inputFileHasHeaderRow = true;
-			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
+			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.loadConfirmationFile();
 			delta.annotationType = delta.gl.getConcept("1295448001"); // |Attribution (attribute)|

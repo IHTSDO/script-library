@@ -29,7 +29,7 @@ public class RP1013_CS_terms_starting_with_number_should_be_cI extends DeltaGene
 			delta.newIdsRequired = false;
 			delta.taskPrefix = "RP-1013";
 			delta.init(args);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit();
 			delta.process();
 			delta.flushFilesWithWait(false);

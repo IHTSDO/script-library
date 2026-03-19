@@ -33,7 +33,7 @@ public class FixConcreteValueDataType extends BatchFix implements ScriptConstant
 			fix.populateEditPanel = false;
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.postInit();
 			TARGET_ATTRIBUTE = fix.getGraphLoader().getConcept("1142139005 |Count of base of active ingredient (attribute)|");
 			fix.processFile();

@@ -26,7 +26,7 @@ public class CardinalityMismatch extends TermServerReport {
 		try {
 			report.additionalReportColumns = "";
 			report.init(args);
-			report.loadProjectSnapshot(true);  
+			report.loadProjectSnapshot();
 			report.finMultipleModifications();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report",e);

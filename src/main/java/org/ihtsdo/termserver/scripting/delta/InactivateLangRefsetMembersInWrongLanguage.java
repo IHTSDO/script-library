@@ -1,8 +1,7 @@
 package org.ihtsdo.termserver.scripting.delta;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Metadata;
-import org.ihtsdo.termserver.scripting.client.TermServerClient;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.BranchMetadata;
 import org.ihtsdo.termserver.scripting.domain.*;
 
 import java.util.HashMap;
@@ -17,7 +16,7 @@ public class InactivateLangRefsetMembersInWrongLanguage extends DeltaGenerator i
 		try {
 			delta.newIdsRequired = false; // We'll only be inactivating existing members
 			delta.init(args);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.startTimer();
 			delta.process();
@@ -69,7 +68,7 @@ public class InactivateLangRefsetMembersInWrongLanguage extends DeltaGenerator i
 		refsetLangCodeMap.put(GB_ENG_LANG_REFSET, "en");
 
 		//Now the optionalLanguageRefsets are laid out nicely
-		Metadata metadata = project.getMetadata();
+		BranchMetadata metadata = project.getMetadata();
 		refsetLangCodeMap.putAll(metadata.getLangRefsetLangMapping());
 		return refsetLangCodeMap;
 	}

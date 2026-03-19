@@ -39,7 +39,7 @@ public class INFRA13580_UICCCopyAJCC extends DeltaGenerator implements ScriptCon
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m"; //Ad-Hoc Batch Updates
 			delta.init(args);
-			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
+			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit();
 			Batch batch = delta.preProcess();
 			delta.process(batch);

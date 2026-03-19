@@ -56,7 +56,7 @@ public abstract class BatchLoincFix extends BatchFix {
 			runStandAlone = false;
 			stateComponentType = false;
 			init(args);
-			loadProjectSnapshot(false);
+			loadProjectSnapshot();
 			postInit();
 			processFile();
 		} finally {

@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.delta.DeltaGenerator;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -24,11 +23,11 @@ public class MSSP1750_RemoveUSLangRefsetENGB extends DeltaGenerator implements S
 		MSSP1750_RemoveUSLangRefsetENGB delta = new MSSP1750_RemoveUSLangRefsetENGB();
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m"; //Ad-Hoc Batch Updates
-			delta.getArchiveManager().setPopulateReleaseFlag(true);
+			delta.getSnapshotConfiguration().setPopulateReleaseFlag(true);
 			delta.targetModuleId = US_MODULE;
 			delta.newIdsRequired = false; // We'll only be modifying existing descriptions
 			delta.init(args);
-			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
+			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit();
 			delta.process();
 			delta.flushFiles(false); //Need to flush files before zipping

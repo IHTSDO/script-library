@@ -35,7 +35,7 @@ public class WordUsageReport extends TermServerScript{
 			report.additionalReportColumns = "Word, Total Instance, Distribution, Examples";
 			report.init(args);
 			Description.setPaddingMode(true);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.loadWords();
 			report.reportWordUsage();
 		} catch (Exception e) {

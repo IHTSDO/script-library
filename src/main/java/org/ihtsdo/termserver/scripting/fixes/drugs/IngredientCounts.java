@@ -29,7 +29,7 @@ public class IngredientCounts extends DrugBatchFix implements ScriptConstants{
 			fix.populateEditPanel = false;
 			fix.populateTaskDescription = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.processFile();
 		} finally {
 			fix.finish();

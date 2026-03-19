@@ -44,8 +44,8 @@ public class INFRA7506_AngiogramReterming extends BatchFix {
 			fix.expectNullConcepts = true;
 			fix.validateConceptOnUpdate = true;
 			fix.init(args);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

@@ -21,11 +21,11 @@ public class WhitelistBornInactiveComponents extends TermServerScript {
 		WhitelistBornInactiveComponents fix = new WhitelistBornInactiveComponents();
 		try {
 			fix.runStandAlone = false;
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
 			fix.additionalReportColumns = "Active, Details, Details, Details";
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.doFix();
 		} finally {

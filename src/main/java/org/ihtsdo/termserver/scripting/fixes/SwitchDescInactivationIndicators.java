@@ -5,7 +5,6 @@ import java.util.*;
 
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.snapshot.ArchiveManager;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.snomed.otf.script.dao.ReportSheetManager;
@@ -31,9 +30,9 @@ public class SwitchDescInactivationIndicators extends BatchFix {
 			fix.runStandAlone = false;  //We need to look up the project path for MS projects
 			fix.selfDetermining = true;
 			fix.populateEditPanel = false;
-			fix.getArchiveManager().setRunIntegrityChecks(false);
+			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			fix.init(args);
-			fix.loadProjectSnapshot(false); // Load all descriptions
+			fix.loadProjectSnapshot(); // Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {
@@ -43,9 +42,8 @@ public class SwitchDescInactivationIndicators extends BatchFix {
 	
 	@Override
 	public void init(String[] args) throws TermServerScriptException {
-		ArchiveManager mgr = getArchiveManager();
-		mgr.setEnsureSnapshotPlusDeltaLoad(true);
-		//mgr.setRunIntegrityChecks(false);  //MSSP-1087
+		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+		//getSnapshotConfiguration().setRunIntegrityChecks(false);  //MSSP-1087
 		super.init(args);
 	}
 

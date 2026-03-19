@@ -24,7 +24,7 @@ public class ConceptsUsingAttribute extends TermServerReport {
 		try {
 			report.additionalReportColumns = "Semtag, DefinitionStatus, Stated, Inferred";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.runConceptsUsingAttributeReport();
 		} catch (Exception e) {

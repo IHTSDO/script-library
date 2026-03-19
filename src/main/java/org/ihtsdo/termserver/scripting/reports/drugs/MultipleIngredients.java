@@ -26,7 +26,7 @@ public class MultipleIngredients extends TermServerReport {
 		try {
 			report.additionalReportColumns = "Ingredient Count";
 			report.init(args);
-			report.loadProjectSnapshot(true);  
+			report.loadProjectSnapshot();
 			report.finMultipleModifications();
 		} catch (Exception e) {
 			LOGGER.info("Failed to produce MultipleIngredients due to {}: {}", e.getClass().getSimpleName(), e.getMessage());

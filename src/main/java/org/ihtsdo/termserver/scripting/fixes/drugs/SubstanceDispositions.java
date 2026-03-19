@@ -51,7 +51,7 @@ public class SubstanceDispositions extends DrugBatchFix implements ScriptConstan
 			fix.additionalReportColumns = "ACTION_DETAIL";
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); //Need full descriptions so we can get PT of target (not loaded from TS)
+			fix.loadProjectSnapshot(); //Need full descriptions so we can get PT of target (not loaded from TS)
 			fix.processFile();
 		} finally {
 			fix.finish();

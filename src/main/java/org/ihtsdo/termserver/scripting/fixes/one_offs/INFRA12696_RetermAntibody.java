@@ -43,8 +43,8 @@ public class INFRA12696_RetermAntibody extends BatchFix {
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Before, After";
 			fix.init(args);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

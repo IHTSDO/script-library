@@ -32,7 +32,7 @@ public class SetProximalPrimitiveParent extends BatchFix {
 		try {
 			ReportSheetManager.setTargetFolderId("1Ay_IwhPD1EkeIYWuU6q7xgWBIzfEf6dl");  // QI/Normalization
 			app.init(args);
-			app.loadProjectSnapshot(false);  //Load all descriptions
+			app.loadProjectSnapshot();  //Load all descriptions
 			app.postInit();
 			app.processFile();
 		} catch (Exception e) {

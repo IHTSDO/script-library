@@ -22,7 +22,7 @@ public class ReassertCoreModuleComponentInExtension extends DeltaGenerator {
 	public static void main(String[] args) throws TermServerScriptException {
 		ReassertCoreModuleComponentInExtension delta = new ReassertCoreModuleComponentInExtension();
 		try {
-			delta.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			delta.runStandAlone = false;
 			delta.inputFileHasHeaderRow = true;
 			delta.newIdsRequired = false; // We'll only be inactivating existing relationships
@@ -30,10 +30,10 @@ public class ReassertCoreModuleComponentInExtension extends DeltaGenerator {
 			//It might be that we need component from an upgraded international edition
 			//so we might have very bad integrity.  Doesn't matter in this case, we just
 			//need the rows from the RF2
-			delta.getArchiveManager().setPopulateHierarchyDepth(false);
-			delta.getArchiveManager().setRunIntegrityChecks(false);
+			delta.getSnapshotConfiguration().setPopulateHierarchyDepth(false);
+			delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			GraphLoader.getGraphLoader().setRecordPreviousState(true);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);  //Flush and Close
@@ -47,7 +47,7 @@ public class ReassertCoreModuleComponentInExtension extends DeltaGenerator {
 
 	@Override
 	public void init (String[] args) throws TermServerScriptException {
-		getArchiveManager().setPopulateReleaseFlag(true);
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 		super.init(args);
 	}
 

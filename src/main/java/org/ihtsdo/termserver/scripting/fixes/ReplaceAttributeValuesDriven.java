@@ -35,7 +35,7 @@ public class ReplaceAttributeValuesDriven extends BatchFix {
 			fix.correctRoundedSCTIDs = true;
 			fix.runStandAlone = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

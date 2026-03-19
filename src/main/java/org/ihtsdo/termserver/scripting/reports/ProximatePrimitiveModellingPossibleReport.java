@@ -32,7 +32,7 @@ public class ProximatePrimitiveModellingPossibleReport extends TermServerScript{
 		try {
 			report.additionalReportColumns = " Sem_Tag, alreadyModelledCorrectly, FDToTop, immedPrimParent, notImmediatePrimitive";
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			report.reportIntermediatePrimitives();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report", e);

@@ -21,7 +21,7 @@ public class AssertionFailureFix extends BatchFix implements ScriptConstants{
 		try {
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); //Load FSNs only
+			fix.loadProjectSnapshot(); //Load FSNs only
 			//We won't incude the project export in our timings
 			fix.startTimer();
 			fix.processFile();

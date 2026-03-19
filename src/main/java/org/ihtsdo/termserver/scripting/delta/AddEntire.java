@@ -37,7 +37,7 @@ public class AddEntire extends DeltaGenerator {
 		try {
 			delta.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			delta.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
+			delta.loadProjectSnapshot();  //Not just FSN, load all terms with lang refset also
 			//We won't incude the project export in our timings
 			delta.startTimer();
 			delta.processFile();

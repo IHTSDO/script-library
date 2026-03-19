@@ -39,10 +39,10 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 		INFRA13323_AddAttributionAnnotations delta = new INFRA13323_AddAttributionAnnotations();
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m"; //Ad-Hoc Batch Updates
-			delta.getArchiveManager().setPopulateReleaseFlag(true);
+			delta.getSnapshotConfiguration().setPopulateReleaseFlag(true);
 			delta.init(args);
 			delta.inputFileHasHeaderRow = true;
-			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
+			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit();
 			delta.loadDefinitionsFile();
 			delta.annotationType = delta.gl.getConcept("1295448001"); // |Attribution (attribute)|

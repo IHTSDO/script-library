@@ -31,8 +31,8 @@ public class GroupSelfGroupedAttributesTargeted extends DeltaGenerator implement
 	public static void main(String[] args) throws TermServerScriptException {
 		GroupSelfGroupedAttributesTargeted delta = new GroupSelfGroupedAttributesTargeted();
 		try {
-			delta.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			delta.getArchiveManager().setRunIntegrityChecks(false);
+			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			delta.newIdsRequired = false; // We'll only be modifying existing components
 			delta.init(args);
 			delta.loadProjectSnapshot();

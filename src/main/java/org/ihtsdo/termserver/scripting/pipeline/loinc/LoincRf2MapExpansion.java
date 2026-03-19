@@ -35,9 +35,9 @@ public class LoincRf2MapExpansion extends LoincScript {
 		try {
 			report.runStandAlone = false;
 			report.getGraphLoader().setExcludedModules(new HashSet<>());
-			report.getArchiveManager().setRunIntegrityChecks(false);
+			report.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			report.init(args);
-			report.loadProjectSnapshot(false);
+			report.loadProjectSnapshot();
 			report.postInit();
 			report.runReport();
 		} finally {

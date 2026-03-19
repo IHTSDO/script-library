@@ -14,8 +14,8 @@ public class MAINT2904_InactivateCNCIndicators extends DeltaGeneratorWithAutoImp
 
 	public static void main(String[] args) throws TermServerScriptException {
 		MAINT2904_InactivateCNCIndicators delta = new MAINT2904_InactivateCNCIndicators();
-		delta.getArchiveManager().setLoadOtherReferenceSets(true);
-		delta.getArchiveManager().setRunIntegrityChecks(false);
+		delta.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
+		delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
 		ArchiveImporter.setSkipSave(true);
 		delta.standardExecution(args);
 	}

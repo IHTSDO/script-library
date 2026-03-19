@@ -28,7 +28,7 @@ public class IncreasedProxPrimInferredComplexityReport extends TermServerScript{
 		IncreasedProxPrimInferredComplexityReport report = new IncreasedProxPrimInferredComplexityReport();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			report.reportIncreasedComplexity();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report", e);

@@ -27,7 +27,7 @@ public class RelationshipReport extends TermServerScript{
 		try {
 			report.additionalReportColumns = "Concept_Active, Concept_Modified, Stated_or_Inferred, Relationship_Active, GroupNum, TypeId, TypeFsn, TargetId, TargetFsn";
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			report.reportActiveRelationships();
 		} catch (Exception e) {
 			LOGGER.info("Failed to produce Changed Relationship Report due to " + e.getMessage());

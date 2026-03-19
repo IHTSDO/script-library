@@ -21,7 +21,7 @@ public class FixMissingOrInappropriateCncIndicators extends DeltaGenerator imple
 		try {
 			delta.newIdsRequired = false;
 			delta.init(args);
-			delta.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			delta.getGraphLoader().setRecordPreviousState(true);
 			delta.loadProjectSnapshot();
 			delta.additionalReportColumns = "Description ET, Details";

@@ -49,7 +49,7 @@ public class QI1326_ReplaceAttributeValueInGroup extends BatchFix {
 			fix.runStandAlone = true;
 			fix.taskPrefix = "QI-1326";
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.configureForSet(MODE_IMFLAMMATION);
 			fix.processFile();

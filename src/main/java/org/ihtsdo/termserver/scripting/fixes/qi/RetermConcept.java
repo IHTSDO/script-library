@@ -41,7 +41,7 @@ public class RetermConcept extends BatchFix {
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

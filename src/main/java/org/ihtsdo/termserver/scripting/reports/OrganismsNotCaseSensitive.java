@@ -44,7 +44,7 @@ public class OrganismsNotCaseSensitive extends TermServerReport {
 			ReportSheetManager.setTargetFolderId("1bwgl8BkUSdNDfXHoL__ENMPQy_EdEP7d");
 			report.additionalReportColumns = "FSN, SemanticTag, ";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.reportOrganismsInSubstances();
 		} catch (Exception e) {

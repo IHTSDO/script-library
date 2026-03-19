@@ -41,7 +41,7 @@ public class SEPRefsetGenerator extends RefsetGenerator{
 			sep.setAdditionalHeaders(new String[] {"targetComponentId"});
 			sep.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			sep.loadProjectSnapshot(true);  //Just FSN
+			sep.loadProjectSnapshot();  //Just FSN
 			//We won't incude the project export in our timings
 			sep.startTimer();
 			sep.process();

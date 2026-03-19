@@ -51,7 +51,7 @@ public class InactivateConceptsAssocParent extends BatchFix implements ScriptCon
 			fix.populateEditPanel = false;
 			fix.populateTaskDescription = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

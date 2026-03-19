@@ -37,7 +37,7 @@ public class InactivateDescriptions extends BatchFix implements ScriptConstants 
 			fix.expectNullConcepts = true;
 			fix.inputFileHasHeaderRow = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.processFile();
 		} finally {
 			fix.finish();

@@ -28,7 +28,7 @@ public class FractureOfXTermRemodelling extends BatchFix implements ScriptConsta
 			fix.selfDetermining = true;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			//We won't incude the project export in our timings
 			fix.processFile();
 		} finally {

@@ -75,7 +75,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			ReportSheetManager.setTargetFolderId("12ZyVGxnFVXZfsKIHxr3Ft2Z95Kdb7wPl"); //Extract and Promote
 			taskPrefix = "";
 			runStandAlone = false;
-			getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			//No need to specify a module if reading from Snowstorm, we'll pick up the moduleId(s) from the branch metadata
 			//sourceModuleIds = SCTID_CORE_MODULE; //NEBCSR are using core module these days.
 			//sourceModuleIds = "911754081000004104"; //Nebraska Lexicon Pathology Synoptic module
@@ -87,42 +87,42 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 			if (getProject().getKey().contains("uk_sct2")) {
 				LOGGER.warn("UK Edition detected, will not check for OWL axiom / stated relationships");
-				getArchiveManager().setRunIntegrityChecks(false);
+				getSnapshotConfiguration().setRunIntegrityChecks(false);
 				sourceModuleIds = Set.of("999000011000001104", "83821000000107", "999000011000000103", "999000041000000102");
-				getArchiveManager().setExpectStatedParents(false); //UK Edition doesn't do stated modeling
+				getSnapshotConfiguration().setExpectStatedParents(false); //UK Edition doesn't do stated modeling
 			} else if (getProject().getKey().contains("Argentina")) {
 				LOGGER.warn("Argentinian Edition detected");
 				sourceModuleIds = Set.of("11000221109");
-				getArchiveManager().setRunIntegrityChecks(false);
+				getSnapshotConfiguration().setRunIntegrityChecks(false);
 			} else if (getProject().getKey().contains("Canadian")) {
 				LOGGER.warn("Canadian Edition detected");
 				sourceModuleIds = Set.of("20621000087109");
 			} else if (getProject().getKey().contains("Uruguay")) {
 				LOGGER.warn("Uruguayan Edition detected");
 				sourceModuleIds = Set.of("5631000179106");
-				getArchiveManager().setRunIntegrityChecks(false);
+				getSnapshotConfiguration().setRunIntegrityChecks(false);
 			} else if (getProject().getKey().contains("Spanish")) {
 				LOGGER.warn("Spanish Edition detected");
 				sourceModuleIds = Set.of("450829007");
 			} else if (getProject().getKey().contains("Española") || getProject().getKey().contains("SpainExtension")) {
 				LOGGER.warn("Spain Edition detected");
-				getArchiveManager().setRunIntegrityChecks(false);
+				getSnapshotConfiguration().setRunIntegrityChecks(false);
 				//Something we could do for Spain is define a levels of strictness for integrity checks,
 				//and allow phantom concepts when they're only referenced by inactive components
 				sourceModuleIds = Set.of("900000001000122104");
 			} else if (getProject().getKey().contains("SpainDrugExtension")) {
 				LOGGER.warn("Spain Drug Extension detected");
-				getArchiveManager().setRunIntegrityChecks(false);
+				getSnapshotConfiguration().setRunIntegrityChecks(false);
 				//Something we could do for Spain is define a levels of strictness for integrity checks,
 				//and allow phantom concepts when they're only referenced by inactive components
 				sourceModuleIds = Set.of("90000011000140108");
 			} else if (KNOWN_DEFECTIVE_PROJECTS.contains(getProject().getKey())) {
-				getArchiveManager().setRunIntegrityChecks(false);
+				getSnapshotConfiguration().setRunIntegrityChecks(false);
 			}
 
 			getGraphLoader().setAllowIllegalSCTIDs(true);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
+			loadProjectSnapshot();  //Not just FSN, load all terms with lang refset also
 			//We won't include the project export in our timings
 			additionalReportColumns = "Defn Status, Stated Parent(s), Additional Detail, , ";
 			postInit(GFOLDER_EXTRACT_AND_PROMOTE);

@@ -33,7 +33,7 @@ public class AlignToTemplate extends TemplateFix {
 			app.subHierarchyStr = "128294001"; // |Chronic inflammatory disorder (disorder)|
 			app.selfDetermining = true;
 			app.init(args);
-			app.loadProjectSnapshot(false);  //Load all descriptions
+			app.loadProjectSnapshot();  //Load all descriptions
 			app.postInit();
 			app.processFile();
 		} catch (Exception e) {

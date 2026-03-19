@@ -48,7 +48,7 @@ public class QI1165_AddPrimaryNeoplasmSubtypes extends BatchFix {
 			fix.overrideEclBranch = "MAIN";
 			fix.nounHelper = CaseSensitivityUtils.get();
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

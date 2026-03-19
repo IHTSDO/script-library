@@ -24,7 +24,7 @@ public class IntermediatePrimitivesReport extends TermServerReport{
 		try {
 			report.additionalReportColumns = "semanticTag, hasImmediateSDParent, hasImmediateSDChild, hasAllParentsSD, hasAllSDChildren";
 			report.init(args);
-			report.loadProjectSnapshot(true);  //just FSNs
+			report.loadProjectSnapshot();  //just FSNs
 			report.getTopLevelHierarchies();
 			report.reportIntermediatePrimitives();
 		} catch (Exception e) {

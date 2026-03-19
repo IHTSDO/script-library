@@ -2,14 +2,9 @@ package org.ihtsdo.termserver.scripting.template;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
-import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.Concept;
-import org.ihtsdo.termserver.scripting.domain.RelationshipGroup;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.otf.script.dao.ReportSheetManager;
-
-import java.util.*;
 
 public class NormaliseConceptsDriven extends NormaliseConcepts {
 
@@ -23,7 +18,7 @@ public class NormaliseConceptsDriven extends NormaliseConcepts {
 			ReportSheetManager.setTargetFolderId(GFOLDER_QI_NORMALIZATION);
 			app.selfDetermining = false;  //We expect to be given a file for 'driven' classes
 			app.init(args);
-			app.loadProjectSnapshot(false);  //Load all descriptions
+			app.loadProjectSnapshot();  //Load all descriptions
 			app.postInit();
 			app.processFile();
 		} catch (Exception e) {

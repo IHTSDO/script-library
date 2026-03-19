@@ -39,7 +39,7 @@ public class SUBST11_RNA_Renaming extends BatchFix {
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

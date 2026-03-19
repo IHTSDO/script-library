@@ -32,7 +32,7 @@ public class GnarlyFactorCalculationECL extends TermServerReport {
 			report.inputFileHasHeaderRow = false;
 			report.additionalReportColumns = "FSN, Depth, Descendants Stated/Inferred, IntermediatePrimitives, FDs under IPs, Mismatched Groups, RepeatedAttributes";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //just FSNs
+			report.loadProjectSnapshot();  //just FSNs
 			report.startTimer();
 			report.identifyGroupersByAttribute(report.processFile());
 			report.run();

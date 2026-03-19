@@ -28,7 +28,7 @@ public class HighGroupNumberFix extends BatchFix {
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

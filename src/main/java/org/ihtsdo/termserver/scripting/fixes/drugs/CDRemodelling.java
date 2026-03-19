@@ -65,7 +65,7 @@ public class CDRemodelling extends DrugBatchFix implements ScriptConstants {
 			app.init(args);
 			//app.termGenerator.includeUnitOfPresentation(app.includeUnitOfPresentation); 
 			//app.termGenerator.specifyDenominator(app.specifyDenominator);
-			app.loadProjectSnapshot(false); //Load all descriptions
+			app.loadProjectSnapshot(); //Load all descriptions
 			app.postInit();
 			//We won't include the project export in our timings
 			app.processFile();

@@ -46,7 +46,7 @@ public class QI138_IncisionalHerniaRemodel extends BatchFix {
 			fix.classifyTasks = true;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

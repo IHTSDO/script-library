@@ -30,7 +30,7 @@ public class JointsInFractures extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN, Joint Structures, Joint Also Bone Structure, Bone Structures, Other things";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.runJointsInFracturesReport();
 		} catch (Exception e) {

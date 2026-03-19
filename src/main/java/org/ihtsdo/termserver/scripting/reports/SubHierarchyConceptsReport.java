@@ -24,7 +24,7 @@ public class SubHierarchyConceptsReport extends TermServerReport{
 		try {
 			report.additionalReportColumns="Descriptions";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.reportConcepts();
 		} catch (Exception e) {

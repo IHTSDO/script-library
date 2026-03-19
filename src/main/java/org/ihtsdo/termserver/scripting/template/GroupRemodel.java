@@ -51,7 +51,7 @@ public class GroupRemodel extends TemplateFix {
 		try {
 			ReportSheetManager.setTargetFolderId("15FSegsDC4Tz7vP5NPayGeG2Q4SB1wvnr"); //QI  / Group One Remodel
 			app.init(args);
-			app.loadProjectSnapshot(false);  //Load all descriptions
+			app.loadProjectSnapshot();  //Load all descriptions
 			app.postInit();
 			app.processFile();
 		} catch (Exception e) {
@@ -191,7 +191,7 @@ public class GroupRemodel extends TemplateFix {
 		
 		//Ensure our ECL matches more than 0 concepts.  This will also cache the result
 		boolean useLocalStoreIfSimple = false;
-		if (!getArchiveManager().isAllowStaleData() && findConcepts(subsetECL, false, useLocalStoreIfSimple).size() == 0) {
+		if (!getSnapshotConfiguration().isAllowStaleData() && findConcepts(subsetECL, false, useLocalStoreIfSimple).size() == 0) {
 			throw new TermServerScriptException(subsetECL + " returned 0 rows");
 		}
 	}

@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.snapshot.ArchiveManager;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.reports.TermServerReport;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -54,9 +53,9 @@ public class GenerateWorkDoneStatsWithTempateTypes extends TermServerReport {
 		try {
 			ReportSheetManager.setTargetFolderId("1YoJa68WLAMPKG6h4_gZ5-QT974EU9ui6"); //QI / Stats
 			report.additionalReportColumns = "FSN, SemTag, Depth, Counted elsewhere, Phase 1, Phase 2, Out of Scope, Total, Orphanet (not included)";
-			ArchiveManager.getArchiveManager(report, null).setPopulateHierarchyDepth(true);
+			report.getSnapshotConfiguration().setPopulateHierarchyDepth(true);
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.generateWorkDoneStats();
 		} catch (Exception e) {

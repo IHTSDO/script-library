@@ -28,7 +28,7 @@ public class RelationshipsWithType extends TermServerScript{
 		try {
 			report.additionalReportColumns = " SemTag, Concept_Active, Concept_Modified, Stated_or_Inferred, Relationship_Active, GroupNum, TypeId, TypeFsn, TargetId, TargetFsn";
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			report.init2(); //Setup needed after data loaded
 			report.reportRelationshipsWithType();
 		} catch (Exception e) {

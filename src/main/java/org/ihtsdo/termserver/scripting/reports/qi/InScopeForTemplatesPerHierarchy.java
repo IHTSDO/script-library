@@ -30,7 +30,7 @@ public class InScopeForTemplatesPerHierarchy extends TermServerReport {
 		InScopeForTemplatesPerHierarchy report = new InScopeForTemplatesPerHierarchy();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.listInScopeForTemplatesPerHierarchy();
 		} catch (Exception e) {

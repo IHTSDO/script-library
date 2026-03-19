@@ -39,7 +39,7 @@ public class Hydrates extends TermServerReport {
 			ReportSheetManager.setTargetFolderId("1bwgl8BkUSdNDfXHoL__ENMPQy_EdEP7d");
 			report.additionalReportColumns = "FSN, Descriptions, Modifications";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.reportDescriptionContainsX();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report", e);

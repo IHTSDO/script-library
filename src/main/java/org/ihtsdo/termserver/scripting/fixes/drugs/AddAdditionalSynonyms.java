@@ -33,7 +33,7 @@ public class AddAdditionalSynonyms extends BatchFix implements ScriptConstants{
 			fix.additionalReportColumns = "term, hasPT_US_GB_Variance";
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.processFile();
 		} finally {
 			fix.finish();

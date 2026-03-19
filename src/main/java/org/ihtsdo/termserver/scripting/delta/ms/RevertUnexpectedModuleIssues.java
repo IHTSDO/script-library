@@ -47,7 +47,7 @@ public class RevertUnexpectedModuleIssues extends DeltaGenerator {
 			delta.inputFileHasHeaderRow = true;
 			delta.newIdsRequired = false;
 			delta.init(args);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);
@@ -59,7 +59,7 @@ public class RevertUnexpectedModuleIssues extends DeltaGenerator {
 
 	@Override
 	public void init (JobRun run) throws TermServerScriptException {
-		getArchiveManager().setPopulateReleaseFlag(true);
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 		ReportSheetManager.setTargetFolderId("1mvrO8P3n94YmNqlWZkPJirmFKaFUnE0o"); //Managed Service
 		subsetECL = run.getParamValue(ECL);
 		super.init(run);

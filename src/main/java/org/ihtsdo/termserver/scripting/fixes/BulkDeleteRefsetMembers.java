@@ -27,12 +27,12 @@ public class BulkDeleteRefsetMembers extends BatchFix implements ScriptConstants
 		BulkDeleteRefsetMembers fix = new BulkDeleteRefsetMembers(null);
 		try {
 			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_UPDATES);  //Release QA
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.getArchiveManager().setPopulateReleaseFlag(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setPopulateReleaseFlag(true);
 			fix.populateEditPanel = false;
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.postInit();
 			fix.batchDeleteRefsetMembers();
 		} finally {

@@ -32,7 +32,7 @@ public class RemoveFSNCounterparts extends BatchFix implements ScriptConstants{
 			fix.populateEditPanel = false;
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.processFile();
 		} finally {
 			fix.finish();

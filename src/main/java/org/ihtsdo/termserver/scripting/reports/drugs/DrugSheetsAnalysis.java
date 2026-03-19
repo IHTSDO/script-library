@@ -52,7 +52,7 @@ public class DrugSheetsAnalysis extends TermServerReport {
 		try {
 			pattern = Pattern.compile(regex);
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.analyzeDrugSheets();
 			report.calculateOverlap();

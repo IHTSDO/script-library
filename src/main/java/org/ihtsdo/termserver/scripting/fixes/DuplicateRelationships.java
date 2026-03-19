@@ -8,7 +8,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
-import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.snomed.otf.script.dao.ReportSheetManager;
 
 
@@ -34,7 +33,7 @@ public class DuplicateRelationships extends BatchFix implements ScriptConstants{
 			fix.selfDetermining = true;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); //Just 
+			fix.loadProjectSnapshot(); //Just
 			fix.postInit();
 			fix.processFile();
 		} finally {

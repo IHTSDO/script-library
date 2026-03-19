@@ -4,7 +4,6 @@ import java.io.File;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.GraphLoader;
-import org.ihtsdo.termserver.scripting.client.TermServerClient;
 
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -23,7 +22,7 @@ public class InactivateDuplicateRelationships extends DeltaGenerator implements 
 			delta.newIdsRequired = false; // We'll only be inactivating existing relationships
 			delta.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			delta.loadProjectSnapshot(true);  //Just FSN, not working with all descriptions here
+			delta.loadProjectSnapshot();  //Just FSN, not working with all descriptions here
 			//We won't include the project export in our timings
 			delta.startTimer();
 			delta.process();

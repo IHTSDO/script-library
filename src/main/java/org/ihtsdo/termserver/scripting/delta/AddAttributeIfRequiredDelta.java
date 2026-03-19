@@ -25,7 +25,7 @@ public class AddAttributeIfRequiredDelta extends DeltaGenerator {
 			delta.additionalReportColumns = "Action Detail";
 			delta.newIdsRequired = false;
 			delta.init(args);
-			delta.loadProjectSnapshot(true);
+			delta.loadProjectSnapshot();
 			delta.postLoadInit();
 			delta.process();
 			delta.createOutputArchive(false, delta.lastBatchSize);

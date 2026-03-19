@@ -47,7 +47,7 @@ public class MissingDrugConcepts extends TermServerReport {
 			ReportSheetManager.setTargetFolderId("1wtB15Soo-qdvb0GHZke9o_SjFSL_fxL3"); //Drugs/Validation
 			report.additionalReportColumns = "FSN, MP/MPF Concept using modified ingredient, Base Ingredient";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			//report.runIdentifyMissingMPConceptsReport();
 			//report.runIdentifyMissingMPFConceptsReport(); //DRUGS-511

@@ -5,7 +5,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
-import org.ihtsdo.termserver.scripting.domain.LangRefsetEntry;
 import org.ihtsdo.termserver.scripting.domain.ScriptConstants;
 
 import java.util.*;
@@ -24,11 +23,11 @@ public class DeleteUnpublishedInactiveDescriptions extends BatchFix implements S
 			fix.populateTaskDescription = false;
 			fix.selfDetermining = true;
 			fix.runStandAlone = false;
-			fix.getArchiveManager().setRunIntegrityChecks(false);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
 			fix.additionalReportColumns = "Active, Details";
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

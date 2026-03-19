@@ -37,7 +37,7 @@ public class HierarchyConceptsUsedInDefinitionsReport extends TermServerScript{
 		try {
 			report.additionalReportColumns="UsedToDefine, InAttribute, Defn_Status";
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			report.reportConceptsUsedInDefinition();
 		} catch (Exception e) {
 			LOGGER.info("Failed to validate laterality due to " + e.getMessage());

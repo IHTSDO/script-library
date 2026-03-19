@@ -39,7 +39,7 @@ public class InactivedCoreRelationshipsToExtensionModule extends DeltaGenerator 
 			delta.newIdsRequired = false; // We'll only be inactivating existing relationships
 			delta.additionalReportColumns = "FSN,SemTag,Severity,Action,Detail,Rel Id,";
 			delta.init(args);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);  //Flush and Close

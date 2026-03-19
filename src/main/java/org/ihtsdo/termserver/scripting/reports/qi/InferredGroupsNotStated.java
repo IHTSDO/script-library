@@ -35,7 +35,7 @@ public class InferredGroupsNotStated extends TermServerReport {
 		try {
 			report.additionalReportColumns = "SemTag, DefnStatus, statedAttribs, infAttribs, UnstatedGroup, ReasonableAncestors";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.runCheckForInferredGroupsNotStated();
 			report.listInstancesPerSubHierarchy();

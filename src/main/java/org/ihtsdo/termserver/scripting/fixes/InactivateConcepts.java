@@ -43,9 +43,9 @@ public class InactivateConcepts extends BatchFix implements ScriptConstants {
 			fix.reportNoChange = false;
 			fix.selfDetermining = true;
 			fix.subsetECL = "<< 363743006 |Navigational concept (navigational concept)|";
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

@@ -31,7 +31,7 @@ public class SubstanceAcidWithBase extends TermServerScript{
 		try {
 			report.additionalReportColumns = " SemTag, Concept_Active, Concept_Modified, Stated_or_Inferred, Relationship_Active, GroupNum, TypeId, TypeFsn, TargetId, TargetFsn";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			LOGGER.info("Generating Report");
 			report.reportAcidsWithBases();
 			LOGGER.info("Processing Complete");

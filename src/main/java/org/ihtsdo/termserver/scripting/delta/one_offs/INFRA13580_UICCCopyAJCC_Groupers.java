@@ -15,7 +15,7 @@ public class INFRA13580_UICCCopyAJCC_Groupers extends INFRA13580_UICCCopyAJCC im
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m"; //Ad-Hoc Batch Updates
 			delta.init(args);
-			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
+			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit();
 			delta.process();
 			delta.createOutputArchive(false, delta.sourceConcepts.size());

@@ -13,6 +13,7 @@ import java.util.zip.ZipInputStream;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component.ComponentType;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.Rf2File;
+import org.snomed.FileType;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 /**
  * ISRS-1256 Requirement to update an existing archive with a Delta

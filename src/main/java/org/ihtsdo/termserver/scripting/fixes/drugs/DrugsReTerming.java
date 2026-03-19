@@ -31,7 +31,7 @@ public class DrugsReTerming extends DrugBatchFix implements ScriptConstants{
 			TermServerScript.inputFileDelimiter = COMMA;
 			fix.inputFileHasHeaderRow = true;
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.processFile();
 		} finally {
 			fix.finish();

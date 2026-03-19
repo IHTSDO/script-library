@@ -32,7 +32,7 @@ public class CaseSignificanceFixDriven extends BatchFix implements ScriptConstan
 			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_UPDATES);
 			fix.descIdCompIdPattern = Pattern.compile("(\\d+).*?\\[(\\d+)\\]");
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {

@@ -27,7 +27,7 @@ public class SemanticTagsMatrix extends TermServerReport{
 		SemanticTagsMatrix report = new SemanticTagsMatrix();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			report.getTopLevelHierarchies();
 			report.listSemanticTags();
 			report.outputResultsXY();

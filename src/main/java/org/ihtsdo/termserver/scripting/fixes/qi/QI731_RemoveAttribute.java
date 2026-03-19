@@ -34,7 +34,7 @@ public class QI731_RemoveAttribute extends BatchFix {
 			fix.populateTaskDescription = false;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

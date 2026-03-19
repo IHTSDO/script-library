@@ -51,7 +51,7 @@ public class ReplaceAttributeValues extends BatchFix {
 			//fix.runStandAlone = true;
 			fix.taskPrefix = "Observable ";
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

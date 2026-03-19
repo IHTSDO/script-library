@@ -49,7 +49,7 @@ public class CaseSignificanceFix extends BatchFix implements ScriptConstants{
 			fix.init(args);
 			fix.csUtils = CaseSensitivityUtils.get();
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {

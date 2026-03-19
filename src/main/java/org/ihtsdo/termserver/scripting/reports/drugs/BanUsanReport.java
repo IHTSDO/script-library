@@ -31,7 +31,7 @@ public class BanUsanReport extends TermServerScript{
 		try {
 			report.additionalReportColumns="Desc_SCTID, Term, Issue";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.reportUnMatchedNationalTerms();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report", e);

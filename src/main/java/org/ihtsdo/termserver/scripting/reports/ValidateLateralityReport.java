@@ -25,7 +25,7 @@ public class ValidateLateralityReport extends TermServerScript{
 		try {
 			report.additionalReportColumns = "EffectiveTime, Definition_Status,SemanticTag";
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			List<Component> lateralizable = report.processFile();
 			report.validateLaterality(lateralizable);
 		} catch (Exception e) {

@@ -33,10 +33,10 @@ public class DuplicateDescriptions extends BatchFix implements ScriptConstants{
 			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-Hoc Batch Updates
 			//fix.runStandAlone = false;  //Was causing issues with historical associations not being set
 			fix.selfDetermining = true;
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); //Just 
+			fix.loadProjectSnapshot(); //Just
 			fix.postInit();
 			fix.processFile();
 		} finally {

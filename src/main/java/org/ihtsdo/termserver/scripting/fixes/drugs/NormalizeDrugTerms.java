@@ -41,7 +41,7 @@ public class NormalizeDrugTerms extends DrugBatchFix implements ScriptConstants 
 			fix.populateTaskDescription = true;
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.postInit();
 			fix.subHierarchyStr = MEDICINAL_PRODUCT.getConceptId();
 			fix.processFile();

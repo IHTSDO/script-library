@@ -42,7 +42,7 @@ public class PreferredAcceptableDialectCombo extends BatchFix implements ScriptC
 			fix.additionalReportColumns = "New Value, Old Value";
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

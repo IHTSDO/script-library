@@ -2,7 +2,7 @@ package org.ihtsdo.termserver.scripting.fixes.metadata;
 
 import java.util.*;
 
-import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Metadata;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.BranchMetadata;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
@@ -48,7 +48,7 @@ public class UpsertMetadata extends BatchFix implements ScriptConstants{
 			LOGGER.info("Processing {}", cs);
 			//Recover that particular branch
 			Branch b = tsClient.getBranch(cs.getBranchPath());
-			Metadata m = b.getMetadata();
+			BranchMetadata m = b.getMetadata();
 			if (m.getDefaultModuleId() == null) {
 				LOGGER.info("Skipping {} due to missing default moduleId", b);
 				continue;

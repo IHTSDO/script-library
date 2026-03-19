@@ -50,8 +50,8 @@ public class INFRA10900_Reterm_Taxonomy extends BatchFix {
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail, Additional Detail";
 			fix.init(args);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

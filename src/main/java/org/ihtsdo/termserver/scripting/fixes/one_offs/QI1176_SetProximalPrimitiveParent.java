@@ -36,7 +36,7 @@ QI1176_SetProximalPrimitiveParent extends BatchFix {
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  // Ad-Hoc Batch Updates
 			app.init(args);
-			app.loadProjectSnapshot(false);  //Load all descriptions
+			app.loadProjectSnapshot();  //Load all descriptions
 			app.postInit();
 			app.processFile();
 		} catch (Exception e) {

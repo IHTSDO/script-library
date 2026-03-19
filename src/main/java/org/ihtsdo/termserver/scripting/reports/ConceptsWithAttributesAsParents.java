@@ -29,7 +29,7 @@ public class ConceptsWithAttributesAsParents extends TermServerReport {
 			ReportSheetManager.setTargetFolderId("1bwgl8BkUSdNDfXHoL__ENMPQy_EdEP7d");
 			report.additionalReportColumns = "FSN, Semtag, CharacteristicType, Attribute, WhatWasInferred?";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.runConceptsWithAttributesAsParentsReport();
 		} catch (Exception e) {

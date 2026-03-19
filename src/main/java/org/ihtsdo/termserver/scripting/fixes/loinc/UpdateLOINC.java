@@ -29,7 +29,7 @@ public class UpdateLOINC extends BatchLoincFix {
 			fix.runStandAlone = false;
 			fix.stateComponentType = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

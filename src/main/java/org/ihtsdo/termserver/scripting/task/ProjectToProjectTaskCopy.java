@@ -6,6 +6,7 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.JobClass;
 import org.ihtsdo.termserver.scripting.TaskHelper;
 import org.ihtsdo.termserver.scripting.client.TermServerClient;
+import org.ihtsdo.termserver.scripting.snapshot.TBCHelper;
 import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.reports.TermServerReport;
 import org.slf4j.Logger;
@@ -68,7 +69,7 @@ public class ProjectToProjectTaskCopy extends TermServerReport implements JobCla
 	private void transferTaskToNewProject(Task t) throws TermServerScriptException {
 		LOGGER.info("Copying task {}", t);
 		try {
-			File exportedDelta = getArchiveManager().generateDelta(t, true);
+			File exportedDelta = new TBCHelper(this).getExportedDelta(t, true);
 			Task newTask = taskHelper.createTask(cloneTaskInProject(t));
 			if (!dryRun) {
 				tsClient.importArchive(newTask.getBranchPath(), TermServerClient.ImportType.DELTA, exportedDelta);

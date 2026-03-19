@@ -36,7 +36,7 @@ public class CaseSignificanceFixForLanguage extends DeltaGenerator implements Sc
 			delta.edition="NL";
 			delta.runStandAlone = false;
 			delta.init(args);
-			delta.loadProjectSnapshot(false); 
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.startTimer();
 			delta.process();

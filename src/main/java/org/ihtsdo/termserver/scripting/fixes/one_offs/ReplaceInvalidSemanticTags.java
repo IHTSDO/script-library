@@ -51,7 +51,7 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

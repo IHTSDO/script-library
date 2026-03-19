@@ -23,7 +23,7 @@ public class ModifiedActiveIngredients extends TermServerReport {
 		try {
 			report.additionalReportColumns = "Ingredient, ModificationOf";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.runModifiedActiveIngredientsReport();
 		} catch (Exception e) {

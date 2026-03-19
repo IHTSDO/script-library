@@ -27,7 +27,7 @@ public class ReactivateUSAcceptability extends DeltaGenerator implements ScriptC
 			delta.newIdsRequired = false; // We'll only be reactivating exisiting langrefset entries
 			delta.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			delta.loadProjectSnapshot(false);  
+			delta.loadProjectSnapshot();
 			//We won't include the project export in our timings
 			delta.startTimer();
 			delta.process();

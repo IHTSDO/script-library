@@ -37,7 +37,7 @@ public class NumberLetterLowerCase extends DrugBatchFix implements ScriptConstan
 			fix.selfDetermining = true;
 			fix.populateEditPanel = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.processFile();
 		} finally {
 			fix.finish();

@@ -42,7 +42,7 @@ public class MSSP1532_MissingTranslations extends BatchFix {
 			fix.additionalReportColumns = "Action Detail";
 			fix.inputFileHasHeaderRow = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

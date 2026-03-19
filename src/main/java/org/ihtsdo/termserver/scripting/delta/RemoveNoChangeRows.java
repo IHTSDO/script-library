@@ -12,6 +12,7 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component.ComponentType
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.*;
+import org.snomed.FileType;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 /**
  * Compare a delta against the base release and filter out any rows that do 
@@ -40,7 +41,7 @@ public class RemoveNoChangeRows extends DeltaGenerator {
 			app.runStandAlone = true;
 			app.additionalReportColumns="ComponentType, ComponentId, Info, Data";
 			app.init(args);
-			app.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
+			app.loadProjectSnapshot();  //Not just FSN, load all terms with lang refset also
 			app.postInit(GFOLDER_ADHOC_UPDATES);
 			app.filterNoChangeDelta();
 			app.flushFiles(false); //Need to flush files before zipping

@@ -32,7 +32,7 @@ public class GenerateTranslation extends DeltaGenerator {
 			delta.config();
 			delta.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			delta.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
+			delta.loadProjectSnapshot();  //Not just FSN, load all terms with lang refset also
 			delta.startTimer();
 			delta.processFile();
 			delta.flushFiles(false); //Need to flush files before zipping

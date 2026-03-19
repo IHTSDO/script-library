@@ -25,7 +25,7 @@ public class BaseWithModification extends TermServerReport {
 		BaseWithModification report = new BaseWithModification();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(true);  
+			report.loadProjectSnapshot();
 			report.findBaseWithModifications();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report",e);

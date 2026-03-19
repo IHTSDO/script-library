@@ -29,7 +29,7 @@ public class AttributeValueOutsideRange extends TermServerReport {
 		try {
 			report.additionalReportColumns = "CharacteristicType, Attribute, WhatWasInferred?";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.runAttributeValueOutsideRangeReport();
 		} catch (Exception e) {

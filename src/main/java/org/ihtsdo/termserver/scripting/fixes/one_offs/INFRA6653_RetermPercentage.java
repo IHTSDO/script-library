@@ -34,8 +34,8 @@ public class INFRA6653_RetermPercentage extends BatchFix {
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail, Additional Detail";
 			fix.init(args);
-			fix.getArchiveManager().setPopulateReleaseFlag(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setPopulateReleaseFlag(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

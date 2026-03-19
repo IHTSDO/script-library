@@ -29,7 +29,7 @@ public class HierarchyConceptsNotInFileReport extends TermServerScript{
 		HierarchyConceptsNotInFileReport report = new HierarchyConceptsNotInFileReport();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			List<Component> conceptsInFile = report.processFile();
 			List<Component> conceptsInFile2 = new ArrayList<Component>();
 			if (report.file2 != null) {

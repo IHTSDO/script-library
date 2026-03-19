@@ -49,7 +49,7 @@ public class QI75_HerniaRemodel extends BatchFix {
 			fix.classifyTasks = true;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

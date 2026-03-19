@@ -28,7 +28,7 @@ public class MissingDispositionSubstanceGroupers extends TermServerReport {
 		try {
 			report.additionalReportColumns="FSN,Used by";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.runMissingDispositionsReport();
 		} catch (Exception e) {

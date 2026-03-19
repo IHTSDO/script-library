@@ -30,7 +30,7 @@ public class CrossHierarchyLeakage extends TermServerReport {
 			//report.additionalReportColumns = "FSN, Parents";
 			
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.runCrossHierarchyLeakageReport();
 			//report.runMultipleParentsReport();

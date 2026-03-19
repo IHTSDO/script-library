@@ -28,7 +28,7 @@ public class UnfixableLangRefsetDuplicates extends DeltaGenerator {
 
 	@Override
 	public void init (JobRun run) throws TermServerScriptException {
-		getArchiveManager().setPopulateReleaseFlag(true);
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 		includeLegacyIssues = run.getParameters().getMandatoryBoolean(INCLUDE_ALL_LEGACY_ISSUES);
 		subsetECL = run.getParamValue(ECL);
 		super.init(run);

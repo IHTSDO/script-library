@@ -20,7 +20,7 @@ public class ReassertPublishedComponentState extends DeltaGeneratorWithAutoImpor
 	public static void main(String[] args) throws TermServerScriptException {
 		ReassertPublishedComponentState delta = new ReassertPublishedComponentState();
 		try {
-			delta.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			delta.taskPrefix = "";
 			delta.runStandAlone = false;
 			delta.inputFileHasHeaderRow = true;
@@ -29,9 +29,9 @@ public class ReassertPublishedComponentState extends DeltaGeneratorWithAutoImpor
 			//It might be that we need component from an upgraded international edition
 			//so we might have very bad integrity.  Doesn't matter in this case, we just
 			//need the rows from the RF2
-			delta.getArchiveManager().setPopulateHierarchyDepth(false);
-			delta.getArchiveManager().setRunIntegrityChecks(false);
-			delta.loadProjectSnapshot(false);
+			delta.getSnapshotConfiguration().setPopulateHierarchyDepth(false);
+			delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_MS);
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);  //Flush and Close
@@ -47,7 +47,7 @@ public class ReassertPublishedComponentState extends DeltaGeneratorWithAutoImpor
 
 	@Override
 	public void init (String[] args) throws TermServerScriptException {
-		getArchiveManager().setPopulateReleaseFlag(true);
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 		super.init(args);
 	}
 

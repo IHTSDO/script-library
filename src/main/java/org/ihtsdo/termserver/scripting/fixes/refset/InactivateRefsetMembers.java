@@ -33,8 +33,8 @@ public class InactivateRefsetMembers extends BatchFix implements ScriptConstants
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
 			fix.init(args);
-			fix.getArchiveManager().setRunIntegrityChecks(false);
-			fix.loadProjectSnapshot(true);
+			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

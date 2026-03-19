@@ -41,7 +41,7 @@ public class CDUpdate extends DrugBatchFix implements ScriptConstants {
 			fix.selfDetermining = true;
 			fix.runStandAlone = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			//We won't include the project export in our timings
 			fix.startTimer();
 			fix.processFile();

@@ -7,7 +7,6 @@ import org.ihtsdo.otf.utils.ExceptionUtils;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
@@ -40,8 +39,8 @@ public class INFRA7059_SEP_Reterm extends BatchFix {
 			fix.expectNullConcepts = true;
 			fix.validateConceptOnUpdate = false;
 			fix.init(args);
-			fix.getArchiveManager().setPopulateReleaseFlag(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setPopulateReleaseFlag(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

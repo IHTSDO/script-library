@@ -26,7 +26,7 @@ public class StatedNotInferred extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN, Redundant Disposition";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.runStatedNotInferredReport();
 		} catch (Exception e) {
 			LOGGER.info("Failed to produce StatedNotInferred Report due to " + e.getMessage());

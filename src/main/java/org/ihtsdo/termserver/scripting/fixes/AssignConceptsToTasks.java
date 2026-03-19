@@ -33,7 +33,7 @@ public class AssignConceptsToTasks extends BatchFix {
 			fix.runStandAlone = true;
 			fix.reportNoChange = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

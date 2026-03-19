@@ -34,7 +34,7 @@ public class RemoveRedundantRelationships extends BatchFix implements ScriptCons
 			fix.selfDetermining = true;
 			fix.runStandAlone = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.processFile();
 		} finally {
 			fix.finish();

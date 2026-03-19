@@ -34,7 +34,7 @@ public class HistoricalHistoricalIssues extends BatchFix implements ScriptConsta
 			fix.summaryTabIdx = SECONDARY_REPORT;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

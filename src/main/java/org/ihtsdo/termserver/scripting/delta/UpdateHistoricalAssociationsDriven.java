@@ -47,7 +47,7 @@ public class UpdateHistoricalAssociationsDriven extends DeltaGenerator implement
 		try {
 			delta.newIdsRequired = false;
 			delta.init(args);
-			delta.loadProjectSnapshot(false); 
+			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_TECHNICAL_SPECIALIST);
 			delta.process();
 		} finally {

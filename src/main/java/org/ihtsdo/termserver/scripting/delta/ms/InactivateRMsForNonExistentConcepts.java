@@ -10,8 +10,8 @@ public class InactivateRMsForNonExistentConcepts extends DeltaGenerator {
 
 	public static void main(String[] args) throws TermServerScriptException {
 		InactivateRMsForNonExistentConcepts delta = new InactivateRMsForNonExistentConcepts();
-		delta.getArchiveManager().setLoadOtherReferenceSets(true);
-		delta.getArchiveManager().setRunIntegrityChecks(false);
+		delta.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
+		delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
 		ArchiveImporter.setSkipSave(true);
 		delta.standardExecution(args);
 	}

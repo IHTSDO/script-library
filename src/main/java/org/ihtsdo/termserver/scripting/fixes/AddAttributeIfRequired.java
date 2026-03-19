@@ -30,7 +30,7 @@ public class AddAttributeIfRequired extends BatchFix {
 			fix.runStandAlone = true;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

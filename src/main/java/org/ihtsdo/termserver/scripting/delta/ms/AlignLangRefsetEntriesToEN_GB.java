@@ -30,7 +30,7 @@ public class AlignLangRefsetEntriesToEN_GB extends DeltaGenerator implements Scr
 			delta.newIdsRequired = false; 
 			delta.additionalReportColumns = "FSN,SemTag,Severity,Action,LangRefset, Detail,";
 			delta.init(args);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit();
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);  //Flush and Close

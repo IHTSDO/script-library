@@ -25,7 +25,7 @@ public class AncestryPath extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.runReport();
 		} catch (Exception e) {
 			LOGGER.info("Failed to produce StatedNotInferred Report due to " + e.getMessage());

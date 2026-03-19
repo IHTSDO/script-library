@@ -18,6 +18,7 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component.ComponentType
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
+import org.snomed.FileType;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
@@ -60,7 +61,7 @@ public class Rf2Player extends BatchFix {
 			//putTaskIntoReview = true;
 			init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			loadProjectSnapshot(false);
+			loadProjectSnapshot();
 			startTimer();
 			LOGGER.info("Processing delta");
 			processDelta();

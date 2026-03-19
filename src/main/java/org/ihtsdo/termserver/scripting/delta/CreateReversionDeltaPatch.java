@@ -48,7 +48,7 @@ public class CreateReversionDeltaPatch extends DeltaGenerator {
 			delta.newIdsRequired=false;
 			delta.additionalReportColumns = "FSN, SemTag, Severity, ChangeType, Detail, Additional Detail, , ";
 			delta.init(args);
-			delta.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
+			delta.loadProjectSnapshot();  //Not just FSN, load all terms with lang refset also
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.createReversionDeltaPatch();
 			delta.flushFiles(false); //Need to flush files before zipping

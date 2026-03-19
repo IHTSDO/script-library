@@ -45,9 +45,9 @@ public class ReplaceParents extends BatchFix implements ScriptConstants{
 			fix.keepIssuesTogether = false;
 			fix.additionalReportColumns="AdditionalDetail, FurtherDetails, Details";
 			fix.init(args);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

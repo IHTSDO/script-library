@@ -42,11 +42,11 @@ public class INFRA11722_ReplaceIntLRSwithUS extends DeltaGenerator implements Sc
 		INFRA11722_ReplaceIntLRSwithUS delta = new INFRA11722_ReplaceIntLRSwithUS();
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m"; //Ad-Hoc Batch Updates
-			delta.getArchiveManager().setPopulateReleaseFlag(true);
+			delta.getSnapshotConfiguration().setPopulateReleaseFlag(true);
 			delta.targetModuleId = US_MODULE;
 			delta.newIdsRequired = false; // We'll only be modifying existing descriptions
 			delta.init(args);
-			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
+			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.loadUSLangRefsets();
 			delta.postInit();
 			delta.process();

@@ -62,8 +62,8 @@ public class INFRA9608_RetermMeasurementFindings extends BatchFix {
 			fix.additionalReportColumns = "Action Detail, Additional Detail";
 			fix.nounHelper = CaseSensitivityUtils.get();
 			fix.init(args);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

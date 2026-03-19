@@ -26,9 +26,9 @@ public class DeleteBornInactiveComponents extends BatchFix implements ScriptCons
 			fix.selfDetermining = true;
 			fix.runStandAlone = false;
 			fix.worksWithConcepts = false; //Ensures doFix is called with Component
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

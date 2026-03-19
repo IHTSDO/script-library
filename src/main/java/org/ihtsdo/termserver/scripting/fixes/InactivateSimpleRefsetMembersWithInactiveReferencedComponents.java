@@ -22,10 +22,10 @@ public class InactivateSimpleRefsetMembersWithInactiveReferencedComponents exten
 			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
 			fix.selfDetermining = true;
 			fix.populateEditPanel = false;
-			fix.getArchiveManager().setLoadOtherReferenceSets(true);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
-			fix.loadProjectSnapshot(false);  //Load all descriptions
+			fix.loadProjectSnapshot();  //Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {

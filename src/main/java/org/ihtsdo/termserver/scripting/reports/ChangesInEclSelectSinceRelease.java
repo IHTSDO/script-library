@@ -20,7 +20,7 @@ public class ChangesInEclSelectSinceRelease extends TermServerReport {
 		ChangesInEclSelectSinceRelease report = new ChangesInEclSelectSinceRelease();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.runChangesInEclSelectSinceReleaseReport();
 			report.summaryTabIdx = PRIMARY_REPORT;

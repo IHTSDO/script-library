@@ -52,8 +52,8 @@ public class QI1279_Reterm_RAST extends BatchFix {
 			fix.groupByIssue = true;
 			fix.additionalReportColumns = "Action Detail, Additional Detail";
 			fix.init(args);
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

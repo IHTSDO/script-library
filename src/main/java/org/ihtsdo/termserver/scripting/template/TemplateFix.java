@@ -179,7 +179,7 @@ abstract public class TemplateFix extends BatchFix {
 		//Is the Domain specified by the template valid?  No point running if it selects no rows
 		boolean useLocalStoreIfSimple = false;
 		String ecl = t.getDomain();
-		if (!getArchiveManager().isAllowStaleData() && findConcepts(ecl, false, useLocalStoreIfSimple).isEmpty()) {
+		if (!getSnapshotConfiguration().isAllowStaleData() && findConcepts(ecl, false, useLocalStoreIfSimple).isEmpty()) {
 			throw new TermServerScriptException("Template domain: " + ecl + " returned 0 rows");
 		}
 		

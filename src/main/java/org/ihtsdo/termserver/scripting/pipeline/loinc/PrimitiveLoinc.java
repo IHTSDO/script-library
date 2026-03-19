@@ -22,10 +22,10 @@ public class PrimitiveLoinc extends TermServerScript {
 		try {
 			report.runStandAlone = false;
 			report.getGraphLoader().setExcludedModules(new HashSet<>());
-			report.getArchiveManager().setRunIntegrityChecks(false);
+			report.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			report.headers="SCTID, FSN, SemTag, PT, LoincNum, Correlation, Update Details, Expression";
 			report.init(args);
-			report.loadProjectSnapshot(false);
+			report.loadProjectSnapshot();
 			report.postInit();
 			report.reportMatchingConcepts();
 		} finally {

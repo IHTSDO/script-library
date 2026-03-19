@@ -25,7 +25,7 @@ public class AttributeCardinalityReport extends TermServerScript{
 		AttributeCardinalityReport report = new AttributeCardinalityReport();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.runAttributeCardinalityReport();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce AttributeCardinalityReport Report due to ", e);

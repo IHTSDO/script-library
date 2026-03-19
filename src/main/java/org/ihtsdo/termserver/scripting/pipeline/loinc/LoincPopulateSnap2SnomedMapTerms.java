@@ -22,9 +22,9 @@ public class LoincPopulateSnap2SnomedMapTerms extends LoincScript {
 		try {
 			report.runStandAlone = false;
 			report.getGraphLoader().setExcludedModules(new HashSet<>());
-			report.getArchiveManager().setRunIntegrityChecks(false);
+			report.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			report.init(args);
-			report.loadProjectSnapshot(false);
+			report.loadProjectSnapshot();
 			report.runReport();
 		} finally {
 			report.finish();

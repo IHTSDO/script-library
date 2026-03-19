@@ -31,7 +31,7 @@ public class UnitConsistency extends TermServerReport {
 			report.additionalReportColumns = "Using Ingredient, With Unit, Among, Compared to, instances, For Example";
 			report.runStandAlone = false;  //We may need the real data from termserver due to problems with switching relationships ids and groupid at the same time
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.findAllIngredientUnits();
 			report.reportInconsistentUnits();
 		} catch (Exception e) {

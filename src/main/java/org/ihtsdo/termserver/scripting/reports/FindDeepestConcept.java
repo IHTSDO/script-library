@@ -15,7 +15,7 @@ public class FindDeepestConcept extends TermServerReport {
 	public static void main(String[] args) throws TermServerScriptException, InterruptedException {
 		FindDeepestConcept report = new FindDeepestConcept();
 		report.init(args);
-		report.loadProjectSnapshot(false);  //Load all descriptions
+		report.loadProjectSnapshot();  //Load all descriptions
 		report.findDeepestConcept();
 	}
 

@@ -26,7 +26,7 @@ public class LostRelationships extends TermServerScript{
 		try {
 			report.additionalReportColumns = "Active, Not Replaced Relationship, ValueIsProdRoleDesc";
 			report.init(args);
-			report.loadProjectSnapshot(true);
+			report.loadProjectSnapshot();
 			report.populateProdRoleDesc();
 			report.detectLostRelationships();
 		} catch (Exception e) {

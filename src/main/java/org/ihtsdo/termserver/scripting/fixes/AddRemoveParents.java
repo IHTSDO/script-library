@@ -33,7 +33,7 @@ public class AddRemoveParents extends BatchFix implements ScriptConstants{
 			fix.additionalReportColumns = "Action Detail";
 			fix.expectNullConcepts = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

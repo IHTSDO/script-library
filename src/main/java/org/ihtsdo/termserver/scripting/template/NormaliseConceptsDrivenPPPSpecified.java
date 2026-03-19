@@ -20,7 +20,7 @@ public class NormaliseConceptsDrivenPPPSpecified extends NormaliseConceptsDriven
 			ReportSheetManager.setTargetFolderId(GFOLDER_QI_NORMALIZATION);
 			app.classifyTasks = true;
 			app.init(args);
-			app.loadProjectSnapshot(false);  //Load all descriptions
+			app.loadProjectSnapshot();  //Load all descriptions
 			app.postInit();
 			app.processFile();
 		} catch (Exception e) {

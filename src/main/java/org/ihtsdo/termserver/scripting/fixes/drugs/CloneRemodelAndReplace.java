@@ -53,7 +53,7 @@ public class CloneRemodelAndReplace extends BatchFix implements ScriptConstants{
 			//fix.classifyTasks = true;
 			fix.additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, PARENT_COUNT, ATTRIBUTE_COUNT";
 			fix.init(args);
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

@@ -29,7 +29,7 @@ public class FdParentsReport extends TermServerReport {
 		try {
 			report.additionalReportColumns = "SemanticTag, DefinitionStatus, FdParent";
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			report.reportFdParents();
 		} catch (Exception e) {
 			LOGGER.info("Failed to produce FdParentsReport due to " + e.getMessage());

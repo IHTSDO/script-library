@@ -21,8 +21,8 @@ public class DeleteAllMembersOfRefset extends DeltaGenerator implements ScriptCo
 		try {
 			fix.runStandAlone = false;
 			fix.newIdsRequired = false;
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.getArchiveManager().setLoadOtherReferenceSets(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
 			fix.init(args);
 			fix.additionalReportColumns = "Active, Details";
 			fix.postInit(GFOLDER_ADHOC_UPDATES);

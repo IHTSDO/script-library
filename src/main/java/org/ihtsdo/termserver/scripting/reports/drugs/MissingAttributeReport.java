@@ -28,7 +28,7 @@ public class MissingAttributeReport extends TermServerReport {
 		MissingAttributeReport report = new MissingAttributeReport();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.runMissingAttributeReport();
 		} catch (Exception e) {

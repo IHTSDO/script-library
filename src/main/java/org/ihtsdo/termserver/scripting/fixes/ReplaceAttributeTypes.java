@@ -54,7 +54,7 @@ public class ReplaceAttributeTypes extends BatchFix {
 			fix.selfDetermining = true;
 			fix.classifyTasks = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

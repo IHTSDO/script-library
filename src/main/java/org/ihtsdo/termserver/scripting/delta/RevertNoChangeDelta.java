@@ -21,13 +21,13 @@ public class RevertNoChangeDelta extends DeltaGenerator {
 	public static void main(String[] args) throws TermServerScriptException {
 		RevertNoChangeDelta app = new RevertNoChangeDelta();
 		try {
-			app.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			app.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			app.newIdsRequired = false;
 			app.runStandAlone = true;
 			app.additionalReportColumns="ComponentType, ComponentId, Info, Data";
 			app.init(args);
 			app.getGraphLoader().setDetectNoChangeDelta(true);
-			app.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
+			app.loadProjectSnapshot();  //Not just FSN, load all terms with lang refset also
 			app.postInit(GFOLDER_ADHOC_UPDATES);
 			app.reportRevertedComponents();
 			app.outputModifiedComponents(true);

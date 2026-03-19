@@ -30,7 +30,7 @@ public class NormalizeTerms extends BatchFix implements ScriptConstants{
 			fix.populateTaskDescription = true;
 			fix.reportNoChange = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

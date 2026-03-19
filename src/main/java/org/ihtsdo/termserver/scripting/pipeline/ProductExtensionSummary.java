@@ -47,10 +47,10 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	@Override
 	protected void init (JobRun jobRun) throws TermServerScriptException {
 		super.init(jobRun);
-		getArchiveManager().setPopulateReleaseFlag(true);
-		getArchiveManager().setLoadOtherReferenceSets(true);
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
+		getSnapshotConfiguration().setLoadOtherReferenceSets(true);
 		if (mode == Mode.PUBLISHED) {
-			getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			getGraphLoader().setRecordPreviousState(true);
 		}
 	}

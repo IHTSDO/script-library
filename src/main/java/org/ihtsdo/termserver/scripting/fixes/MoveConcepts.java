@@ -49,7 +49,7 @@ public class MoveConcepts extends BatchFix implements ScriptConstants{
 			fix.additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, ATTRIBUTES, STATED CHILDREN, INFERRED_CHILDREN";
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

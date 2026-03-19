@@ -63,7 +63,7 @@ public class ReplaceConcepts extends DrugBatchFix implements ScriptConstants{
 			fix.populateEditPanel = false;
 			fix.populateTaskDescription = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

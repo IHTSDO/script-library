@@ -26,7 +26,7 @@ public class FullyDefinedInSubHierarchy extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN, Parents...";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postLoadInit();
 			report.runFullyDefinedInSubHierarchyReport();
 		} catch (Exception e) {

@@ -40,7 +40,7 @@ public class QI1187_AddParasiticProcess extends BatchFix {
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

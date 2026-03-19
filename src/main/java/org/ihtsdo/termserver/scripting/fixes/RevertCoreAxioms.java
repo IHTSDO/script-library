@@ -38,7 +38,7 @@ public class RevertCoreAxioms extends BatchFix implements ScriptConstants {
 			fix.selfDetermining = true;
 			fix.populateEditPanel = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all description
+			fix.loadProjectSnapshot(); //Load all description
 			fix.postInit();
 			fix.processFile();
 		} finally {

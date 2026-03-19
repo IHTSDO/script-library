@@ -30,7 +30,7 @@ public class RequiringProxPrimModellingReport extends TermServerReport{
 		RequiringProxPrimModellingReport report = new RequiringProxPrimModellingReport();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			boolean reportAll = true; //Report all concepts whether they require remodelling or not
 			report.reportRequiringProxPrimModelling(reportAll);
 		} catch (Exception e) {

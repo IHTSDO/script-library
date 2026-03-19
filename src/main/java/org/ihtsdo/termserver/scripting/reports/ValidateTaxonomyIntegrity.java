@@ -32,7 +32,7 @@ public class ValidateTaxonomyIntegrity extends TermServerScript{
 		ValidateTaxonomyIntegrity report = new ValidateTaxonomyIntegrity();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.validateTaxonomyIntegrity();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report", e);

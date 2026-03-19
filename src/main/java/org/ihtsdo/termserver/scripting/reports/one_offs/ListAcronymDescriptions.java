@@ -23,7 +23,7 @@ public class ListAcronymDescriptions extends TermServerReport implements ReportC
 	}
 	
 	public void init (JobRun run) throws TermServerScriptException {
-		getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		ReportSheetManager.targetFolderId = "1bHVd-cWbcafa3alwf5nmSOVREHYbpOMP"; //MS AdHoc Reports
 		super.init(run);
 	}

@@ -27,10 +27,10 @@ public class RecentSpecimenChanges extends TermServerScript {
 		RecentSpecimenChanges report = new RecentSpecimenChanges();
 		try {
 			report.getGraphLoader().setExcludedModules(new HashSet<>());
-			report.getArchiveManager().setRunIntegrityChecks(false);
+			report.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			report.headers="SCTID, FSN, SemTag, PT, LoincNum, Correlation, Update Made,Expression,";
 			report.init(args);
-			report.loadProjectSnapshot(false);
+			report.loadProjectSnapshot();
 			report.postInit();
 			report.reportMatchingConcepts();
 		} finally {

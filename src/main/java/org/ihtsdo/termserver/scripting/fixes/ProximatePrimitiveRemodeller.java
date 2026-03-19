@@ -23,7 +23,7 @@ public class ProximatePrimitiveRemodeller extends BatchFix implements ScriptCons
 		try {
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {

@@ -32,7 +32,7 @@ public class TouchConceptsInTask extends BatchFix implements ScriptConstants{
 			fix.dryRun = false;  //We're doing this for content that doesn't exist in the snapshot, only the task
 			fix.validateConceptOnUpdate = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.touchConcepts();
 		} finally {

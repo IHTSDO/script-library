@@ -29,7 +29,7 @@ public class MultipleModifications extends TermServerReport {
 			ReportSheetManager.setTargetFolderId("1hYd96nzfB35ggffWR_SdPbybpmzynlI6"); //Drugs
 			report.additionalReportColumns = "FSN, Attribute Type, Ingredient Value, Bases";
 			report.init(args);
-			report.loadProjectSnapshot(true);  
+			report.loadProjectSnapshot();
 			report.findMultipleModifications();
 			report.findCDsWithMultipleModifications();
 		} catch (Exception e) {

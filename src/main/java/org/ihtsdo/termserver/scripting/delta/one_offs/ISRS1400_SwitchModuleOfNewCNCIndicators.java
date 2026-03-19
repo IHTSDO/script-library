@@ -24,7 +24,7 @@ public class ISRS1400_SwitchModuleOfNewCNCIndicators extends DeltaGenerator impl
 			//delta.inputFileHasHeaderRow = true;
 			delta.newIdsRequired = false; 
 			delta.init(args);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit();
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);  //Flush and Close

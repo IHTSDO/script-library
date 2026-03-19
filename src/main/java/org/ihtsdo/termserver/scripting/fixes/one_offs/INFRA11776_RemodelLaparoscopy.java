@@ -46,7 +46,7 @@ public class INFRA11776_RemodelLaparoscopy extends BatchFix implements ScriptCon
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

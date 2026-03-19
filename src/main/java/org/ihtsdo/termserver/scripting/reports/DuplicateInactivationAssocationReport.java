@@ -25,7 +25,7 @@ public class DuplicateInactivationAssocationReport extends TermServerReport {
 			ReportSheetManager.setTargetFolderId("15WXT1kov-SLVi4cvm2TbYJp_vBMr4HZJ");  //Release QA
 			report.additionalReportColumns = "fsn, effectiveTime, data";
 			report.init(args);
-			report.loadProjectSnapshot(false);  
+			report.loadProjectSnapshot();
 			report.reportMatchingInactivations();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report", e);

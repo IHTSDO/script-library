@@ -31,7 +31,7 @@ public class MissingDispositionSubstanceGroupers2 extends TermServerReport {
 			ReportSheetManager.setTargetFolderId(GFOLDER_DRUGS_MISSING);
 			report.additionalReportColumns="FSN,Used by";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.runReport();
 		} catch (Exception e) {

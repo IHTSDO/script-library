@@ -34,7 +34,7 @@ public class CorrectModuleId extends BatchFix implements ScriptConstants{
 			fix.populateEditPanel = false;
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.processFile();
 		} finally {
 			fix.finish();

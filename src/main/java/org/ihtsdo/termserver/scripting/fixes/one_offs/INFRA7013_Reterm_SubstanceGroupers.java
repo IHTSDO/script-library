@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 
 import org.ihtsdo.otf.utils.ExceptionUtils;
@@ -32,8 +31,8 @@ public class INFRA7013_Reterm_SubstanceGroupers extends BatchFix {
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
 			fix.init(args);
-			fix.getArchiveManager().setPopulateReleaseFlag(true);
-			fix.loadProjectSnapshot(false);
+			fix.getSnapshotConfiguration().setPopulateReleaseFlag(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

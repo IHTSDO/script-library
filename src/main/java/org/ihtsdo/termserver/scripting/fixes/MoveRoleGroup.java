@@ -34,7 +34,7 @@ public class MoveRoleGroup extends BatchFix implements ScriptConstants {
 			fix.populateEditPanel = false;
 			fix.groupByIssue = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

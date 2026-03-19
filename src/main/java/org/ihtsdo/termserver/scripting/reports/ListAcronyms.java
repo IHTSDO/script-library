@@ -30,7 +30,7 @@ public class ListAcronyms extends TermServerReport {
 			report.pattern = Pattern.compile(regex);
 			report.additionalReportColumns="Expansion, Found Together, Usage Count, Examples";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.findAcronyms();
 			report.listAcronyms();

@@ -20,7 +20,7 @@ public class DeleteBornInactiveConcepts extends BatchFix implements ScriptConsta
 		DeleteBornInactiveConcepts fix = new DeleteBornInactiveConcepts(null);
 		try {
 			fix.init(args);
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.processFile();
 		} finally {
 			fix.finish();

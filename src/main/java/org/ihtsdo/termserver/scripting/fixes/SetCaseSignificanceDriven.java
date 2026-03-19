@@ -23,7 +23,7 @@ public class SetCaseSignificanceDriven extends BatchFix implements ScriptConstan
 			fix.populateTaskDescription = true;
 			fix.inputFileHasHeaderRow = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

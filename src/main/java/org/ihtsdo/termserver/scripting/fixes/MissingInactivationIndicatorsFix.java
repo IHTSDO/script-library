@@ -36,7 +36,7 @@ public class MissingInactivationIndicatorsFix extends BatchFix implements Script
 			fix.selfDetermining = true;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); //Just 
+			fix.loadProjectSnapshot(); //Just
 			fix.processFile();
 		} finally {
 			fix.finish();

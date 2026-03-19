@@ -29,7 +29,7 @@ public class ListSubstancesWithModificationsAndDispositions extends TermServerRe
 		try {
 			report.additionalReportColumns = "FSN, Used in Product, Some Direct Stated Children Flattened, All Direct Stated Children Flattened, Some Direct Inferred Children Flattened, All Direct Inferred Children Flattened, Parents, Modifications, Dispositions";
 			report.init(args);
-			report.loadProjectSnapshot(true);  
+			report.loadProjectSnapshot();
 			report.findBaseWithModifications();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report",e);

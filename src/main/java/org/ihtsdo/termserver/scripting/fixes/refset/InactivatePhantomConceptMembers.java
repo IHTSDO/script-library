@@ -30,9 +30,9 @@ public class InactivatePhantomConceptMembers extends BatchFix implements ScriptC
 			fix.selfDetermining = true;
 			fix.reportNoChange = true;
 			fix.init(args);
-			fix.getArchiveManager().setRunIntegrityChecks(false);
-			fix.getArchiveManager().setLoadOtherReferenceSets(true);
-			fix.loadProjectSnapshot(true);
+			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
+			fix.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

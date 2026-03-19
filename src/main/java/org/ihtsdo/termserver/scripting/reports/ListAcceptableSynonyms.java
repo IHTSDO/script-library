@@ -27,7 +27,7 @@ public class ListAcceptableSynonyms extends TermServerReport {
 		try {
 			report.additionalReportColumns="DescId, Term";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.conceptsOfInterest = report.processFile();
 			report.listAcceptableSynonyms();
 		} catch (Exception e) {

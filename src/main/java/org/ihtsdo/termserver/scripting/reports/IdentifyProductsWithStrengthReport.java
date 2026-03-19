@@ -42,7 +42,7 @@ public class IdentifyProductsWithStrengthReport extends TermServerScript{
 			report.additionalReportColumns = "EffectiveTime, Definition_Status,lexicalMatch, authorIdentified";
 			report.init(args);
 			report.compileRegexes();
-			report.loadProjectSnapshot(true);  //Load FSNs only
+			report.loadProjectSnapshot();  //Load FSNs only
 			List<Component> authorIdentified = report.processFile();
 			report.identifyProductsWithStrength(authorIdentified);
 		} catch (Exception e) {

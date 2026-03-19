@@ -27,7 +27,7 @@ public class LowerCaseTermInactivation extends BatchFix implements ScriptConstan
 			fix.selfDetermining = true;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.processFile();
 		} finally {
 			fix.finish();

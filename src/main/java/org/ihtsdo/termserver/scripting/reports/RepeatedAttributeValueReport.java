@@ -28,7 +28,7 @@ public class RepeatedAttributeValueReport extends TermServerReport {
 		RepeatedAttributeValueReport report = new RepeatedAttributeValueReport();
 		try {
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.runRepeatedAttributeValueReport();
 		} catch (Exception e) {
 			LOGGER.info("Failed to produce RepeatedAttributeValueReport Report due to " + e.getMessage());

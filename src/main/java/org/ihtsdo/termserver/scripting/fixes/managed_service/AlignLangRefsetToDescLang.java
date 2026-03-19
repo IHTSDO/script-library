@@ -39,7 +39,7 @@ public class AlignLangRefsetToDescLang extends BatchFix implements ScriptConstan
 			fix.selfDetermining = true;
 			fix.runStandAlone = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Load all descriptions
+			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {

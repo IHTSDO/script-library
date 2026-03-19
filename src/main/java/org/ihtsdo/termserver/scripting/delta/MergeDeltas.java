@@ -18,6 +18,7 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component.ComponentType
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.FlatFileLoader;
 import org.ihtsdo.termserver.scripting.domain.Rf2File;
+import org.snomed.FileType;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 /**
@@ -46,7 +47,7 @@ public class MergeDeltas extends DeltaGenerator {
 			app.additionalReportColumns="ComponentType, ComponentId, Info, Data";
 			app.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			app.loadProjectSnapshot(false);  //Not just FSN, load all terms with lang refset also
+			app.loadProjectSnapshot();  //Not just FSN, load all terms with lang refset also
 			app.startTimer();
 			app.doMerge();
 			app.flushFiles(false); //Need to flush files before zipping

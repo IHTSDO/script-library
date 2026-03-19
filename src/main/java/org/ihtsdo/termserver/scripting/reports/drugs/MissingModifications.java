@@ -31,7 +31,7 @@ public class MissingModifications extends TermServerReport {
 		try {
 			report.additionalReportColumns = "Base, HasPhrasePrecedent, HasExistingModification, Example Product";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.findSubstancesUsedInProducts();
 			report.findModificationWords();
 			report.findMissingModifications();

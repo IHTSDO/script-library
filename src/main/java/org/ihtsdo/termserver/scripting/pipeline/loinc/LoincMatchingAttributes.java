@@ -24,7 +24,7 @@ public class LoincMatchingAttributes extends TermServerScript{
 		try {
 			report.getGraphLoader().setExcludedModules(new HashSet<>());
 			report.init(args);
-			report.loadProjectSnapshot(true);
+			report.loadProjectSnapshot();
 			report.postInit();
 			report.reportMatchingConcepts();
 		} finally {

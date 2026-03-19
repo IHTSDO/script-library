@@ -29,7 +29,7 @@ public class RemoveRedundantParents extends BatchFix implements ScriptConstants{
 			fix.runStandAlone = true;
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.processFile();
 		} finally {
 			fix.finish();

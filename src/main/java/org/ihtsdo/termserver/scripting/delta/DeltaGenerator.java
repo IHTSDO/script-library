@@ -295,7 +295,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 					setDependencyArchives(List.of(response));
 				}
 			}
-			getArchiveManager().setLoadDependencyPlusExtensionArchives(getDependencyArchives() != null);
+			getSnapshotConfiguration().setLoadDependencyPlusExtensionArchive(getDependencyArchives() != null);
 		}
 	}
 
@@ -725,7 +725,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 			runStandAlone = false;
 			this.newIdsRequired = newIdsRequired;
 			init(args);
-			loadProjectSnapshot(false);
+			loadProjectSnapshot();
 			postInit(GFOLDER_ADHOC_UPDATES);
 			process();
 			flushFiles(false);

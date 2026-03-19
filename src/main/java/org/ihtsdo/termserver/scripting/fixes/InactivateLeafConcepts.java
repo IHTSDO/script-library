@@ -25,7 +25,7 @@ public class InactivateLeafConcepts extends BatchFix implements ScriptConstants{
 		try {
 			fix.runStandAlone = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false); //Just the FSNs
+			fix.loadProjectSnapshot(); //Just the FSNs
 			fix.processFile();
 		} finally {
 			fix.finish();

@@ -36,10 +36,10 @@ public class FixMultipleFsnPTs extends BatchFix implements ScriptConstants{
 		try {
 			ReportSheetManager.setTargetFolderId("1u6YLvJWX2GwAVJazFqJeKcVTwBbw96cc");  //MS Ad-Hoc Batch fixes
 			fix.selfDetermining = true;
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(true); //Just 
+			fix.loadProjectSnapshot(); //Just
 			fix.postInit();
 			fix.processFile();
 		} finally {

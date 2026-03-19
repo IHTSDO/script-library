@@ -21,7 +21,7 @@ public class ReassertPublishedState extends DeltaGenerator {
 
 	@Override
 	public void init (JobRun run) throws TermServerScriptException {
-		getArchiveManager().setPopulateReleaseFlag(true);
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 		subsetECL = run.getParamValue(ECL);
 		super.init(run);
 	}

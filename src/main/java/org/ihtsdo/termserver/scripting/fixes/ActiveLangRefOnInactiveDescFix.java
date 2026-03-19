@@ -29,9 +29,9 @@ public class ActiveLangRefOnInactiveDescFix extends BatchFix {
 			fix.populateEditPanel = false;
 			fix.populateTaskDescription = false;
 			fix.runStandAlone = false;  //MS projects need to work out their branch
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
-			fix.loadProjectSnapshot(false);  //Load all descriptions
+			fix.loadProjectSnapshot();  //Load all descriptions
 			fix.postInit();
 			fix.processFile();
 		} finally {

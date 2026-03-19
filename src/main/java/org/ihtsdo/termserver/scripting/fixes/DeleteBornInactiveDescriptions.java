@@ -24,11 +24,11 @@ public class DeleteBornInactiveDescriptions extends BatchFix implements ScriptCo
 			fix.populateTaskDescription = false;
 			fix.selfDetermining = true;
 			fix.runStandAlone = false;
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
 			fix.additionalReportColumns = "Active, Details";
 			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(false); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

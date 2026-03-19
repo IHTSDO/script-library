@@ -41,7 +41,7 @@ public class CreateTasksWithConcepts extends BatchFix implements ScriptConstants
 			fix.expectNullConcepts = true; 
 			fix.validateConceptOnUpdate = false;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

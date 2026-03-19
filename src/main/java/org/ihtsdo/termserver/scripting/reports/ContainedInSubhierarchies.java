@@ -37,7 +37,7 @@ public class ContainedInSubhierarchies extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN, Contained by";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.postInit();
 			report.runContainedInSubhierarchyReport();
 		} catch (Exception e) {

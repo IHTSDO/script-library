@@ -29,7 +29,7 @@ public class FullStopInTerm extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN, MatchedIn, Case, SubHierarchy, SubSubHierarchy";
 			report.init(args);
-			report.loadProjectSnapshot(false);  //Load all descriptions
+			report.loadProjectSnapshot();  //Load all descriptions
 			report.reportDescriptionContainsX();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report", e);

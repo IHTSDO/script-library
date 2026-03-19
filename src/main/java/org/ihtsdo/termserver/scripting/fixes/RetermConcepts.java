@@ -50,7 +50,7 @@ public class RetermConcepts extends BatchFix {
 			fix.selfDetermining = true;
 			fix.runStandAlone = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

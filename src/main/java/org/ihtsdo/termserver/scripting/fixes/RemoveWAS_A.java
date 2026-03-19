@@ -34,7 +34,7 @@ public class RemoveWAS_A extends BatchFix implements ScriptConstants{
 			fix.runStandAlone = true;
 			fix.additionalReportColumns = "Inactivation, Sibling + Lexical match, WAS_A -> MAY BE, Current Siblings, Lexical Matches (same semtag), Lexical matches (other semtag)";
 			fix.init(args);
-			fix.loadProjectSnapshot(true); 
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

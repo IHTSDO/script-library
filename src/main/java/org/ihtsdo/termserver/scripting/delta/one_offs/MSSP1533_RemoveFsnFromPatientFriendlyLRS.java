@@ -26,8 +26,8 @@ public class MSSP1533_RemoveFsnFromPatientFriendlyLRS extends DeltaGenerator {
 			delta.newIdsRequired = false;
 			delta.runStandAlone = false;  //We need to look up the project path for MS projects
 			delta.init(args);
-			delta.getArchiveManager().setPopulateReleaseFlag(true);
-			delta.loadProjectSnapshot(false);
+			delta.getSnapshotConfiguration().setPopulateReleaseFlag(true);
+			delta.loadProjectSnapshot();
 			delta.postInit();
 			delta.process();
 			delta.flushFiles(false); //Need to flush files before zipping

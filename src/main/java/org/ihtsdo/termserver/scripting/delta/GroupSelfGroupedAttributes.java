@@ -24,8 +24,8 @@ public class GroupSelfGroupedAttributes extends DeltaGenerator implements Script
 	public static void main(String[] args) throws TermServerScriptException {
 		GroupSelfGroupedAttributes delta = new GroupSelfGroupedAttributes();
 		try {
-			delta.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			delta.getArchiveManager().setRunIntegrityChecks(false);
+			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
+			delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			delta.newIdsRequired = false; // We'll only be modifying existing components
 			delta.sourceModuleIds = Set.of("1326031000000103","83821000000107","999000011000000103","999000011000001104","999000021000000109","999000021000001108","999000031000000106","999000041000000102");
 			delta.init(args);

@@ -41,7 +41,7 @@ public class ConceptsNotAccountedFor extends TermServerReport implements ReportC
 		additionalReportColumns="FSN, Descendants NOC, Already accounted, SIMPLE, PURE_CO, COMPLEX, COMPLEX_NO_MORPH, NONE";
 		run.setParameter(SUB_HIERARCHY, CLINICAL_FINDING.toString());
 		super.init(run);
-		getArchiveManager().setAllowStaleData(true);
+		getSnapshotConfiguration().setAllowStaleData(true);
 	}
 
 	@Override

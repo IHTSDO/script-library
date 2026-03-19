@@ -17,7 +17,7 @@ public class AddDescriptionSuffix extends DeltaGenerator implements ScriptConsta
 		AddDescriptionSuffix delta = new AddDescriptionSuffix();
 		try {
 			delta.init(args);
-			delta.loadProjectSnapshot(false); //Need all descriptions loaded.
+			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
 			delta.createOutputArchive(false, delta.lastBatchSize);

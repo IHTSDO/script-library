@@ -37,7 +37,7 @@ public class ReplaceAttributes extends BatchFix {
 			fix.reportNoChange = true;
 			fix.selfDetermining = true;
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit();
 			fix.processFile();
 		} finally {

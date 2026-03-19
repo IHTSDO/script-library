@@ -43,7 +43,7 @@ public class INFRA7503_RewireAndReterm_PressureUlcer extends BatchFix {
 			fix.reportNoChange = true;
 			fix.additionalReportColumns = "Action Detail, Further Detail";
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postLoadInit();
 			fix.processFile();
 		} finally {

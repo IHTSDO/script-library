@@ -20,7 +20,7 @@ public class MismatchedRelationships extends TermServerScript{
 		try {
 			report.additionalReportColumns = "Concept_Active, Concept_Modified, Stated_or_Inferred, Relationship_Active, GroupNum, Type, Target";
 			report.init(args);
-			report.loadProjectSnapshot(false);
+			report.loadProjectSnapshot();
 			report.detectMismatchedRelationships();
 		} catch (Exception e) {
 			LOGGER.error("Failed to produce report ", e);

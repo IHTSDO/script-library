@@ -24,7 +24,7 @@ public class ListDoseForms extends TermServerReport {
 		try {
 			report.additionalReportColumns = "FSN, SemTag, Acceptability Specified, Acceptable for MPF, Acceptable for CD, Used in Modelling, Example";
 			report.init(args);
-			report.loadProjectSnapshot(true);
+			report.loadProjectSnapshot();
 			report.postInit();
 			report.listDoseForms();
 		} catch (Exception e) {

@@ -37,7 +37,7 @@ public class INFRA9963_NewUUIDsCommonFrenchCH extends DeltaGenerator implements 
 			//delta.inputFileHasHeaderRow = true;
 			delta.newIdsRequired = false; 
 			delta.init(args);
-			delta.loadProjectSnapshot(false);
+			delta.loadProjectSnapshot();
 			delta.postInit();
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);  //Flush and Close

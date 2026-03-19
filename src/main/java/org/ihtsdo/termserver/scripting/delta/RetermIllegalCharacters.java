@@ -20,7 +20,7 @@ public class RetermIllegalCharacters extends DeltaGenerator {
 		RetermIllegalCharacters fix = new RetermIllegalCharacters();
 		try {
 			fix.init(args);
-			fix.loadProjectSnapshot(false);
+			fix.loadProjectSnapshot();
 			fix.postInit(GFOLDER_ADHOC_UPDATES);
 			fix.retermIllegalCharacters();
 			fix.createOutputArchive();

@@ -41,7 +41,7 @@ public class LoincStats extends TermServerReport {
 			ReportSheetManager.setTargetFolderId("1yF2g_YsNBepOukAu2vO0PICqJMAyURwh");  //LOINC
 			app.getGraphLoader().setExcludedModules(new HashSet<>());
 			app.init(args);
-			app.loadProjectSnapshot(false);
+			app.loadProjectSnapshot();
 			app.postInit();
 			app.doReport();
 			app.populateSummaryTab();
