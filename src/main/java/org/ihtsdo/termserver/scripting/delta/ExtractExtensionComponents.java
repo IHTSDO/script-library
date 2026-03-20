@@ -93,8 +93,11 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 				LOGGER.warn("Argentinian Edition detected");
 				sourceModuleIds = Set.of("11000221109");
 				getArchiveManager().setRunIntegrityChecks(false);
+			} else if (getProject().getKey().contains("Canadian")) {
+				LOGGER.warn("Canadian Edition detected");
+				sourceModuleIds = Set.of("20621000087109");
 			} else if (getProject().getKey().contains("Uruguay")) {
-				LOGGER.warn("Uruguayian Edition detected");
+				LOGGER.warn("Uruguayan Edition detected");
 				sourceModuleIds = Set.of("5631000179106");
 				getArchiveManager().setRunIntegrityChecks(false);
 			} else if (getProject().getKey().contains("Spanish")) {
