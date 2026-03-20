@@ -16,6 +16,7 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.termserver.scripting.AxiomUtils;
 import org.ihtsdo.termserver.scripting.IdGenerator;
 import org.ihtsdo.termserver.scripting.TermServerScript;
+import org.ihtsdo.termserver.scripting.client.TermServerClient;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -184,10 +185,19 @@ public abstract class DeltaGenerator extends TermServerScript {
 		}
 	}
 
-	private void determineMostLikelySourceModuleFromProject() {
+	private void determineMostLikelySourceModuleFromProject() throws TermServerScriptException {
 		//If we're working in an extension and the source modules haven't been set, suggest
 		//the default module for that project
-		if (!projectName.endsWith(".zip") && sourceModuleIds.isEmpty()){
+		if (projectName.startsWith("MAIN/SNOMEDCT-")) {
+			//In this case we're running at the code system level, so we can recover metadata
+			//from the branch
+			tsClient = createTSClient(url, authenticatedCookie);
+			Branch branch = tsClient.getBranch(projectName);
+			sourceModuleIds.add(branch.getMetadata().getDefaultModuleId());
+			if (branch.getMetadata().getExpectedExtensionModules() != null) {
+				sourceModuleIds.addAll(branch.getMetadata().getExpectedExtensionModules());
+			}
+		} else if (!projectName.endsWith(".zip") && sourceModuleIds.isEmpty()){
 			try{
 				scaClient = new AuthoringServicesClient(url, authenticatedCookie);
 				//MAIN is not a project, but we know what the default module is
@@ -204,7 +214,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 					}
 				}
 			} catch (Exception e) {
-				LOGGER.error("Failed to retrieve project metadata for " + projectName, e);
+				LOGGER.error("Failed to retrieve project metadata for {}", projectName, e);
 			}
 		}
 	}
