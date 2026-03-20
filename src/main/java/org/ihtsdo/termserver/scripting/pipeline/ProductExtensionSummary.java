@@ -1,11 +1,8 @@
 package org.ihtsdo.termserver.scripting.pipeline;
 
-import org.ihtsdo.otf.exception.NotImplementedException;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
-import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.otf.utils.SnomedUtilsBase;
-import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.ReportClass;
 import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.*;
@@ -15,35 +12,30 @@ import org.snomed.otf.scheduler.domain.*;
 import org.snomed.otf.scheduler.domain.Job.ProductionStatus;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ProductExtensionSummary extends TermServerReport implements ReportClass {
 
-	private static final String ACTIVE_CONCEPTS = "Active Concepts";
-	private static final String ACTIVE_PROMOTED_CONCEPT = "Active Promoted Concepts";
-	private static final String ACTIVE_DESCRIPTIONS = "Active Descriptions";
-	private static final String ACTIVE_PROMOTED_DESCRIPTIONS = "Active Promoted Descriptions";
-	private static final String ACTIVE_AXIOMS = "Active Axioms";
-	private static final String ACTIVE_RELATIONSHIPS = "Active Relationships";
-	private static final String ACTIVE_SIMPLE_REFSET_MEMBERS = "Active Simple Refset Members";
-	private static final String ACTIVE_ALT_IDS = "Active Alternate Identifiers";
+	private static final String SNAPSHOT_ACTIVE = "Snapshot Active";
 
-	private static final String INACTIVE_CONCEPTS = "Inactive Concepts";
-	private static final String INACTIVE_PROMOTED_CONCEPT = "Inactive Promoted Concepts";
-	private static final String INACTIVE_DESCRIPTIONS = "Inactive Descriptions";
-	private static final String INACTIVE_PROMOTED_DESCRIPTIONS = "Inactive Promoted Descriptions";
-	private static final String INACTIVE_AXIOMS = "Inactive Axioms";
-	private static final String INACTIVE_RELATIONSHIPS = "Inactive Relationships";
-	private static final String INACTIVE_SIMPLE_REFSET_MEMBERS = "Inactive Simple Refset Members";
-	private static final String INACTIVE_ALT_IDS = "Inactive Alternate Identifiers";
+	private static final String DESCRIPTIONS = "Descriptions";
 
-	private static final String DESCRIPTION_ON_INTERNATIONAL_CONCEPT = "Description on International Concept";
+	private static final String DELTA_NEW = "Delta New";
+	private static final String DELTA_CHANGED = "Delta Changed";
+	private static final String DELTA_NEW_CHANGED = "Delta New/Changed";
+	private static final String DELTA_INACTIVATED = "Delta Inactivated";
+
+	private static final String ON_INTERNATIONAL_CONCEPT = " on International Concept";
 
 	private List<Concept> inScopeConcepts;
 
 	enum Mode { PUBLISHED, UNPUBLISHED }
-	Mode mode = Mode.UNPUBLISHED;
-	boolean includeDetails = true;  //Note that born inactive components are always included
+	Mode mode = Mode.PUBLISHED;
+	private String packageEffectiveDate;
+	
+	boolean includeDetails = false;  //Note that born inactive components are always included
 	String inScopeNamespace = null;
 
 	public static void main(String[] args) throws TermServerScriptException {
@@ -54,9 +46,13 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 
 	@Override
 	protected void init (JobRun jobRun) throws TermServerScriptException {
+		super.init(jobRun);
 		getArchiveManager().setPopulateReleaseFlag(true);
 		getArchiveManager().setLoadOtherReferenceSets(true);
-		super.init(jobRun);
+		if (mode == Mode.PUBLISHED) {
+			getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
+			getGraphLoader().setRecordPreviousState(true);
+		}
 	}
 
 	@Override
@@ -66,13 +62,13 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				"Concept Details",
 				"Concepts without Alternate Identifiers",
 				"Concepts with multiple Axioms",
-				"Descriptions",
+				DESCRIPTIONS,
 				"Text Definitions",
 				"Inactive Components",
 				"Born Inactive Components"
 		};
 		String[] columnHeadings = new String[] {
-				"Item, Count",
+				"Category, Item, Count",
 				"Concept, FSN, SemTag, Alternate Identifier, Descriptions, Inferred Model, , ",
 				"Concept, FSN, SemTag",
 				"Concept, FSN, SemTag",
@@ -86,13 +82,21 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				.filter(this::inScope)
 				.sorted(SnomedUtils::compareSemTagFSN)
 				.toList();
-		Set<String> inScopeNamespaces = getInScopeNamespaces();
-		if (inScopeNamespaces.size() != 1) {
-			throw new IllegalArgumentException("Expected only one namespace, but got " + inScopeNamespaces.size() + " namespaces");
-		}
-		inScopeNamespace = inScopeNamespaces.iterator().next();
+		determineNamespace();
 	}
-	
+
+	private void determineNamespace() {
+		if (mode == Mode.PUBLISHED) {
+			obtainPackageMetadata();
+		} else {
+			Set<String> inScopeNamespaces = getInScopeNamespaces();
+			if (inScopeNamespaces.size() != 1) {
+				throw new IllegalArgumentException("Expected only one namespace, but got " + inScopeNamespaces.size() + " namespaces");
+			}
+			inScopeNamespace = inScopeNamespaces.iterator().next();
+		}
+	}
+
 	@Override
 	public Job getJob() {
 		return new Job()
@@ -108,7 +112,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	public void runJob() throws TermServerScriptException {
 		getSummaryCounts();
 		checkForBornInactiveComponents();
-		populateSummaryTabAndTotal(PRIMARY_REPORT);
+		reportSummaryCounts(PRIMARY_REPORT);
 
 		if (includeDetails) {
 			getConceptDetails(SECONDARY_REPORT);
@@ -123,111 +127,69 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		//Some components belong to International Concepts, so start with the full set, then consider
 		//scope at the component level
 		for (Concept c : gl.getAllConcepts()) {
-			if (c.getId().equals("703151010000100")) {
-				System.out.println("Not counted");
-			}
 			getSummaryCounts(c);
 		}
 	}
 
-	private void getSummaryCounts(Concept c) throws TermServerScriptException {
-		getConceptSummaryCounts(c);
-		getDescriptionSummaryCounts(c);
-		getAxiomSummaryCounts(c);
-		getRelationshipSummaryCounts(c);
-		getOtherRefsetSummaryCounts(c);
-		getAlternateIdentifierSummaryCounts(c);
-	}
-
-	private void getAxiomSummaryCounts(Concept c) {
-		for (AxiomEntry ax : c.getAxiomEntries()) {
-			if (inScope(ax)) {
-				incrementSummaryInformation(ax.isActiveSafely() ? ACTIVE_AXIOMS : INACTIVE_AXIOMS);
+	private void getSummaryCounts(Concept concept) throws TermServerScriptException {
+		for (Component c : SnomedUtils.getAllComponents(concept)) {
+			if (inScope(c)) {
+				doSnapshotCounts(c);
+				doDeltaCounts(c);
+			} else if (!inScope(concept) && SnomedUtilsBase.isSctid(c.getId()) && SnomedUtilsBase.getNamespace(c.getId()).equals(inScopeNamespace)) {
+				String category = c.isActiveSafely() ? "Snapshot Promoted Active" : "Snapshot Promoted Inactive";
+				incrementSummaryCount(category, c.getComponentType() + ON_INTERNATIONAL_CONCEPT);
 			}
 		}
 	}
 
-	private void getDescriptionSummaryCounts(Concept c) throws TermServerScriptException {
-		for (Description d : c.getDescriptions(ActiveState.BOTH)) {
-			if (inScope(d)) {
-				incrementSummaryInformation(d.isActiveSafely() ? ACTIVE_DESCRIPTIONS : INACTIVE_DESCRIPTIONS);
-				//Is this a change on an International concept?
-				if (!inScope(c)) {
-					incrementSummaryInformation(DESCRIPTION_ON_INTERNATIONAL_CONCEPT);
-				}
-				if (includeDetails) {
-					report(QUINARY_REPORT, d.getId(), d.getActive(), d.getTerm());
-				}
-			} else if (SnomedUtilsBase.getNamespace(d.getId()).equals(inScopeNamespace)) {
-				incrementSummaryInformation(d.isActiveSafely() ? ACTIVE_PROMOTED_DESCRIPTIONS : INACTIVE_PROMOTED_DESCRIPTIONS);
-			}
+	private void doSnapshotCounts(Component c) throws TermServerScriptException {
+		String category = SNAPSHOT + (c.isActiveSafely()? "_Active" : "_Inactive");
+		String counter = (c.isActiveSafely()? "Active_" : "Inactive_") + c.getComponentType();
+		incrementSummaryCount(category, counter);
+
+		if (includeDetails && c instanceof Description d) {
+			report(QUINARY_REPORT, d.getId(), d.getActive(), d.getTerm());
 		}
 	}
 
-	private void getAlternateIdentifierSummaryCounts(Concept c) {
-		for (AlternateIdentifier ai : c.getAlternateIdentifiers()) {
-			incrementSummaryInformation(ai.isActiveSafely() ? ACTIVE_ALT_IDS : INACTIVE_ALT_IDS);
-			boolean isNew = determineIfNew(ai);
-			if (ai.isActiveSafely() && (isNew || determineIfChanged(ai))) {
-				incrementSummaryInformation( "New/Changed Alternate Identifier");
-			}
+	private void doDeltaCounts(Component c) {
+		if (isInDelta(c)) {
+			String category = determineDeltaCategory(c);
+			incrementSummaryCount(category, c.getComponentType().toString());
 		}
 	}
 
-	private void getOtherRefsetSummaryCounts(Concept c) {
-		for (RefsetMember rm : c.getOtherRefsetMembers()) {
-			incrementSummaryInformation(rm.isActiveSafely() ? ACTIVE_SIMPLE_REFSET_MEMBERS : INACTIVE_SIMPLE_REFSET_MEMBERS);
-			boolean isNew = determineIfNew(rm);
-			if (rm.isActiveSafely() && (isNew || determineIfChanged(rm))) {
-				incrementSummaryInformation( "New/Changed Simple Refset Member");
-			}
-		}
-	}
-
-	private void getConceptSummaryCounts(Concept c) throws TermServerScriptException {
-		if (inScope(c)) {
-			incrementSummaryInformation(c.isActiveSafely() ? ACTIVE_CONCEPTS : INACTIVE_CONCEPTS);
-			boolean isNew = determineIfNew(c);
-			if (isNew) {
-				boolean isObservable = c.getAncestors(NOT_SET).contains(OBSERVABLE_ENTITY);
-				incrementSummaryInformation(isObservable ? "New Observable Entities" : "New Non-Observable Entities");
-			} else if (determineIfChanged(c)) {
-				incrementSummaryInformation(c.isActiveSafely() ? "Changed Concept Row" : "Inactivated Concept Row");
-			}
-		} else if (SnomedUtilsBase.getNamespace(c.getId()).equals(inScopeNamespace)) {
-			incrementSummaryInformation(c.isActiveSafely() ? ACTIVE_PROMOTED_CONCEPT : INACTIVE_PROMOTED_CONCEPT);
-		}
-	}
-
-	private void getRelationshipSummaryCounts(Concept c) {
-		//No need to look at stated relationships, they're covered by axiom counts
-		for (Relationship r : c.getRelationships(CharacteristicType.INFERRED_RELATIONSHIP, ActiveState.BOTH)) {
-			if (inScope(r, true)) {
-				incrementSummaryInformation(r.isActiveSafely() ? ACTIVE_RELATIONSHIPS : INACTIVE_RELATIONSHIPS);
-				if (r.getCharacteristicType().equals(CharacteristicType.INFERRED_RELATIONSHIP)) {
-					boolean relIsNew = determineIfNew(r);
-					if (relIsNew && !r.isActiveSafely()) {
-						incrementSummaryInformation("New but inactive inferred relationship");
-					}
-				}
-			}
-		}
-	}
-
-	private boolean determineIfChanged(Component c) {
-		if (mode == Mode.UNPUBLISHED) {
-			// We're only interested in unpublished components
-			return StringUtils.isEmpty(c.getEffectiveTime());
+	private String determineDeltaCategory(Component c) {
+		//We know it's a delta, so is it new, changed or inactivated?
+		if (!c.isActiveSafely()) {
+			return DELTA_INACTIVATED;
+		} else if (mode == Mode.PUBLISHED) {
+			return DELTA_NEW_CHANGED; //Can't tell the difference between new and changed with only a snapshot import
 		} else {
-			throw new NotImplementedException();
+			return c.isReleasedSafely() ? DELTA_CHANGED : DELTA_NEW;
 		}
 	}
 
-	private boolean determineIfNew(Component c) {
-		if (mode == Mode.UNPUBLISHED) {
-			return !c.isReleased();
+	private boolean isInDelta(Component c) {
+		if (mode == Mode.PUBLISHED) {
+			return c.getEffectiveTime().equals(packageEffectiveDate);
 		} else {
-			throw new NotImplementedException();
+			return c.getEffectiveTime().isEmpty();
+		}
+	}
+
+	private void obtainPackageMetadata() {
+		// Regex: capture the last 7 digits before the last underscore, then 8-digit date
+		Pattern pattern = Pattern.compile(".*?(\\d{7})_(\\d{8})T\\d{6}Z\\.zip$");
+		Matcher matcher = pattern.matcher(projectName);
+		if (matcher.find()) {
+			inScopeNamespace = matcher.group(1);       // 1010000
+			packageEffectiveDate = matcher.group(2);   // 20260321
+		} else {
+			throw new IllegalArgumentException(
+					"Filename does not match expected pattern to extract namespace and date: " + projectName
+			);
 		}
 	}
 
@@ -240,7 +202,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	private void getConceptsWithoutAltIds(int tabIdx) throws TermServerScriptException {
 		for (Concept c : inScopeConcepts) {
 			if (c.getAlternateIdentifiers().isEmpty()) {
-				incrementSummaryInformation("Concepts without AltIds");
+				incrementSummaryCount(SNAPSHOT_ACTIVE, "Concepts without AltIds");
 				report(tabIdx, c);
 			}
 		}
@@ -291,7 +253,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		for (Concept concept : gl.getAllConcepts()) {
 			for (Component c : SnomedUtils.getAllComponents(concept)) {
 				if (inScope(c) && !c.isActiveSafely() && !c.isReleasedSafely()) {
-					incrementSummaryInformation("Born Inactive Components");
+					incrementSummaryCount(SNAPSHOT_ACTIVE, "Born Inactive Components");
 					report(OCTONARY_REPORT, c.getId(), c);
 				}
 			}
