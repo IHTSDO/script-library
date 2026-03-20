@@ -28,7 +28,8 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 	private List<String> historicallyAcceptableSemTags = List.of("(administrative concept)",
 			"(context-dependent category)",
 			"(environment / location)",
-			"(special concept)");
+			"(special concept)",
+			"(life style)");
 
 	private Map<String, String> knownReplacements = Map.of(
 		"(virtual clinical drug)", "(clinical drug)",
@@ -37,6 +38,8 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 	);
 
 	private Set<String> validSemTags = new HashSet<>();
+
+	private List<String> unacceptableSolutions = List.of("(namespace concept)");
 
 	protected ReplaceInvalidSemanticTags(BatchFix clone) {
 		super(clone);
@@ -79,9 +82,7 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 	public int doFix(Task t, Concept c, String info) throws TermServerScriptException {
 		int changesMade = 0;
 		String semTag = SnomedUtilsBase.deconstructFSN(c.getFsn())[1];
-		if (c.getId().equals("138297002")) {
-			LOGGER.debug("here");
-		}
+		Concept originalConcept = c.cloneWithIds();
 		boolean isReplacement = false;
 		String replacementSemTag = "";
 		if (knownReplacements.containsKey(semTag)) {
@@ -103,13 +104,19 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 				}
 			}
 		}
+
 		String isA = c.getRelationships(CharacteristicType.INFERRED_RELATIONSHIP, IS_A, ActiveState.BOTH)
 				.stream()
 				.map(Relationship::toString)
 				.collect(Collectors.joining(",\n"));
 		String histAssocs = SnomedUtils.prettyPrintHistoricalAssociations(c, gl);
-		changesMade += replaceSemTag(t, c, semTag, replacementSemTag, isReplacement);
-		report(t,c, Severity.NONE, ReportActionType.INFO, c.getEffectiveTime(), replacementSemTag, isA, histAssocs);
+		if (unacceptableSolutions.contains(semTag)) {
+			report(t,c, Severity.HIGH, ReportActionType.VALIDATION_CHECK, c.getEffectiveTime(), "No acceptable solution for: " + semTag, isA, histAssocs);
+			return NO_CHANGES_MADE;
+		} else {
+			changesMade += replaceSemTag(t, c, semTag, replacementSemTag, isReplacement);
+			report(t, originalConcept, Severity.NONE, ReportActionType.INFO, c.getEffectiveTime(), replacementSemTag, isA, histAssocs);
+		}
 		return changesMade;
 	}
 
@@ -138,7 +145,6 @@ public class ReplaceInvalidSemanticTags extends BatchFix {
 	@Override
 	protected List<Component> identifyComponentsToProcess() throws TermServerScriptException {
 		List<Component> process = new ArrayList<>();
-		nextConcept:
 		//Now work through all Concepts and list any that don't have an active semantic tag
 		for (Concept c : SnomedUtils.sort(gl.getAllConcepts())) {
 			String semTag = SnomedUtils.deconstructFSN(c.getFsn())[1];
