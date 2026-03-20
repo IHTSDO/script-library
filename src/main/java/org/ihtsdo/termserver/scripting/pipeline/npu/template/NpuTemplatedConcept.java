@@ -188,6 +188,15 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			}
 		}
 
+		//Rule for detected enzymatic method
+		if (part.getPartNumber().equals("QU50721")) {
+			slotTermAppendMap.put(NPU_PART_UNIT, " with reference to enzymatic method");
+			removeProcessingFlag(ProcessingFlag.MARK_AS_PRIMITIVE);
+			RelationshipTemplate attr = new RelationshipTemplate(TECHNIQUE,
+					gl.getConcept("258026004 |Enzyme method (qualifier value)"));
+			attributes.add(attr);
+		}
+
 		//This will only apply when the blood cell is coming from the system
 		checkForBloodCellProcessing(attributes, part, rt);
 

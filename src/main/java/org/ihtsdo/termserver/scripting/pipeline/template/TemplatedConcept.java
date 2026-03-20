@@ -168,6 +168,10 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 	public void addProcessingFlag(ProcessingFlag flag) {
 		processingFlags.add(flag);
 	}
+
+	public void removeProcessingFlag(ProcessingFlag flag) {
+		processingFlags.remove(flag);
+	}
 	
 	public boolean hasProcessingFlag(ProcessingFlag flag) {
 		return processingFlags.contains(flag);
