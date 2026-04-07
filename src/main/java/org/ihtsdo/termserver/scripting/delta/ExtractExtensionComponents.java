@@ -60,6 +60,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	protected boolean butNotLaterality = true;
 	protected List<Concept> attributeTypesExcludedFromInferredToStated = new ArrayList<>();
 	protected Rf2ConceptCreator conceptCreator;
+	protected Concept forceNewParent = null; // or MEDICINAL_PRODUCT for UK MPs
 
 	protected String[] componentIdsToProcess = null; //If it's just a couple, no need for a file, just specify here.
 	protected String componentsToProcessEcl = null; // (<<64572001 |Disease|:116676008 |Associated morphology|=46360000 |Abnormal curvature|) {{ C moduleId = 890108001 }}
@@ -435,11 +436,14 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 				LOGGER.info("Processing archive batch {}", batchNum);
 				process(archiveBatches.remove());
 				createOutputArchive();
-				gl.setAllComponentsClean();
-				if (!archiveBatches.isEmpty()) {
-					outputDirName = "output"; //Reset so we don't end up with _1_1_1
-					initialiseOutputDirectory();
-					initialiseFileHeaders();
+				//Are we doing more?
+				if (CONCEPTS_PER_ARCHIVE < Integer.MAX_VALUE) {
+					gl.setAllComponentsClean();
+					if (!archiveBatches.isEmpty()) {
+						outputDirName = "output"; //Reset so we don't end up with _1_1_1
+						initialiseOutputDirectory();
+						initialiseFileHeaders();
+					}
 				}
 			}
 		} else {
@@ -493,8 +497,8 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 				incrementSummaryInformation("Concepts no movement required");
 			} else if (thisConcept.getDefinitionStatus().equals(DefinitionStatus.FULLY_DEFINED) &&
 					SnomedUtils.countAttributes(thisConcept, CharacteristicType.STATED_RELATIONSHIP) == 0) {
-				//Check we're not ending up with a Fully Defined concept with only ISAs
-				report(thisConcept, Severity.HIGH, ReportActionType.VALIDATION_CHECK, "Concept FD with only ISAs ", thisConcept.toExpression(CharacteristicType.STATED_RELATIONSHIP));
+				//Check we're not ending up with a Sufficiently Defined concept with only ISAs
+				report(thisConcept, Severity.HIGH, ReportActionType.VALIDATION_CHECK, "Concept SD with only ISAs ", thisConcept.toExpression(CharacteristicType.STATED_RELATIONSHIP));
 			}
 			if (doAdditionalProcessing) {
 				doAdditionalProcessing(thisConcept, componentsToProcess);
@@ -670,8 +674,24 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		//If we have no stated modelling (either stated relationships or those extracted from an axiom),
 		//create an Axiom Entry from the inferred rels.
 		if (!hasStatedModeling(c)) {
+			if (forceNewParent != null) {
+				forceReplacementOfParent(c);
+			}
 			convertInferredRelsToAxiomEntry(c);
 		}
+	}
+
+	private void forceReplacementOfParent(Concept c) throws TermServerScriptException {
+		c.getRelationships().removeIf(r ->
+				r.getCharacteristicType() == CharacteristicType.INFERRED_RELATIONSHIP &&
+						r.getType() == IS_A &&
+						r.isActiveSafely()
+		);
+		Relationship parentRel = new Relationship(IS_A, forceNewParent);
+		parentRel.setCharacteristicType(CharacteristicType.INFERRED_RELATIONSHIP);
+		parentRel.setModuleId(targetModuleId);
+		parentRel.setId(getRelIdGenerator().getSCTID());
+		c.addRelationship(parentRel);
 	}
 
 	private boolean hasStatedModeling(Concept c) {
