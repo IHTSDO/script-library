@@ -381,4 +381,16 @@ public class NpuConcept extends ExternalConcept {
 	public boolean isCurrentVersion() {
 		return currentVersion != null && currentVersion.equalsIgnoreCase("true");
 	}
+
+	public String[] asArray() {
+		return new String[] {
+			getNpuCode(),
+			getLongDisplayName(),
+			system,
+			component,
+			kindOfProperty,
+			proc,
+			unit,
+		};
+	}
 }

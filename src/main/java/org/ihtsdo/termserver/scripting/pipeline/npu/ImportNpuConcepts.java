@@ -18,6 +18,7 @@ import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuDetail;
 import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuPart;
 import org.ihtsdo.termserver.scripting.pipeline.npu.template.NpuTemplatedConcept;
 import org.ihtsdo.termserver.scripting.pipeline.npu.template.NpuTemplatedConceptWithComponent;
+import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,7 +178,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		TypeReference<List<NpuPart>> listType = new TypeReference<>(){};
 		try {
 			File partFile = getInputFile(FILE_IDX_NPU_PARTS);
-			LOGGER.info("Importing NPU Parts from file: " + partFile);
+			LOGGER.info("Importing NPU Parts from file: {}", partFile);
 			FileInputStream is = FileUtils.openInputStream(partFile);
 			List<NpuPart> npuParts = mapper.readValue(is, listType);
 			partMap = npuParts.stream()
@@ -208,6 +209,13 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		} catch (IOException e) {
 			throw new TermServerScriptException("Failed to read NPU codes from file", e);
 		}
+	}
+
+	@Override
+	protected void postModelling(TemplatedConcept tc) throws TermServerScriptException {
+		NpuConcept npuConcept = (NpuConcept)tc.getExternalConcept();
+		report(getTab(TAB_ITEMS_OF_INTEREST), npuConcept.asArray());
+		super.postModelling(tc);
 	}
 
 	@Override
