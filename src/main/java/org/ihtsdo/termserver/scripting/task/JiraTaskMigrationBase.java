@@ -117,8 +117,8 @@ public abstract class JiraTaskMigrationBase extends TermServerReport {
 
 	protected void saveComments(Issue task, Long foreignKeyId, List<Comment> comments, Connection conn, int tabIdx) throws SQLException {
 		String insertSql = "INSERT INTO " + getCommentTableName() +
-				" (body, user, " + getCommentCreatedColumnName() + ", "+ getCommentUpdatedColumnName()+", " + getCommentForeignKeyColumnName() +
-				") VALUES (?, ?, ?, ?, ?)";
+				" (body, user, internal, " + getCommentCreatedColumnName() + ", "+ getCommentUpdatedColumnName()+", " + getCommentForeignKeyColumnName() +
+				") VALUES (?, ?, ?, ?, ?, ?)";
 
 		String existsSql = "SELECT 1 FROM  " + getCommentTableName() +
 				" WHERE body = ? AND user = ? AND "+getCommentCreatedColumnName()+" = ? AND " + getCommentForeignKeyColumnName() + " = ?";
@@ -134,8 +134,9 @@ public abstract class JiraTaskMigrationBase extends TermServerReport {
 				// check for existence
 				existsPs.setString(1, body);
 				existsPs.setString(2, user);
-				existsPs.setTimestamp(3, created);
-				existsPs.setLong(4, foreignKeyId);
+				existsPs.setBoolean(3, false);
+				existsPs.setTimestamp(4, created);
+				existsPs.setLong(7, foreignKeyId);
 
 				try (ResultSet rs = existsPs.executeQuery()) {
 					if (rs.next()) {
