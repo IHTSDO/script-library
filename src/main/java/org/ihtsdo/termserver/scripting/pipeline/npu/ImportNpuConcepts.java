@@ -205,6 +205,11 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 	@Override
 	protected List<String> getExternalConceptsToModel() throws TermServerScriptException {
 		try {
+			//If we didn't specify a file, try for all of them
+			File filterList = getInputFile(FILE_IDX_NPU_TECH_PREVIEW_CONCEPTS);
+			if (filterList == null) {
+				return externalConceptMap.keySet().stream().sorted().toList();
+			}
 			return FileUtils.readLines(getInputFile(FILE_IDX_NPU_TECH_PREVIEW_CONCEPTS), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new TermServerScriptException("Failed to read NPU codes from file", e);
