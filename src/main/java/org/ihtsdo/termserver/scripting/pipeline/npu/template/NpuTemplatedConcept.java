@@ -90,13 +90,18 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 	protected void populateParts() throws TermServerScriptException {
 		prepareConceptDefaultedForModule(SCTID_NPU_EXTENSION_MODULE);
 		NpuConcept npuConcept = getNpuConcept();
-		NpuDetail npuDetail = npuDetailMap.get(getExternalIdentifier());
-		for (Part part : npuDetail.getParts(npuConcept)) {
-			populatePart(normalise(part));
-		}
+		if (npuDetailMap.containsKey(getExternalIdentifier())) {
+			NpuDetail npuDetail = npuDetailMap.get(getExternalIdentifier());
+			for (Part part : npuDetail.getParts(npuConcept)) {
+				populatePart(normalise(part));
+			}
 
-		//Ensure attributes are unique (considering both type and value)
-		checkAndRemoveDuplicateAttributes();
+			//Ensure attributes are unique (considering both type and value)
+			checkAndRemoveDuplicateAttributes();
+		} else {
+			LOGGER.warn("No NPU detail found for concept with NPU code: {}", getExternalIdentifier());
+			addProcessingFlag(ProcessingFlag.DROP_OUT);
+		}
 	}
 
 	private Part normalise(Part part) {
@@ -142,7 +147,10 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			if (otherPart != null) {
 				//Check for additional modeling rules relating to this part
 				applyTemplateSpecificModellingRules(additionalAttributes, otherPart, null);
-				slotTermAppendMap.put(NPU_PART_UNIT, " with reference to " + otherPart.getPartName());
+				//Did we populate the append map already?  Don't do it twice
+				if (!slotTermAppendMap.containsKey(NPU_PART_UNIT)) {
+					slotTermAppendMap.put(NPU_PART_UNIT, " with reference to " + otherPart.getPartName());
+				}
 			}
 			//In this case we don't need report the compound key as a missing mapping
 			cpm.removeMissingMapping(part);
@@ -188,7 +196,7 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			}
 		}
 
-		//Rule for detected enzymatic method
+		//Rule for detected enzymatic method NPU-19
 		if (part.getPartNumber().equals("QU50721")) {
 			slotTermAppendMap.put(NPU_PART_UNIT, " with reference to enzymatic method");
 			removeProcessingFlag(ProcessingFlag.MARK_AS_PRIMITIVE);
@@ -212,17 +220,21 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			return;
 		}
 
-		rt.setType(ScriptConstants.INHERES_IN);
-		//The particular cell eg (Leukocyte) will already be present
-		slotTermMap.put(NPU_PART_COMPONENT, rt.getTarget().getPreferredSynonym());
+		if (rt == null) {
+			LOGGER.warn("Check - no Relationship found for blood part {}", part);
+		} else {
+			rt.setType(ScriptConstants.INHERES_IN);
+			//The particular cell eg (Leukocyte) will already be present
+			slotTermMap.put(NPU_PART_COMPONENT, rt.getTarget().getPreferredSynonym());
 
-		//Recover the specification and add that as the inherent location
-		//Not sure that I need to.  The fact that we've found a type of blood cell tells us we're in blood
-		RelationshipTemplate locationAttribute = new RelationshipTemplate(
-				INHERENT_LOCATION,
-				gl.getConcept("87612001 |Blood (substance)|")
-		);
-		attributes.add(locationAttribute);
+			//Recover the specification and add that as the inherent location
+			//Not sure that I need to.  The fact that we've found a type of blood cell tells us we're in blood
+			RelationshipTemplate locationAttribute = new RelationshipTemplate(
+					INHERENT_LOCATION,
+					gl.getConcept("87612001 |Blood (substance)|")
+			);
+			attributes.add(locationAttribute);
+		}
 	}
 
 	@Override

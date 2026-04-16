@@ -205,6 +205,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check IFCC technique");
 		}
 
+		if (externalIdentifier.equals("NPU04998")) {
+			LOGGER.debug("Check enzymatic method term");
+		}
+
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
 		if (!confirmExternalIdentifierExists(externalIdentifier) ||
 				(containsObjectionableWord(externalConcept) && !MANUALLY_MAINTAINED_ITEMS.containsKey(externalIdentifier))) {
@@ -365,18 +369,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	private void determineChanges(TemplatedConcept tc, Set<String> externalIdentifiersProcessed) throws TermServerScriptException {
 		Concept concept = tc.getConcept();
 		externalIdentifiersProcessed.add(tc.getExternalIdentifier());
-
-		if (tc.getExternalIdentifier().equals("77338-2")) {
-			LOGGER.debug("Check Langreset comparison");
-		}
-
-		if (tc.getExternalIdentifier().equals("100437-3")) {
-			LOGGER.debug("Check recording of simple refset");
-		}
-
-		if (tc.getExternalIdentifier().equals("15360-1")) {
-			LOGGER.debug("Check annotation counted");
-		}
 
 		//Do we already have this concept?  Also, it might use freshly modelled concepts internally which need to have IDs assigned
 		//before we can compare their axioms
