@@ -180,8 +180,8 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		if (part.getPartNumber().equals("LP450076-7")) {
 			//viii.2.d Keep “specimen” in the FSN and descriptions in concepts that are modeled with LP450076-7 Specimen collection
 			addProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN_EXCEPT_CHARACTERIZES);
-			String tweakedFsnTemplate = getPreferredTermTemplate().replace("in [SYSTEM]", "of [SYSTEM]");
-			setPreferredTermTemplate(tweakedFsnTemplate);
+			String tweakedFsnTemplate = getTermTemplate().replace("in [SYSTEM]", "of [SYSTEM]");
+			setTermTemplate(tweakedFsnTemplate);
 		}
 
 		doCheckForCoagulationRules(loincDetail);
@@ -265,7 +265,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			&& getLoincDetailOrThrow(COMPNUM_PN).getPartNumber().equals(LOINC_PART_OBSERVATION)) {
 			if (this instanceof LoincTemplatedConceptWithInheresNoComponent) {
 				slotTermMap.put(LOINC_PART_TYPE_PROPERTY, "Microscopic observation of finding");
-				setPreferredTermTemplate("[PROPERTY] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+				setTermTemplate("[PROPERTY] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 			} else {
 				slotTermMap.put(LOINC_PART_TYPE_PROPERTY, "Microscopic observation");
 				slotTermMap.put(LOINC_PART_TYPE_COMPONENT, "finding");

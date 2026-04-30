@@ -35,7 +35,7 @@ public class LoincTemplatedConceptWithProcessNoOutput extends LoincTemplatedConc
 
 		//See https://confluence.ihtsdotools.org/display/SCTEMPLATES/Process+Observable+for+LOINC+-+No+Process+output%2C+With+Time+Aspect+%28observable+entity%29+-+v0.1
 		//[property] of [characterizes] of [process output] in [process duration] in [direct site] by [technique] using [using device] [precondition] (observable entity)
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [COMPONENT] at [TIME] in [SYSTEM] by [METHOD] using [DEVICE] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT] at [TIME] in [SYSTEM] by [METHOD] using [DEVICE] [CHALLENGE]");
 		return templatedConcept;
 	}
 

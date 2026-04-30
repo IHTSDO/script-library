@@ -21,7 +21,7 @@ public class LoincTemplatedConceptWithComponent extends LoincTemplatedConcept {
 	public static LoincTemplatedConcept create(ExternalConcept externalConcept) throws TermServerScriptException {
 		LoincTemplatedConceptWithComponent templatedConcept = new LoincTemplatedConceptWithComponent(externalConcept);
 		templatedConcept.populateTypeMapCommonItems();
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 		return templatedConcept;
 	}
 	
@@ -51,7 +51,7 @@ public class LoincTemplatedConceptWithComponent extends LoincTemplatedConcept {
 				&& detailPresent(COMPNUM_PN)
 				&& getLoincDetailOrThrow(COMPNUM_PN).getPartNumber().equals(LOINC_PART_OBSERVATION)) {
 				//If we're working with a property/threshold then we'll be saying "Presence of"
-				setPreferredTermTemplate("[PROPERTY] of [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+				setTermTemplate("[PROPERTY] of [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 		}
 
 		ensureComponentMappedOrRepresentedInTerm(attributes);

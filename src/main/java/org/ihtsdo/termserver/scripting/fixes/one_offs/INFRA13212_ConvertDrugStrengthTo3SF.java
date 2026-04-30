@@ -10,22 +10,18 @@ import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.otf.script.dao.ReportSheetManager;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * QI-1209
- */
 public class INFRA13212_ConvertDrugStrengthTo3SF extends BatchFix {
 
 	protected INFRA13212_ConvertDrugStrengthTo3SF(BatchFix clone) {
 		super(clone);
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
+	public static void main(String[] args) throws TermServerScriptException {
 		INFRA13212_ConvertDrugStrengthTo3SF fix = new INFRA13212_ConvertDrugStrengthTo3SF(null);
 		try {
 			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates

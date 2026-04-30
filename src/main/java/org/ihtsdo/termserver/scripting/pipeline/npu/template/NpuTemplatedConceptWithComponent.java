@@ -14,7 +14,7 @@ public class NpuTemplatedConceptWithComponent extends NpuTemplatedConcept {
 		NpuTemplatedConceptWithComponent templatedConcept = new NpuTemplatedConceptWithComponent(externalConcept);
 		templatedConcept.populateTypeMapCommonItems();
 		//Where inherent location is specified, add in [LOCATION] before unit
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM] in [UNIT]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM] in [UNIT]");
 		return templatedConcept;
 	}
 

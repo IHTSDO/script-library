@@ -18,7 +18,7 @@ public class LoincTemplatedConceptWithSusceptibility extends LoincTemplatedConce
 		LoincTemplatedConceptWithSusceptibility templatedConcept = new LoincTemplatedConceptWithSusceptibility(externalConcept);
 		templatedConcept.populateTypeMapCommonItems();
 		templatedConcept.typeMap.put("COMPONENT", gl.getConcept("704320005 |Towards (attribute)|"));
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] to [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] to [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 		return templatedConcept;
 	}
 

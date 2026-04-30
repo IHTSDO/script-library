@@ -17,7 +17,7 @@ public class LoincTemplatedConceptForGrouper extends LoincTemplatedConcept {
 	public static LoincTemplatedConcept create(ExternalConcept externalConcept) throws TermServerScriptException {
 		LoincTemplatedConceptForGrouper templatedConcept = new LoincTemplatedConceptForGrouper(externalConcept);
 		templatedConcept.populateTypeMapCommonItems();
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM]");
 		return templatedConcept;
 	}
 

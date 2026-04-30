@@ -25,7 +25,7 @@ public class TemplatedConceptWithDefaultMap extends TemplatedConcept {
 		TemplatedConceptWithDefaultMap templatedConcept = new TemplatedConceptWithDefaultMap(externalConcept);
 		templatedConcept.codeSystemSctId = codeSystemSctId;
 		templatedConcept.semTag = semTag;
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [COMPONENT] to [DIVISOR] in [SYSTEM] at [TIME] by [METHOD] using [using device] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT] to [DIVISOR] in [SYSTEM] at [TIME] by [METHOD] using [using device] [CHALLENGE]");
 		return templatedConcept;
 	}
 

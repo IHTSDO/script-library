@@ -37,7 +37,7 @@ public class LoincTemplatedConceptWithProcess extends LoincTemplatedConcept {
 
 		//See https://confluence.ihtsdotools.org/display/SCTEMPLATES/Process+Observable+for+LOINC+%28observable+entity%29+-+v1.0
 		//[property] of [characterizes] of [process output] in [process duration] in [direct site] by [technique] using [using device] [precondition] (observable entity)
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [CHARACTERIZES] of [COMPONENT] in [TIME] in [SYSTEM] by [METHOD] using [DEVICE] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [CHARACTERIZES] of [COMPONENT] in [TIME] in [SYSTEM] by [METHOD] using [DEVICE] [CHALLENGE]");
 		return templatedConcept;
 	}
 
@@ -89,7 +89,7 @@ public class LoincTemplatedConceptWithProcess extends LoincTemplatedConcept {
 		if (loincDetail.getPartNumber().equals(LOINC_PART_SPECIMEN_VOLUME)) {
 			//For a process template, "specimen" will appear in the SYSTEM slot.
 			addProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN);
-			setPreferredTermTemplate("[PROPERTY] in [TIME] in [SYSTEM] by [METHOD] using [DEVICE] [CHALLENGE]");
+			setTermTemplate("[PROPERTY] in [TIME] in [SYSTEM] by [METHOD] using [DEVICE] [CHALLENGE]");
 		}
 
 		//Rule vi.6.b LP16409-2 Erythrocyte sedimentation rate

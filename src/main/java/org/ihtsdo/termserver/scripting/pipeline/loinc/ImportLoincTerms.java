@@ -1,7 +1,6 @@
 package org.ihtsdo.termserver.scripting.pipeline.loinc;
 
 import org.ihtsdo.otf.RF2Constants;
-import org.ihtsdo.otf.exception.NotImplementedException;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.ComponentAnnotationEntry;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;

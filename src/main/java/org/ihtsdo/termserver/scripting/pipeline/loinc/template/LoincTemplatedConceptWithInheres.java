@@ -31,7 +31,7 @@ public class LoincTemplatedConceptWithInheres extends LoincTemplatedConcept {
 		LoincTemplatedConceptWithInheres templatedConcept = new LoincTemplatedConceptWithInheres(externalConcept);
 		templatedConcept.populateTypeMapCommonItems();
 		templatedConcept.typeMap.put(LOINC_PART_TYPE_COMPONENT, gl.getConcept("704319004 |Inheres in (attribute)|"));
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 		return templatedConcept;
 	}
 
@@ -79,7 +79,7 @@ public class LoincTemplatedConceptWithInheres extends LoincTemplatedConcept {
 		if (loincDetail.getPartNumber().equals(LOINC_PART_SPECIMEN_VOLUME)) {
 			//For an Inheres template, "specimen" will appear in the COMPONENT slot.
 			addProcessingFlag(ProcessingFlag.ALLOW_SPECIMEN);
-			setPreferredTermTemplate("[PROPERTY] of [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+			setTermTemplate("[PROPERTY] of [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 			typeMap.remove(LOINC_PART_TYPE_COMPONENT);
 			typeMap.put(LOINC_PART_TYPE_SYSTEM, gl.getConcept("704319004 |Inheres in (attribute)|"));
 		}

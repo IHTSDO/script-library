@@ -13,7 +13,7 @@ public class LoincTemplatedConceptWithInheresNoComponent extends LoincTemplatedC
 		LoincTemplatedConceptWithInheresNoComponent templatedConcept = new LoincTemplatedConceptWithInheresNoComponent(externalConcept);
 		templatedConcept.populateTypeMapCommonItems();
 		templatedConcept.typeMap.put(LOINC_PART_TYPE_SYSTEM, gl.getConcept("704319004 |Inheres in (attribute)|"));
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 		return templatedConcept;
 	}
 

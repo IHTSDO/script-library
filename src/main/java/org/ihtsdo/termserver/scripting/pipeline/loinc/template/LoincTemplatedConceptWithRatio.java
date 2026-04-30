@@ -21,7 +21,7 @@ public class LoincTemplatedConceptWithRatio extends LoincTemplatedConceptWithRel
 		templatedConcept.populateTypeMapCommonItems();
 		templatedConcept.typeMap.put("DIVISORS", gl.getConcept("704325000 |Relative to (attribute)|"));
 		//The 'to' changes to a slash in the PT
-		templatedConcept.setPreferredTermTemplate("[PROPERTY] of [COMPONENT]" + SEPARATOR + "[DIVISORS] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT]" + SEPARATOR + "[DIVISORS] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 		return templatedConcept;
 	}
 

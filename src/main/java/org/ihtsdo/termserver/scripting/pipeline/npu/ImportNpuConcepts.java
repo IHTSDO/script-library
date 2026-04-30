@@ -58,7 +58,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		String[] columnHeadings = new String[] {
 				"npu_code, shortDefinition, system, component, kindOfProperty, proc, unit, specialty, contextDependent, group, scaleType, active, , ",
 				"npu_code, Item of Interest, External Concept Long Name, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
-				"NpuNum, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, System, Component, Property, Proc, Unit, , , , , , , , , , , , , , , , , ",
+				"NpuNum, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, , , , , , , , , , , , , , , , , ",
 				"NPU Element Code, Element Name, Category, High Usage, Highest Usage, , Concepts Affected, , , ",
 				"PartNum, PartName, PartType, Needed for High Usage Mapping, Needed for Highest Usage Mapping, PriorityIndex, Usage Count,Top Priority Usage, Higest Rank, HighestUsageCount",
 				"Concept, FSN, SemTag, Severity, Action, NpuNum, Descriptions, Expression, Status, , ",

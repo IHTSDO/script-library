@@ -46,7 +46,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 	private Set<ProcessingFlag> processingFlags = new HashSet<>();
 	
 	protected Map<String, Concept> typeMap = new HashMap<>();
-	private String preferredTermTemplate;
+	private String termTemplate;
 	
 	protected Map<String, String> slotTermMap = new HashMap<>();
 	protected Map<String, String> slotTermAppendMap = new HashMap<>();
@@ -260,7 +260,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 
 	protected void populateTerms() throws TermServerScriptException {
 		//Start with the template PT and swap out as many parts as we come across
-		String ptTemplateStr = getPreferredTermTemplate();
+		String ptTemplateStr = getTermTemplate();
 		
 		ptTemplateStr = populateTermTemplateFromSlots(ptTemplateStr);
 		ptTemplateStr = tidyUpTerm(ptTemplateStr);
@@ -495,12 +495,12 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		}
 	}
 
-	public String getPreferredTermTemplate() {
-		return preferredTermTemplate;
+	public String getTermTemplate() {
+		return termTemplate;
 	}
 
-	public void setPreferredTermTemplate(String preferredTermTemplate) {
-		this.preferredTermTemplate = preferredTermTemplate;
+	public void setTermTemplate(String termTemplate) {
+		this.termTemplate = termTemplate;
 	}
 
 	protected String tidyUpTerm(String term) {
