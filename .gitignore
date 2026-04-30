@@ -4,6 +4,7 @@ historic-data
 reports/*
 *.txt
 *.zip
+.*
 releases
 releases/*
 csr.txt

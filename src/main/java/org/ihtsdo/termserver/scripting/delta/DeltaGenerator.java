@@ -271,7 +271,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 
 	private void checkDependencySettingsWithUser() {
-		boolean dependencySpecified = (getDependencyArchive() != null);
+		boolean dependencySpecified = (getDependencyArchives() != null);
 		if (projectName != null && projectName.endsWith(".zip")) {
 			String choice = dependencySpecified? "Y":"N";
 			if (!dependencySpecified) {
@@ -281,13 +281,13 @@ public abstract class DeltaGenerator extends TermServerScript {
 			}
 
 			if (choice.equalsIgnoreCase("Y")) {
-				print("Please enter the name of a dependent release archive (in releases or S3) [" + getDependencyArchive() + "]: ");
+				print("Please enter the name of a dependent release archive (in releases or S3) [" + getDependencyArchives() + "]: ");
 				String response = STDIN.nextLine().trim();
 				if (!response.isEmpty()) {
-					setDependencyArchive(response);
+					setDependencyArchives(List.of(response));
 				}
 			}
-			getArchiveManager().setLoadDependencyPlusExtensionArchive(getDependencyArchive() != null);
+			getArchiveManager().setLoadDependencyPlusExtensionArchives(getDependencyArchives() != null);
 		}
 	}
 
