@@ -104,12 +104,18 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			} else if (getProject().getKey().contains("Spanish")) {
 				LOGGER.warn("Spanish Edition detected");
 				sourceModuleIds = Set.of("450829007");
-			} else if (getProject().getKey().contains("Española")) {
+			} else if (getProject().getKey().contains("Española") || getProject().getKey().contains("SpainExtension")) {
 				LOGGER.warn("Spain Edition detected");
 				getArchiveManager().setRunIntegrityChecks(false);
 				//Something we could do for Spain is define a levels of strictness for integrity checks,
 				//and allow phantom concepts when they're only referenced by inactive components
 				sourceModuleIds = Set.of("900000001000122104");
+			} else if (getProject().getKey().contains("SpainDrugExtension")) {
+				LOGGER.warn("Spain Drug Extension detected");
+				getArchiveManager().setRunIntegrityChecks(false);
+				//Something we could do for Spain is define a levels of strictness for integrity checks,
+				//and allow phantom concepts when they're only referenced by inactive components
+				sourceModuleIds = Set.of("90000011000140108");
 			} else if (KNOWN_DEFECTIVE_PROJECTS.contains(getProject().getKey())) {
 				getArchiveManager().setRunIntegrityChecks(false);
 			}
