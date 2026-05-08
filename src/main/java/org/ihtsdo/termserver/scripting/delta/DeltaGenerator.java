@@ -275,12 +275,12 @@ public abstract class DeltaGenerator extends TermServerScript {
 		if (projectName != null && projectName.endsWith(".zip")) {
 			String choice = dependencySpecified? "Y":"N";
 			if (!dependencySpecified) {
-				println("Is " + projectName + " an extension that requires a dependant edition to be loaded first?");
-				print("Choice Y/N: ");
+				println("Is " + projectName + " an extension that requires a dependant edition(s) to be loaded first?");
+				print("Choice Y/N [N]: ");
 				choice = STDIN.nextLine().trim();
 			}
 
-			if (choice.equalsIgnoreCase("Y")) {
+			if (!choice.isEmpty() && choice.equalsIgnoreCase("Y")) {
 				print("Please enter the name of a dependent release archive (in releases or S3) [" + getDependencyArchives() + "]: ");
 				String response = STDIN.nextLine().trim();
 				if (!response.isEmpty()) {
@@ -401,13 +401,14 @@ public abstract class DeltaGenerator extends TermServerScript {
 		int conceptsOutput = 0;
 		for (Concept thisConcept : gl.getAllConcepts()) {
 			try {
-				if (outputRF2(thisConcept, alwaysCheckSubComponents)) {
+				if (thisConcept.isModified() && outputRF2(thisConcept, alwaysCheckSubComponents)) {
 					conceptsOutput++;
 				}
 			} catch (TermServerScriptException e) {
 				report(thisConcept, null, Severity.CRITICAL, ReportActionType.API_ERROR, "Exception while processing: " + e.getMessage() + " : " + SnomedUtils.getStackTrace(e));
 			}
 		}
+		LOGGER.info("{} concepts output to RF2", conceptsOutput);
 		return conceptsOutput;
 	}
 	
@@ -420,6 +421,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		boolean componentOutput = false;
 		if (d.isDirty()) {
 			writeToRF2File(descDeltaFilename, d.toRF2());
+			d.setClean();
 			componentOutput = true;
 		}
 		//Does this component itself have an associated annotations?
@@ -428,6 +430,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		for (LangRefsetEntry lang : d.getLangRefsetEntries()) {
 			if (lang.isDirty()) {
 				writeToRF2File(langDeltaFilename, lang.toRF2());
+				lang.setClean();
 				componentOutput = true;
 			}
 			//Does this component itself have an associated annotations?
@@ -436,6 +439,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		for (InactivationIndicatorEntry i : d.getInactivationIndicatorEntries()) {
 			if (i.isDirty()) {
 				writeToRF2File(attribValDeltaFilename, i.toRF2());
+				i.setClean();
 				componentOutput = true;
 			}
 			//Does this component itself have an associated annotations?
@@ -444,6 +448,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		for (AssociationEntry a : d.getAssociationEntries()) {
 			if (a.isDirty()) {
 				writeToRF2File(assocDeltaFilename, a.toRF2());
+				a.setClean();
 				componentOutput = true;
 			}
 			//Does this component itself have an associated annotations?
@@ -462,6 +467,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 				default: writeToRF2File(relDeltaFilename, r.toRF2());
 			}
 			componentOutput = true;
+			r.setClean();
 		}
 		//Does this component itself have an associated annotations?
 		componentOutput |= outputComponentAnnotations(r);
@@ -471,6 +477,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected boolean outputRF2(InactivationIndicatorEntry i) throws TermServerScriptException {
 		if (i.isDirty()) {
 			writeToRF2File(attribValDeltaFilename, i.toRF2());
+			i.setClean();
 		}
 		//Does this component itself have an associated annotations?
 		outputComponentAnnotations(i);
@@ -486,37 +493,48 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 
 	protected boolean outputRF2(AssociationEntry h) throws TermServerScriptException {
+		boolean componentOutput = false;
 		if (h.isDirty()) {
 			writeToRF2File(assocDeltaFilename, h.toRF2());
+			componentOutput = true;
+			h.setClean();
 		}
 		//Does this component itself have an associated annotations?
 		outputComponentAnnotations(h);
-		return h.isDirty();
+		return componentOutput;
 	}
 	
 	protected boolean outputRF2(AxiomEntry a) throws TermServerScriptException {
+		boolean componentOutput = false;
 		if (a.isDirty()) {
 			writeToRF2File(owlDeltaFilename, a.toRF2());
+			a.setClean();
+			componentOutput = true;
 		}
 		//Does this component itself have an associated annotations?
 		outputComponentAnnotations(a);
-		return a.isDirty();
+		return componentOutput;
 	}
 
 	protected boolean outputRF2(ComponentAnnotationEntry cae) throws TermServerScriptException {
+		boolean componentOutput = false;
 		if (cae.isDirty() && !dryRun) {
 			writeToRF2File(compAnnotDeltaFilename, cae.toRF2());
+			cae.setClean();
+			componentOutput = true;
 		}
 		//Does this component itself have an associated annotations?
 		//This will be an annotation on an annotation - MCHMOOS
+
 		outputComponentAnnotations(cae);
-		return cae.isDirty();
+		return componentOutput;
 	}
 	
 	protected boolean outputRF2(Concept c, boolean checkAllComponents) throws TermServerScriptException {
 		boolean conceptComponentOutput = false;
 		if (c.isDirty()) {
 			writeToRF2File(conDeltaFilename, c.toRF2());
+			c.setClean();
 			conceptComponentOutput = true;
 		} else if (!checkAllComponents) {
 			return conceptComponentOutput;
@@ -529,6 +547,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		for (AlternateIdentifier a : c.getAlternateIdentifiers()) {
 			if (a.isDirty()) {
 				writeToRF2File(altIdDeltaFilename, a.toRF2());
+				a.setClean();
 				conceptComponentOutput = true;
 			}
 		}
@@ -585,6 +604,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 
 	protected boolean outputRF2(RefsetMember rm) throws TermServerScriptException {
+		boolean componentWasDirty = rm.isDirty();
 		if (rm.isDirty() && !dryRun) {
 			//What sort of refset member is this?
 			int additionalFieldCount = rm.getAdditionalFields().size();
@@ -593,8 +613,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 				fileToWriteTo = simpleMapDeltaFilename;
 			}
 			writeToRF2File(fileToWriteTo, rm.toRF2());
+			rm.setClean();
 		}
-		return rm.isDirty();
+		return componentWasDirty;
 	}
 
 	private boolean hasDirtyStatedRelationships(Concept c) {
@@ -625,8 +646,19 @@ public abstract class DeltaGenerator extends TermServerScript {
 		}
 		
 		//Default implementation is to take the first column and try that as an SCTID
-		//Override for more complex implementation
-		return Collections.singletonList(gl.getConcept(lineItems[0]));
+		//Override for more complex implementation.
+
+		//Does this concept exist in memory?  If not (eg for promotions), we might give it
+		//an FSN if there's a second column
+		Concept c = gl.getConcept(lineItems[0], false, false);
+		if (c == null) {
+			if (lineItems.length > 1) {
+				c = new Concept(lineItems[0], lineItems[1]);
+			} else {
+				c = gl.getConcept(lineItems[0]);
+			}
+		}
+		return Collections.singletonList(c);
 	}
 
 	protected int createOutputArchive() throws TermServerScriptException {

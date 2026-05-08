@@ -202,7 +202,7 @@ public class BatchImport extends BatchFix implements BatchJobClass {
 	}
 	
 	@Override
-	protected int doFix(Task t, Concept c, String info) throws TermServerScriptException {
+	public int doFix(Task t, Concept c, String info) throws TermServerScriptException {
 		BatchImportConcept concept = (BatchImportConcept)c;
 		String statedForm = c.toExpression(CharacteristicType.STATED_RELATIONSHIP);
 		try{

@@ -11,6 +11,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.Status;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
+import org.ihtsdo.otf.utils.ExceptionUtils;
 import org.ihtsdo.otf.utils.SnomedUtilsBase;
 import org.ihtsdo.termserver.scripting.*;
 import org.ihtsdo.termserver.scripting.domain.*;
@@ -104,7 +105,23 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		return allComponentsToProcess;
 	}
 
-	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
+	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
+		int changesMade = 0;
+		try {
+			Concept loadedConcept = loadConcept(concept, task.getBranchPath());
+			changesMade += doFix(task, loadedConcept);
+			if (changesMade > 0) {
+				updateConcept(task, loadedConcept, info);
+			}
+		} catch (ValidationFailure v) {
+			report(task, concept, v);
+		} catch (Exception e) {
+			report(task, concept, Severity.CRITICAL, ReportActionType.API_ERROR, "Failed to save changed concept to TS: " + ExceptionUtils.getStackTrace(e));
+		}
+		return changesMade;
+	}
+
+	public int doFix(Task task, Concept concept) throws TermServerScriptException {
 		throw new NotImplementedException("Override doFix in the Concrete Class");
 	}
 
@@ -439,7 +456,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 	}
 
 	//Override if working with Refsets or Descriptions directly
-	protected int doFix(Task task, Component component, String info) throws TermServerScriptException {
+	public int doFix(Task task, Component component, String info) throws TermServerScriptException {
 		throw new NotImplementedException("Override doFix in the Concrete Class - use components when working with refset members and descriptions directly.");
 	}
 
@@ -1709,8 +1726,6 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		am.setRunIntegrityChecks(options.isIntegrityChecking());
 		am.setLoadOtherReferenceSets(options.isImportAllRefsets());
 	}
-
-
 
 	protected void deleteDescriptionWithLangRefsets(Task t, Concept c, Description d) throws TermServerScriptException {
 		for (LangRefsetEntry l : d.getLangRefsetEntries()) {

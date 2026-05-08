@@ -50,7 +50,7 @@ public class CreateTasksWithConcepts extends BatchFix implements ScriptConstants
 	}
 
 	@Override
-	protected int doFix(Task task, Concept c, String info) throws TermServerScriptException, ValidationFailure {
+	public int doFix(Task task, Concept c, String info) throws TermServerScriptException, ValidationFailure {
 		return NO_CHANGES_MADE;
 	}
 

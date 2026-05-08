@@ -218,7 +218,7 @@ public class GroupRemodel extends TemplateFix {
 	}
 
 	@Override
-	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
+	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
 		Concept loadedConcept = loadConcept(concept, task.getBranchPath());
 		
 		//Record that we've looked at this file

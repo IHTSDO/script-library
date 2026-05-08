@@ -38,7 +38,7 @@ public class InactivateMembersOnInactiveRefsets extends BatchFix {
 	}
 
 	@Override
-	protected int doFix(Task t, Concept c, String info) throws TermServerScriptException {
+	public int doFix(Task t, Concept c, String info) throws TermServerScriptException {
 		int changesMade = 0;
 		try {
 			for (RefsetMember rm : c.getOtherRefsetMembers()) {

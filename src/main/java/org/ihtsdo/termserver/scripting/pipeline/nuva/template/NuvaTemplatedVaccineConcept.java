@@ -57,7 +57,7 @@ public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements Con
 	protected void populateParts() throws TermServerScriptException {
 		concept = Concept.withDefaults(null);
 		concept.setModuleId(RF2Constants.SCTID_NUVA_EXTENSION_MODULE);
-		concept.addRelationship(IS_A, ScriptConstants.MEDICINAL_PRODUCT);
+		concept.addRelationship(IS_A, ScriptConstants.VACCINE_PRODUCT);
 
 		if (isPassiveVaccine(getNuvaVaccine())) {
 			concept.addRelationship(HAS_ACTIVE_INGRED, gl.getConcept("112133008 |Immunoglobulin|"));

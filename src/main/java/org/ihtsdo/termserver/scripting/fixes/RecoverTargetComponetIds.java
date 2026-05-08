@@ -49,7 +49,7 @@ public class RecoverTargetComponetIds extends BatchFix {
 	}
 
 	@Override
-	protected int doFix(Task t, Concept c, String info) throws TermServerScriptException {
+	public int doFix(Task t, Concept c, String info) throws TermServerScriptException {
 		int changesMade = 0;
 		try {
 			for (AssociationEntry a : c.getAssociationEntries()) {

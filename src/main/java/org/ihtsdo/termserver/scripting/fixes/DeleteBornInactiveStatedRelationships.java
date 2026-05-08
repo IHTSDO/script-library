@@ -85,7 +85,7 @@ public class DeleteBornInactiveStatedRelationships extends BatchFix implements S
 	}
 
 	@Override
-	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
+	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
 		throw new TermServerScriptException("Expecting to use component version here");
 	}
 

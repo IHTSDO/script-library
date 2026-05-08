@@ -469,7 +469,7 @@ public class NormaliseTemplateCompliantConcepts extends TemplateFix {
 	}
 
 	@Override
-	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
+	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
 		Concept loadedConcept = loadConcept(concept, task.getBranchPath());
 		if ((loadedConcept.getGciAxioms() != null && !loadedConcept.getGciAxioms().isEmpty())
 				|| (loadedConcept.getAdditionalAxioms() != null && !loadedConcept.getAdditionalAxioms().isEmpty())) {

@@ -71,7 +71,7 @@ public class NormaliseConcepts extends BatchFix {
 	}
 
 	@Override
-	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
+	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
 		Concept loadedConcept = loadConcept(concept, task.getBranchPath());
 		String before = loadedConcept.toExpression(CharacteristicType.STATED_RELATIONSHIP);
 		if ((loadedConcept.getGciAxioms() != null && !loadedConcept.getGciAxioms().isEmpty())

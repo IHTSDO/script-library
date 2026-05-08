@@ -33,7 +33,7 @@ public class CreateConceptsPreModelled extends BatchFix implements ScriptConstan
 	}
 
 	@Override
-	protected int doFix(Task t, Concept c, String info) throws TermServerScriptException, ValidationFailure {
+	public int doFix(Task t, Concept c, String info) throws TermServerScriptException, ValidationFailure {
 		//What was this concept original wrapped in?
 		ConceptWrapper wrapping = conceptWrapperMap.get(c);
 		try {

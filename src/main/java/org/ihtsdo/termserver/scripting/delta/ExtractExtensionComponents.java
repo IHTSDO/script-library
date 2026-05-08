@@ -32,7 +32,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExtractExtensionComponents.class);
 	private static final Integer CONCEPTS_PER_ARCHIVE = Integer.MAX_VALUE;
-	private static final boolean AUTO_IMPORT = true;
+	private static final boolean AUTO_IMPORT = false;
 	private static final boolean EXCLUDE_NON_ENGLISH_TERMS = true;
 	private static final boolean CONTAINS_REPLACEMENT_FSNS = false;  //If true, extra column needed in input file!
 	private static final boolean INCLUDE_DEPENDENCIES = true;
@@ -150,9 +150,12 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		for (int i=0; i < environments.length; i++) {
 			println("  " + i + ": " + environments[i]);
 		}
-		print ("Choice: ");
+		print ("Choice [" + envIndex + "]: ");
 		String choice = STDIN.nextLine().trim();
-		int envChoice = Integer.parseInt(choice);
+		int envChoice = envIndex;
+		if (!choice.isEmpty()) {
+			envChoice = Integer.parseInt(choice);
+		}
 		String secondaryURL = environments[envChoice];
 		
 		if (!secondaryURL.equals(url)) {
@@ -443,8 +446,8 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 				process(archiveBatches.remove());
 				createOutputArchive();
 				//Are we doing more?
-				if (CONCEPTS_PER_ARCHIVE < Integer.MAX_VALUE) {
-					gl.setAllComponentsClean();
+				if (batchDelimitersDetected || CONCEPTS_PER_ARCHIVE < Integer.MAX_VALUE) {
+					//Don't need to set components clean.  We'll do this at point of RF2 Output
 					if (!archiveBatches.isEmpty()) {
 						outputDirName = "output"; //Reset so we don't end up with _1_1_1
 						initialiseOutputDirectory();
@@ -555,6 +558,8 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		}
 		
 		allModifiedConcepts.add(c);
+		c.setModified(); //Specify a change in the concept somewhere so that when we come to output RF2
+		//We're not checking every component in the whole Ontology, just asking initially at the concept level
 
 		//Register this concept again with the GL so that whatever we've done, the components are known such that they can be cleaned
 		gl.populateComponentMapForConcept(c);
@@ -797,15 +802,14 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	}
 
 	private void validatePreferredTermsInLanguageRefsets(Concept c) throws TermServerScriptException {
-		// Ensure that the concept has a preferred term in both en-gb and en-us.
+		if (c.getId().equals("158791000000107")) {
+			LOGGER.info("Debug");
+		}
+		// Ensure that the concept has one preferred synonym + FSN in both en-gb and en-us.
 		if (validateLangResetEntryCount(c, false, DescriptionType.SYNONYM) &&
 				validateLangResetEntryCount(c, false, DescriptionType.FSN)) {
 			return;
 		}
-
-		// Check what happens behind setAcceptability....that may be more for working with the browser representation of the concept.
-		// It may or may not also work through the RF2 rows of LangRefsetEntries.     It's not the Description that is being modified
-		// (although, in fact, it will already be dirty because we changed its module), it's the Language Reference Set entries.
 
 		// If it does NOT, then loop through preferred terms in knownMapToCoreLangRefsets and,
 		// where en-gb/en-us langrefset entries exist for the same description, upgrade them from acceptable to preferred.
@@ -1028,7 +1032,9 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 						if (replacement == null) {
 							replacement = getReplacement(PRIMARY_REPORT, r.getSource(), loadedTarget, isIsA);
 							//We will probably not have loaded this concept via RF2 if the target has been replaced, so load from secondary source
-							replacement = loadConcept(replacement);
+							if (replacement != null) {
+								replacement = loadConcept(replacement);
+							}
 						}
 						
 						if (replacement == null && isIsA) {
@@ -1123,10 +1129,14 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			//Set dirty explicitly in case the source content is already in the expected module
 			d.setDirty();
 		}
+
+		//We're also going to see if we have an enGB PT, because if that already exists
+		//and THIS description is a PT in some other langrefset, then we don't want to promote it
+		//rather, in that case, we'd map it to just being acceptable
+		Description enGbPT = c.getPreferredSynonym(GB_ENG_LANG_REFSET);
+		moveLangRefsetEntriesToTargetModule(d, usGbVariance, doShiftDescription, enGbPT);
 		
-		moveLangRefsetEntriesToTargetModule(d, usGbVariance, doShiftDescription);
-		
-		//If we didn't need to transfer the concept, then do report the movement of it's sub components.
+		//If we didn't need to transfer the concept, then do report the movement of its subcomponents.
 		if (!conceptOnTS.equals(NULL_CONCEPT)) {
 			if (doShiftDescription) {
 				report(c, Severity.MEDIUM, ReportActionType.MODULE_CHANGE_MADE, d, d.getId());
@@ -1141,12 +1151,12 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		return true;
 	}
 
-	private void moveLangRefsetEntriesToTargetModule(Description d, boolean usGbVariance, boolean doShiftDescription) throws TermServerScriptException {
+	private void moveLangRefsetEntriesToTargetModule(Description d, boolean usGbVariance, boolean doShiftDescription, Description enGbPT) throws TermServerScriptException {
 		//AU, for example, doesn't give language refset entries for FSNs
 		if (d.isActiveSafely() && d.getLangRefsetEntries(ActiveState.ACTIVE, targetLangRefsetIds).isEmpty()) {
-			createTargetLangRefsetEntries(d);
+			createTargetLangRefsetEntries(d, enGbPT);
 		} else {
-			moveExistingLangRefsetEntries(d, usGbVariance, doShiftDescription);
+			moveExistingLangRefsetEntries(d, usGbVariance, doShiftDescription, enGbPT);
 		}
 
 		//If Desc has been made inactive, take over the inactivation indicators
@@ -1160,7 +1170,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		}
 	}
 
-	private void moveExistingLangRefsetEntries(Description d, boolean usGbVariance, boolean doShiftDescription) throws TermServerScriptException {
+	private void moveExistingLangRefsetEntries(Description d, boolean usGbVariance, boolean doShiftDescription, Description enGbPT) throws TermServerScriptException {
 		boolean hasUSLangRefset = false;
 		for (LangRefsetEntry usEntry : d.getLangRefsetEntries(ActiveState.ACTIVE, US_ENG_LANG_REFSET)) {
 			hasUSLangRefset = true;
@@ -1206,10 +1216,11 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		}
 	}
 
-	private void createTargetLangRefsetEntries(Description d) throws TermServerScriptException {
+	private void createTargetLangRefsetEntries(Description d, Description enGbPT) throws TermServerScriptException {
 		//The international edition, however, does PREF for FSNs
 		String acceptability = SCTID_PREFERRED_TERM;
-		if (d.getType().equals(DescriptionType.SYNONYM) && !d.isPreferred()) {
+		if (d.getType().equals(DescriptionType.SYNONYM) &&
+				(!d.isPreferred() || (d.isPreferred() && enGbPT != null && !d.equals(enGbPT)))) {
 			acceptability = SCTID_ACCEPTABLE_TERM;
 		}
 

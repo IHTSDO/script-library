@@ -52,16 +52,7 @@ public class AlignToTemplate extends TemplateFix {
 	}
 
 	@Override
-	protected int doFix(Task t, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
-		Concept loadedConcept = loadConcept(concept, t.getBranchPath());
-		int changesMade = alignConceptToTemplate(t, loadedConcept);
-		if (changesMade > 0) {
-			updateConcept(t, loadedConcept, info);
-		}
-		return 0;
-	}
-	
-	private int alignConceptToTemplate(Task t, Concept c) throws TermServerScriptException {
+	public int doFix(Task t, Concept c) throws TermServerScriptException, ValidationFailure {
 		Template template = templates.iterator().next();
 		int changesMade = alignParent(t, c, template);
 		changesMade += alignUngroupedAttributes(t, c, template.getLogicalTemplate().getUngroupedAttributes());

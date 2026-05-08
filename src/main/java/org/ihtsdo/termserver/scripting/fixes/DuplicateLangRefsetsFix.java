@@ -39,7 +39,7 @@ public class DuplicateLangRefsetsFix extends BatchFix {
 	}
 
 	@Override
-	protected int doFix(Task t, Concept c, String info) throws TermServerScriptException {
+	public int doFix(Task t, Concept c, String info) throws TermServerScriptException {
 		int changesMade = 0;
 		try {
 			//Find all refsetIds to be deleted for this concept

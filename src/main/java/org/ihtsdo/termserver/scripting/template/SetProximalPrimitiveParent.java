@@ -62,7 +62,7 @@ public class SetProximalPrimitiveParent extends BatchFix {
 	}
 
 	@Override
-	protected int doFix(Task t, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
+	public int doFix(Task t, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
 		Concept loadedConcept = loadConcept(concept, t.getBranchPath());
 		if ((loadedConcept.getGciAxioms() != null && loadedConcept.getGciAxioms().size() > 0) 
 				|| (loadedConcept.getAdditionalAxioms() != null && loadedConcept.getAdditionalAxioms().size() > 0)) {

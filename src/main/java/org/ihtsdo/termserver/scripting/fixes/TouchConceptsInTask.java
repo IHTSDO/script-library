@@ -74,7 +74,7 @@ public class TouchConceptsInTask extends BatchFix implements ScriptConstants{
 	}
 
 	@Override
-	protected int doFix(Task task, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
+	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException, ValidationFailure {
 		throw new NotImplementedException();
 	}
 	
