@@ -8,6 +8,10 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
 public class MAINT2904_InactivateCNCIndicators extends DeltaGeneratorWithAutoImport {
 
+	enum Mode { INT, MS }
+
+	private static final Mode MODE = Mode.MS;
+
 	public static void main(String[] args) throws TermServerScriptException {
 		MAINT2904_InactivateCNCIndicators delta = new MAINT2904_InactivateCNCIndicators();
 		delta.getArchiveManager().setLoadOtherReferenceSets(true);
@@ -22,8 +26,10 @@ public class MAINT2904_InactivateCNCIndicators extends DeltaGeneratorWithAutoImp
 			for (Description d : c.getDescriptions())	{
 				for (InactivationIndicatorEntry rm : d.getInactivationIndicatorEntries(ActiveState.ACTIVE)) {
 					if (rm.isActiveSafely() && rm.getInactivationReasonId().equals(SCTID_INACT_CONCEPT_NON_CURRENT)) {
-						if (SnomedUtils.isCore(rm)) {
+						if (MODE == Mode.MS && SnomedUtils.isCore(rm)) {
 							LOGGER.warn("Encountered core CNC indicator {}", rm);
+						} else if (MODE == Mode.INT && !SnomedUtils.isCore(rm)) {
+							LOGGER.warn("Encountered non-core CNC indicator {}", rm);
 						} else {
 							//Set the concept to be clean so we don't try and output anything there
 							c.setClean();
