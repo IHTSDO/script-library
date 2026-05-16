@@ -87,7 +87,8 @@ public class NpuAttributePartMapManager extends AttributePartMapManager {
 				gl.getConcept("30061003000105 |10^-3/international unit per litre (qualifier value)|")));
 		hardCodedMappings.put("QU50440", List.of(
 				gl.getConcept("60061003000103 |10^3/international unit per litre (qualifier value)|")));
-
+		hardCodedMappings.put("QU101474", List.of(
+				gl.getConcept("20151003000105 |Phosphatidylethanol (16:0/18:1) (substance)|")));
 
 	}
 
