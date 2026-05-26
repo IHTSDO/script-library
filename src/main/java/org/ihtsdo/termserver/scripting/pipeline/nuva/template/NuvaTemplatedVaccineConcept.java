@@ -21,6 +21,8 @@ public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements Con
 
 	protected static Concept hasValence;
 	protected static List<String> passiveVaccines;
+	protected static List<String> immunoglobulinValences;
+	protected static List<String> forcePrimitive = List.of("VAC1437");
 
 	public static void initialise(ContentPipelineManager cpm) throws TermServerScriptException {
 		TemplatedConcept.initialise(cpm);
@@ -29,7 +31,9 @@ public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements Con
 
 	@Override
 	public String getSemTag() {
-		return isPassiveVaccine(getNuvaVaccine()) ?" (product)" : " (vaccine)";
+		//We could have products that have both passive and active valences.
+		//Only use product if it's definitely NOT an active vaccine
+		return !isActiveVaccine(getNuvaVaccine()) ? " (product)" : " (vaccine)";
 	}
 
 	@Override
@@ -57,17 +61,27 @@ public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements Con
 	protected void populateParts() throws TermServerScriptException {
 		concept = Concept.withDefaults(null);
 		concept.setModuleId(RF2Constants.SCTID_NUVA_EXTENSION_MODULE);
-		concept.addRelationship(IS_A, ScriptConstants.VACCINE_PRODUCT);
+		concept.addRelationship(IS_A, ScriptConstants.MEDICINAL_PRODUCT);
+
+		if (getExternalIdentifier().equals("VAC0794")) {
+			System.out.println("Here");
+		}
 
 		if (isPassiveVaccine(getNuvaVaccine())) {
 			concept.addRelationship(HAS_ACTIVE_INGRED, gl.getConcept("112133008 |Immunoglobulin|"));
 			concept.addRelationship(PLAYS_ROLE, gl.getConcept("871530006 |Passive immunity stimulant therapeutic role|"));
-		} else {
+		}
+
+		//We test these separately, because eg Tetanus toxoid vaccine combined with anti-tetanus immunoglobulin, is both
+		if (isActiveVaccine(getNuvaVaccine())) {
 			concept.addRelationship(PLAYS_ROLE, gl.getConcept("318331000221102 |Active immunity stimulant role|"));
 		}
 
 		//Real vaccines (not abstract) only differ in their brand name, so we'll mark those as primitive
 		DefinitionStatus ds = getNuvaVaccine().isAbstract() ? DefinitionStatus.FULLY_DEFINED : DefinitionStatus.PRIMITIVE;
+		if (forcePrimitive.contains(getExternalIdentifier())) {
+			ds = DefinitionStatus.PRIMITIVE;
+		}
 		concept.setDefinitionStatus(ds);
 
 		//Now link each valence via a HAS_DISPOSITION attribute
@@ -109,6 +123,20 @@ public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements Con
 	}
 
 	private static boolean isPassiveVaccine(NuvaVaccine vaccine) {
+		return isKnownPassiveVaccine(vaccine) || containsImmunoglobulinValance(vaccine);
+	}
+
+	private static boolean containsImmunoglobulinValance(NuvaVaccine vaccine) {
+		return vaccine.getValenceRefs().stream()
+				.anyMatch(NuvaTemplatedVaccineConcept::isImmunoglobulinValence);
+	}
+
+	private static boolean isActiveVaccine(NuvaVaccine vaccine) {
+		return vaccine.getValenceRefs().stream()
+				.anyMatch(v -> !isImmunoglobulinValence(v));
+	}
+
+	private static boolean isKnownPassiveVaccine(NuvaVaccine vaccine) {
 		if (passiveVaccines == null) {
 			passiveVaccines = List.of(
 				"VAC1223","VAC1156","VAC1104","VAC1099","VAC1097","VAC1093","VAC1092","VAC1091","VAC1089","VAC1088",
@@ -119,6 +147,33 @@ public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements Con
 			);
 		}
 		return passiveVaccines.contains(vaccine.getExternalIdentifier());
+	}
+
+	private static boolean isImmunoglobulinValence(String valenceRef) {
+		if (immunoglobulinValences == null) {
+			immunoglobulinValences = List.of(
+					"VAL016", // RIG - Rabies valence, immunoglobulin, unspecified
+					"VAL019", // DATx - Diphtheria valence, antitoxin
+					"VAL047", // IgHepB - Hepatitis B valence, immunoglobulin
+					"VAL055", // MEAS-Ig - Measles valence, immunoglobulin
+					"VAL063", // BAT - Botulism valence, antitoxin
+					"VAL088", // VZV-Ig - Varicella valence, immunoglobulin
+					"VAL110", // T-Ig - Tetanus valence, immunoglobulin
+					"VAL116", // RSV-mAb-pal - RSV valence, monoclonal antibody, palivizumab
+					"VAL148", // RSV-IG - RSV valence, immunoglobulin
+					"VAL252", // RIG-hu - Rabies immunoglobulin, human origin
+					"VAL253", // eRIG - Rabies immunoglobulin valence, equine origin
+					"VAL293", // Anthrax-Ig - Anthrax immunoglobulin valence
+					"VAL317", // RSV-Ab - RSV valence, antibody, unspecified
+					"VAL321", // VRS-mAb-nir - RSV valence, monoclonal antibody, nirsevimab
+					"VAL331", // CMV-Ig - CMV valence, immunoglobulin
+					"VAL337", // POX-Ig - Smallpox valence, immunoglobulin
+					"VAL358", // BIG - Botulism valence, immunoglobulin
+					"VAL420", // BOT-passive - Botulism valence, passive immunization products
+					"VAL429"  // VRS-mAb-cle - RSV valence, monoclonal antibody, clesrovimab
+			);
+		}
+		return immunoglobulinValences.contains(valenceRef);
 	}
 	
 }

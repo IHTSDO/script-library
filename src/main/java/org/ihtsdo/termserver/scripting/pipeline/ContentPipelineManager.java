@@ -658,17 +658,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		if (existingConcept == null) {
 			conceptCreator.copyStatedRelsToInferred(concept);
 			changesMade = true;
-		} else {
-			//TEMPORARY CODE.   We can remove this after our first publication
-			//For existing concepts we're going to group inferred relationships if required
-			for (Relationship r : existingConcept.getRelationships(CharacteristicType.INFERRED_RELATIONSHIP, ActiveState.ACTIVE)) {
-				if (r.getGroupId() > 1) {
-					Relationship inferredRelOnNewConcept = r.cloneWithIds();
-					inferredRelOnNewConcept.setGroupId(1);
-					concept.addRelationship(inferredRelOnNewConcept);
-					changesMade = true;
-				}
-			}
 		}
 		return changesMade;
 	}
