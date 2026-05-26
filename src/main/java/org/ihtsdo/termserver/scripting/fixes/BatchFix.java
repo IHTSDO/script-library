@@ -1705,7 +1705,7 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 	protected void standardExecution(String[] args, ExecutionOptions options) throws TermServerScriptException {
 		try {
 			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_UPDATES);
-			selfDetermining = true;
+			selfDetermining = !options.isDrivenByInputFile();
 			populateEditPanel = false;
 			runStandAlone = false;  //Need to look up the project for MS extensions
 			processExecutionOptions(options, args);
