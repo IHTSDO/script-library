@@ -1077,9 +1077,9 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	@Override
 	protected List<Component> loadLine(String[] lineItems) throws TermServerScriptException {
 		//Do we have an FSN override to deal with?
-		if (CONTAINS_REPLACEMENT_FSNS && lineItems.length == 2) {
+		if (CONTAINS_REPLACEMENT_FSNS && lineItems.length > 1) {
 			Concept c = gl.getConcept(lineItems[0]);
-			replacementFSNs.put(c.getId(), lineItems[1]);
+			replacementFSNs.put(c.getId(), lineItems[lineItems.length - 1]);
 		}
 		return super.loadLine(lineItems);
 	}
