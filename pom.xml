@@ -127,6 +127,11 @@
 			<artifactId>hapi-fhir-structures-r4</artifactId>
 			<version>7.6.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.thrift</groupId>
+			<artifactId>libthrift</artifactId>
+			<version>${thrift.version}</version>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

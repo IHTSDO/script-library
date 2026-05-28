@@ -277,17 +277,17 @@ public class NuvaOntologyLoader extends TermServerScript implements NuvaConstant
 		report(tabIdx, "");
 	}
 
-	protected Model loadNuva(File inputFile) {
+	protected Model loadNuva(File inputFile) throws TermServerScriptException {
 		LOGGER.info ("Loading NUVA file: {}", inputFile);
-		// create an empty model
-		Model model = ModelFactory.createDefaultModel();
-
-		// use the RDFDataMgr to find the input file
-		InputStream in = RDFDataMgr.open(inputFile.getAbsolutePath());
-
-		// read the RDF/XML file
-		model.read(in, null);
-		return model;
+		try {
+			Model model = ModelFactory.createDefaultModel();
+			InputStream in = RDFDataMgr.open(inputFile.getAbsolutePath());
+			model.read(in, null);
+			return model;
+		} catch (Throwable t) {
+			throw new TermServerScriptException("Failed to load NUVA RDF file: " + inputFile.getAbsolutePath()
+					+ " - " + t.getClass().getSimpleName() + ": " + t.getMessage(), t);
+		}
 	}
 
 	public List<NuvaVaccine> asVaccines(File file, ContentPipelineManager cpm) throws TermServerScriptException {
@@ -299,7 +299,12 @@ public class NuvaOntologyLoader extends TermServerScript implements NuvaConstant
 		ResIterator subIterator = dataModel.listSubjects();
 		while (subIterator.hasNext()) {
 			Resource subject = subIterator.next();
-			convertToNuvaObjects(subject, vaccineMap, valenceMap, diseaseMap, cpm);
+			try {
+				convertToNuvaObjects(subject, vaccineMap, valenceMap, diseaseMap, cpm);
+			} catch (Throwable t) {
+				throw new TermServerScriptException("Failed to process RDF subject: " + subject.getURI()
+						+ " - " + t.getClass().getSimpleName() + ": " + t.getMessage(), t);
+			}
 		}
 		formHierarchy(vaccineMap, valenceMap, diseaseMap);
 		cpm.incrementSummaryCount(ContentPipelineManager.INTERNAL_MAP_COUNT, "Vaccine Map", vaccineMap.size());
