@@ -29,9 +29,6 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(HistoricTemplateCompliance.class);
 
-	Set<Concept> alreadyCounted = new HashSet<>();
-	Map<Concept, Integer> outOfScopeCache = new HashMap<>();
-	int totalTemplateMatches = 0;
 	private static final String dataDir = "historic-data/";
 	private static final String PREV_DATA = "Previous Data";
 	public static final String THIS_RELEASE = "This Release";
@@ -46,8 +43,6 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 
 	public static void main(String[] args) throws TermServerScriptException {
 		Map<String, String> params = new HashMap<>();
-		params.put(SERVER_URL, "https://authoring.ihtsdotools.org/template-service");
-	
 		//params.put(THIS_RELEASE, "SnomedCT_InternationalRF2_PRODUCTION_20200731T120000Z.zip");
 		//TermServerScript.run(HistoricTemplateCompliance.class,args, params);
 		
@@ -78,9 +73,6 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 	@Override
 	public Job getJob() {
 		JobParameters params = new JobParameters()
-				.add(SERVER_URL)
-					.withType(JobParameter.Type.HIDDEN)
-					.withMandatory()
 				.add(PREV_DATA)
 					.withType(JobParameter.Type.STRING)
 				.build();
@@ -99,13 +91,13 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 	public void runJob() throws TermServerScriptException {
 		//Check all of our domain points are still active concepts, or we'll have trouble with them!
 		Set<String> invalidTemplateDomains = domainTemplates.keySet().stream()
-			.filter(ecl -> findConceptsSafely(ecl).size() == 0)
+			.filter(ecl -> findConceptsSafely(ecl).isEmpty())
 			.collect(Collectors.toSet());
 		
 		for (String invalidTemplateDomain : invalidTemplateDomains) {
 			List<Template> templates = domainTemplates.get(invalidTemplateDomain);
 			for (Template t : templates) {
-				LOGGER.warn ("Inactive or Non-existent domain: " + invalidTemplateDomain + " in template: " + t.getName());
+				LOGGER.warn ("Inactive or Non-existent domain: {} in template: {}",invalidTemplateDomain, t.getName());
 			}
 			domainTemplates.remove(invalidTemplateDomain);
 		}
@@ -114,10 +106,10 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 			String subsetECL = entry.getKey();
 			try {
 				List<Template> templates = entry.getValue();
-				LOGGER.info("Examining subset defined by '" + subsetECL + "' against " + templates.size() + " templates");
+				LOGGER.info("Examining subset defined by '{}' against {} templates", subsetECL, templates.size());
 				examineSubset(subsetECL, templates);
 			} catch (Exception e) {
-				LOGGER.error ("Exception while processing domain " + subsetECL, e);
+				LOGGER.error("Exception while processing domain {}", subsetECL, e);
 			}
 		}
 		
@@ -133,7 +125,7 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 		TransitiveClosure tc = gl.generateTransitiveClosure();
 		
 		File f = new File(dataDir + dataFileId  + "_conceptData.tsv");
-		LOGGER.info("Reading historic data file " + f);
+		LOGGER.info("Reading historic data file {}", f);
 		Set<String> previouslyAligned = new HashSet<>();
 		try {
 			Scanner scanner = new Scanner(f);
@@ -180,7 +172,7 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 	
 	private void comparePreviousTemplateData() throws TermServerScriptException {
 		File f = new File(dataDir + dataFileId  + "_templateData.tsv");
-		LOGGER.info("Reading historic data file " + f);
+		LOGGER.info("Reading historic data file {}", f);
 		Set<String> previousTemplates= new HashSet<>();
 		try {
 			Scanner scanner = new Scanner(f);
@@ -211,7 +203,7 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 			//Create the historic-data directory if required
 			File dataDirFile = new File(dataDir);
 			if (!dataDirFile.exists()) {
-				LOGGER.info("Creating directory to store historic data analysis: " + dataDir);
+				LOGGER.info("Creating directory to store historic data analysis: {}", dataDir);
 				boolean success = dataDirFile.mkdir();
 				if (!success) {
 					throw new TermServerScriptException("Failed to create " + dataDirFile.getAbsolutePath());
@@ -220,23 +212,23 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 			
 			dataFileId = project.getKey();
 			File f = new File(dataDir + dataFileId  + "_conceptData.tsv");
-			LOGGER.info("Creating dataFile: " + f.getAbsolutePath());
+			LOGGER.info("Creating dataFile: {}", f.getAbsolutePath());
 			f.createNewFile();
 			fw = new FileWriter(f);
 			
 			TransitiveClosure tc = gl.generateTransitiveClosure();
-			LOGGER.debug("Outputting Data to " + f.getAbsolutePath());
+			LOGGER.debug("Outputting Data to {}", f.getAbsolutePath());
 			for (AlignedConcept ac : alignedConceptMap.values()) {
 				fw.append(ac.serialize(getHierarchy(tc, ac.c)));
 			}
 			fw.close();
 			
 			f = new File(dataDir + dataFileId  + "_templateData.tsv");
-			LOGGER.info("Creating dataFile: " + f.getAbsolutePath());
+			LOGGER.info("Creating dataFile: {}", f.getAbsolutePath());
 			f.createNewFile();
 			fw = new FileWriter(f);
 			
-			LOGGER.debug("Outputting Data to " + f.getAbsolutePath());
+			LOGGER.debug("Outputting Data to {}", f.getAbsolutePath());
 			for (TemplateData td : templateDataMap.values()) {
 				fw.append(td.serialize());
 			}
@@ -274,7 +266,7 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 	private void examineSubset(String ecl, List<Template> templates) throws TermServerScriptException {
 		Collection<Concept> subset = findConcepts(ecl);
 		if (subset.size() == 0) {
-			LOGGER.warn ("No concepts found in subset defined by '" + ecl + "' skipping");
+			LOGGER.warn("No concepts found in subset defined by '{}' skipping", ecl);
 			return;
 		}
 		
@@ -335,7 +327,7 @@ public class HistoricTemplateCompliance extends AllKnownTemplates implements Rep
 		AlignedConcept ac = new AlignedConcept (gl.getConcept(lineItems[0]));
 		ac.hierarchy=lineItems[1];
 		String[] tArr = Arrays.copyOfRange(lineItems, 2, lineItems.length);
-		ac.matchingTemplates = new HashSet<String>(Arrays.asList(tArr));
+		ac.matchingTemplates = new HashSet<>(Arrays.asList(tArr));
 		return ac;
 	}
 
