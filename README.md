@@ -16,7 +16,7 @@ The types of jobs undertaken by these classes cover:
 Download and Build
 ================================
 
-Requirement - Java 8 (or later), Maven, Git
+Requirement - Java 25 (or later), Maven, Git
 
 ```bash	
 git clone git@git.ihtsdotools.org:ihtsdo/reporting-engine.git
