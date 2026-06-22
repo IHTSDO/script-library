@@ -17,6 +17,7 @@ import org.ihtsdo.termserver.scripting.*;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate.Mode;
 import org.ihtsdo.termserver.scripting.fixes.batch_import.BatchImport;
+import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveManager;
 import org.ihtsdo.termserver.scripting.util.AcceptabilityMode;
 import org.ihtsdo.termserver.scripting.util.DialectChecker;
@@ -1721,7 +1722,10 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 
 	private void processExecutionOptions(ExecutionOptions options, String[] args) throws TermServerScriptException {
 		ArchiveManager am = getArchiveManager();
+		//If we're doing batch fixes, we generally need to know if a component is published or not, so build new snapshot each time
 		am.setEnsureSnapshotPlusDeltaLoad(true);
+		//And if we're going to do that, there's no point in saving the snapshot to disk
+		ArchiveImporter.setSkipSave(true);
 		init(args);
 		am.setRunIntegrityChecks(options.isIntegrityChecking());
 		am.setLoadOtherReferenceSets(options.isImportAllRefsets());
