@@ -65,8 +65,12 @@ public class ReplaceParentsDriven extends BatchFix implements ScriptConstants{
 
 		boolean replacementNeeded = true;
 		for (Relationship parentRel : parentRels) {
-			//If this is the only relationship, and it's already the new target, then we don't need to make any changes
-			if (parentRel.equals(newParentRel) && parentRels.size() == 1) {
+			if (!parentRel.equals(newParentRel)) {
+				if (allowAdditionalParentsExcept == null || parentRel.getTarget().equals(allowAdditionalParentsExcept)) {
+					removeParentRelationship(task, parentRel, loadedConcept, newParentRel.getTarget().toString(), null);
+					changesMade++;
+				}
+			} else {
 				replacementNeeded = false;
 			}
 
