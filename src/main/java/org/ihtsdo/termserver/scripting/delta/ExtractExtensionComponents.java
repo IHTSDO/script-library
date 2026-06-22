@@ -32,7 +32,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExtractExtensionComponents.class);
 	private static final Integer CONCEPTS_PER_ARCHIVE = Integer.MAX_VALUE;
-	private static final boolean AUTO_IMPORT = false;
+	private static final boolean AUTO_IMPORT = true;
 	private static final boolean EXCLUDE_NON_ENGLISH_TERMS = true;
 	private static final boolean CONTAINS_REPLACEMENT_FSNS = false;  //If true, extra column needed in input file!
 	private static final boolean INCLUDE_DEPENDENCIES = true;
@@ -62,7 +62,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	protected Rf2ConceptCreator conceptCreator;
 	protected Concept forceNewParent = null; // or MEDICINAL_PRODUCT for UK MPs
 
-	protected String[] componentIdsToProcess = null; //If it's just a couple, no need for a file, just specify here.
+	protected List<String> componentIdsToProcess = null; //If it's just a couple, no need for a file, just specify here.
 	protected String componentsToProcessEcl = null; // (<<64572001 |Disease|:116676008 |Associated morphology|=46360000 |Abnormal curvature|) {{ C moduleId = 890108001 }}
 
 	public static void main(String[] args) throws TermServerScriptException {
@@ -191,8 +191,8 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			conceptsToProcess = findConcepts(componentsToProcessEcl).stream()
 					.map(c -> (Component)c)
 					.collect(Collectors.toList()); //Not 'toList' here because we need a mutable collection
-		} else if (componentIdsToProcess != null && componentIdsToProcess.length > 0) {
-			conceptsToProcess = Arrays.stream(componentIdsToProcess)
+		} else if (componentIdsToProcess != null && !componentIdsToProcess.isEmpty()) {
+			conceptsToProcess = componentIdsToProcess.stream()
 					.map(s -> (Component)gl.getConceptSafely(s))
 					.collect(Collectors.toList());  //Not 'toList' here because we need a mutable collection
 		} else {
@@ -877,7 +877,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			Map<Integer, List<org.snomed.otf.owltoolkit.domain.Relationship>> relationshipMap = new HashMap<>();
 			boolean includeIsA = true;
 			for (RelationshipGroup g : c.getRelationshipGroups(CharacteristicType.INFERRED_RELATIONSHIP, includeIsA)) {
-				relationshipMap.put(g.getGroupId(), g.getToolKitRelationships());
+				relationshipMap.put(g.getGroupId(), g.getToolKitRelationships(gl.getMRCMAttributeRangeManager()));
 			}
 			axiom.setRightHandSideRelationships(relationshipMap);
 			String axiomStr = axiomService.convertRelationshipsToAxiom(axiom);

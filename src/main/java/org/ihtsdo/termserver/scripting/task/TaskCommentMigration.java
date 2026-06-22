@@ -116,7 +116,7 @@ public class TaskCommentMigration extends JiraTaskMigrationBase implements Repor
 				}
 			}
 		} finally {
-			populateSummaryTab(PRIMARY_REPORT);
+			reportSummaryCounts(PRIMARY_REPORT, SUMMARY_SORT_ORDER.COUNT);
 			addFinalWords("Last task processed: " + lastTaskProcesssed);
 		}
 	}

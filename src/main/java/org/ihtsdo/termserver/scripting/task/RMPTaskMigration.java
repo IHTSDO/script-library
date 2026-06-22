@@ -141,7 +141,7 @@ public class RMPTaskMigration extends JiraTaskMigrationBase implements ReportCla
 			} catch (SQLException e) {
 				LOGGER.warn("Error closing connection to database.", e);
 			}
-			populateSummaryTab(PRIMARY_REPORT);
+			reportSummaryCounts(PRIMARY_REPORT, SUMMARY_SORT_ORDER.COUNT);
 		}
 
 	}

@@ -6,13 +6,12 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-/**
- * Reports concepts that are primitive, and have both fully defined ancestors and descendants 
- * */
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Reports concepts that are primitive, and have both fully defined ancestors and descendants 
+ * */
 public class IntermediatePrimitivesReport extends TermServerReport{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IntermediatePrimitivesReport.class);
@@ -102,15 +101,6 @@ public class IntermediatePrimitivesReport extends TermServerReport{
 			}
 		}
 		return true;
-	}
-
-	private boolean containsFdConcept(Collection<Concept> concepts) {
-		for (Concept c : concepts) {
-			if (c.isActive() && c.getDefinitionStatus().equals(DefinitionStatus.FULLY_DEFINED)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private String simpleName(String sctid) throws TermServerScriptException {
