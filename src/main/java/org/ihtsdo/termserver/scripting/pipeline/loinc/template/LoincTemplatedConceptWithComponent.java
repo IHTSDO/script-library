@@ -47,11 +47,15 @@ public class LoincTemplatedConceptWithComponent extends LoincTemplatedConcept {
 			processSubComponents(attributes, componentAttribType);
 		}
 
-		if (getExternalConcept().getProperty().equals("PrThr")
-				&& detailPresent(COMPNUM_PN)
-				&& getLoincDetailOrThrow(COMPNUM_PN).getPartNumber().equals(LOINC_PART_OBSERVATION)) {
-				//If we're working with a property/threshold then we'll be saying "Presence of"
+		if (getExternalConcept().getProperty().equals(LOINC_PROPERTY_PRESENCE_THRESHOLD)) {
+			//Concept naming rule #15
+			slotTermMap.put(LOINC_PART_TYPE_PROPERTY, "Threshold presence");
+
+			if (detailPresent(COMPNUM_PN)
+					&& getLoincDetailOrThrow(COMPNUM_PN).getPartNumber().equals(LOINC_PART_OBSERVATION)) {
+				//If we're working with a property/threshold then we'll be saying "Presence of" or "Threshold presence of"
 				setTermTemplate("[PROPERTY] of [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+			}
 		}
 
 		ensureComponentMappedOrRepresentedInTerm(attributes);

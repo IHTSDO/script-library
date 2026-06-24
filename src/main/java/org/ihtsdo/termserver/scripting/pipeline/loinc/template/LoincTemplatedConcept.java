@@ -260,7 +260,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	protected void applyConceptLevelRules() throws TermServerScriptException {
 		//Rule 9 for Prid & PrHrObservations
 		if ((getExternalConcept().getProperty().equals("Prid")
-				|| getExternalConcept().getProperty().equals("PrThr"))
+				|| getExternalConcept().getProperty().equals(LOINC_PROPERTY_PRESENCE_THRESHOLD))
 			&& detailPresent(COMPNUM_PN)
 			&& getLoincDetailOrThrow(COMPNUM_PN).getPartNumber().equals(LOINC_PART_OBSERVATION)) {
 			if (this instanceof LoincTemplatedConceptWithInheresNoComponent) {
