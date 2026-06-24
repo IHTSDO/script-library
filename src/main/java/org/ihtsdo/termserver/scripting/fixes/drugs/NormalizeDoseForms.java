@@ -8,25 +8,23 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.ihtsdo.termserver.scripting.util.DrugTermGenerator;
+import org.ihtsdo.termserver.scripting.util.DrugUtils;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
 DRUGS-514
 Replace topical, ophthalmic and respiratory MPFs with cutaneous, ocular and pulmonary
 Inactivate and replace concept
 */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class NormalizeDoseForms extends DrugBatchFix implements ScriptConstants{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(NormalizeDoseForms.class);
 
 	Map<String, Concept> doseFormMap;
-	DrugTermGenerator termGenerator = new DrugTermGenerator(this);
-	
+
 	protected NormalizeDoseForms(BatchFix clone) {
 		super(clone);
 	}
@@ -60,7 +58,7 @@ public class NormalizeDoseForms extends DrugBatchFix implements ScriptConstants{
 	public int doFix(Task task, Concept concept, String info) throws TermServerScriptException {
 		
 		Concept loadedConcept = loadConcept(concept, task.getBranchPath());
-		Set<Relationship> parentRels = new HashSet<Relationship> (loadedConcept.getRelationships(CharacteristicType.STATED_RELATIONSHIP, 
+		Set<Relationship> parentRels = new HashSet<> (loadedConcept.getRelationships(CharacteristicType.STATED_RELATIONSHIP,
 				IS_A,
 				ActiveState.ACTIVE));
 		String parentCount = Integer.toString(parentRels.size());
@@ -75,8 +73,8 @@ public class NormalizeDoseForms extends DrugBatchFix implements ScriptConstants{
 		
 		if (loadedConcept.getDefinitionStatus().equals(DefinitionStatus.PRIMITIVE)) {
 			
-			int activeIngredientCount = loadedConcept.getRelationships(CharacteristicType.STATED_RELATIONSHIP, Concept.HAS_ACTIVE_INGRED, ActiveState.ACTIVE).size();
-			int doseFormCount = loadedConcept.getRelationships(CharacteristicType.STATED_RELATIONSHIP, Concept.HAS_MANUFACTURED_DOSE_FORM, ActiveState.ACTIVE).size();
+			int activeIngredientCount = loadedConcept.getRelationships(CharacteristicType.STATED_RELATIONSHIP, HAS_ACTIVE_INGRED, ActiveState.ACTIVE).size();
+			int doseFormCount = loadedConcept.getRelationships(CharacteristicType.STATED_RELATIONSHIP, HAS_MANUFACTURED_DOSE_FORM, ActiveState.ACTIVE).size();
 			
 			if (activeIngredientCount > 0 && doseFormCount > 0) {
 				loadedConcept.setDefinitionStatus(DefinitionStatus.FULLY_DEFINED);
@@ -101,9 +99,9 @@ public class NormalizeDoseForms extends DrugBatchFix implements ScriptConstants{
 		if (doseForms.size() > 1) {
 			report(t, c, Severity.CRITICAL, ReportActionType.VALIDATION_ERROR, doseForms.size() + " dose forms detected");
 		}
-		for (String currentTerm : doseFormMap.keySet()) {
-			if (c.getFsn().contains(currentTerm)) {
-				replaceRelationship(t, c, HAS_MANUFACTURED_DOSE_FORM, doseFormMap.get(currentTerm), UNGROUPED, true);
+		for (Map.Entry<String, Concept> entry : doseFormMap.entrySet()) {
+			if (c.getFsn().contains(entry.getKey())) {
+				replaceRelationship(t, c, HAS_MANUFACTURED_DOSE_FORM, entry.getValue(), UNGROUPED, true);
 				return CHANGE_MADE;
 			}
 		}
@@ -111,15 +109,11 @@ public class NormalizeDoseForms extends DrugBatchFix implements ScriptConstants{
 	}
 
 	@Override
-	protected List<Component> loadLine(String[] lineItems) throws TermServerScriptException {
-		return null;
-	}
-	
 	protected List<Component> identifyComponentsToProcess() throws TermServerScriptException {
 		LOGGER.debug("Identifying concepts to process");
 		List<Component> processMe = new ArrayList<>();
 		for (Concept c : PHARM_BIO_PRODUCT.getDescendants(NOT_SET)) {
-			SnomedUtils.populateConceptType(c);
+			DrugUtils.populateConceptType(c);
 			if (c.getConceptType().equals(ConceptType.MEDICINAL_PRODUCT_FORM)) {
 				for (String currentTerm : doseFormMap.keySet()) {
 					if (c.getFsn().contains(currentTerm)) {

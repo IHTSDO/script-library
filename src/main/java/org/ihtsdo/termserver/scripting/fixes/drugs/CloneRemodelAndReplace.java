@@ -10,6 +10,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.DrugTermGenerator;
+import org.ihtsdo.termserver.scripting.util.DrugUtils;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.otf.script.dao.ReportSheetManager;
 
@@ -80,7 +81,7 @@ public class CloneRemodelAndReplace extends BatchFix implements ScriptConstants{
 		HCSNV = gl.getConcept("733724008 |Has concentration strength numerator value (attribute)|");
 	
 		for (Concept c : gl.getDescendantsCache().getDescendants(MEDICINAL_PRODUCT)) {
-			SnomedUtils.populateConceptType(c);
+			DrugUtils.populateConceptType(c);
 			if (c.getConceptType().equals(ConceptType.CLINICAL_DRUG)) {
 				allKnownCDs.put(c.getFsn(), c);
 			}
@@ -113,8 +114,8 @@ public class CloneRemodelAndReplace extends BatchFix implements ScriptConstants{
 		//it's not safe to inactivate
 		String msg = "Concept is not safe to inactivate. ";
 
-		if (c.getChildren(CharacteristicType.STATED_RELATIONSHIP).size() > 0 ||
-			c.getChildren(CharacteristicType.INFERRED_RELATIONSHIP).size() > 0) {
+		if (!c.getChildren(CharacteristicType.STATED_RELATIONSHIP).isEmpty() ||
+			!c.getChildren(CharacteristicType.INFERRED_RELATIONSHIP).isEmpty()) {
 			msg += "It has descendants";
 			report(t, c, Severity.HIGH, ReportActionType.VALIDATION_CHECK, msg);
 			return false;
@@ -130,15 +131,15 @@ public class CloneRemodelAndReplace extends BatchFix implements ScriptConstants{
 	}
 
 	private int cloneRemodelAndReplace(Task t, Concept c) throws TermServerScriptException {
-		SnomedUtils.populateConceptType(c);
+		DrugUtils.populateConceptType(c);
 		Concept clone = c.clone();
-		//Remove all "Presenation" attributes
+		//Remove all "Presentation" attributes
 		for (Relationship r : clone.getRelationships(CharacteristicType.STATED_RELATIONSHIP, ActiveState.ACTIVE)) {
 			if (r.getType().getFsn().contains(PRESENTATION)) {
 				removeRelationship(t, clone, r);
 			}
 		}
-		//And reterm
+		//And re-term
 		termGenerator.ensureTermsConform(t, clone, null, CharacteristicType.STATED_RELATIONSHIP);
 		
 		//Have we already got one of these?  If not, create it, otherwise re-use

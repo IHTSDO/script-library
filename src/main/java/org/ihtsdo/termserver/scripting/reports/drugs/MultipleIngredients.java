@@ -1,12 +1,12 @@
 package org.ihtsdo.termserver.scripting.reports.drugs;
 
-import java.io.PrintStream;
-
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.reports.TermServerReport;
 import org.ihtsdo.termserver.scripting.util.DrugUtils;
-import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DRUGS-494
@@ -14,10 +14,6 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
  * @author Peter
  *
  */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class MultipleIngredients extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MultipleIngredients.class);
@@ -33,8 +29,7 @@ public class MultipleIngredients extends TermServerReport {
 			report.loadProjectSnapshot(true);  
 			report.finMultipleModifications();
 		} catch (Exception e) {
-			LOGGER.info("Failed to produce MultipleIngredients due to " + e.getClass().getSimpleName() + ": " + e.getMessage());
-			e.printStackTrace(new PrintStream(System.out));
+			LOGGER.info("Failed to produce MultipleIngredients due to {}: {}", e.getClass().getSimpleName(), e.getMessage());
 		} finally {
 			report.finish();
 		}
@@ -43,9 +38,9 @@ public class MultipleIngredients extends TermServerReport {
 	private void finMultipleModifications() throws TermServerScriptException {
 		for (Concept c : MEDICINAL_PRODUCT.getDescendants(NOT_SET)) {
 			DrugUtils.setConceptType(c);
-			if (SnomedUtils.isConceptType(c, validTypes)) {
+			if (DrugUtils.isConceptType(c, validTypes)) {
 				int ingredientCount = DrugUtils.getIngredients(c, CharacteristicType.STATED_RELATIONSHIP).size();
-				String fsn = c.getFsn().replaceAll("\\+", " and ");
+				String fsn = c.getFsn().replace("\\+", " and ");
 				//Remove any fragments of terms that cause false positives
 				for (String falsePositive : falsePositives) {
 					fsn = fsn.replace(falsePositive, "");

@@ -10,6 +10,8 @@ import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.DrugUtils;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
 For DRUGS-413, DRUGS-432, DRUGS-522
@@ -17,12 +19,7 @@ Driven by a text file of concepts, move specified concepts to exist under
 a parent concept.  
 
 Optionally Reassign orphaned children to their grandparents.
-
 */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class MoveConcepts extends BatchFix implements ScriptConstants{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MoveConcepts.class);
@@ -298,7 +295,7 @@ public class MoveConcepts extends BatchFix implements ScriptConstants{
 			return null;
 		}
 		//c.setConceptType(ConceptType.THERAPEUTIC_ROLE);
-		SnomedUtils.populateConceptType(c);
+		DrugUtils.populateConceptType(c);
 		return Collections.singletonList(c);
 	}
 

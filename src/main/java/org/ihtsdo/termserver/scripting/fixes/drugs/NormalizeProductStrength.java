@@ -124,7 +124,7 @@ public class NormalizeProductStrength extends DrugBatchFix implements ScriptCons
 		List<Concept> processMe = new ArrayList<>();  //We want to process in the same order each time, in case we restart and skip some.
 		setQuiet(true);
 		for (Concept c : PHARM_BIO_PRODUCT.getDescendants(NOT_SET)) {
-			SnomedUtils.populateConceptType(c);
+			DrugUtils.populateConceptType(c);
 			if (c.getConceptType().equals(ConceptType.CLINICAL_DRUG) && normalizeProductStrength(null, c) > 0) {
 				processMe.add(c);
 			}

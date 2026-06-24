@@ -6,16 +6,15 @@ import java.util.*;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.reports.TermServerReport;
-import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+import org.ihtsdo.termserver.scripting.util.DrugUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DRUGS-289
  * Report to ensure that any given ingredient across all products is always represented using the same units.
  */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class UnitConsistency extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(UnitConsistency.class);
@@ -47,7 +46,7 @@ public class UnitConsistency extends TermServerReport {
 		LOGGER.info("Finding all ingredient units");
 		for (Concept c : PHARM_BIO_PRODUCT.getDescendants(NOT_SET)) {
 			//We're only interested in clinical drugs if we're talking about units
-			SnomedUtils.populateConceptType(c);
+			DrugUtils.populateConceptType(c);
 			if (!c.getConceptType().equals(ConceptType.CLINICAL_DRUG)) {
 				continue;
 			}
