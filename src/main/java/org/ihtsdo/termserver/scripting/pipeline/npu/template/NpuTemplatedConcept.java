@@ -164,8 +164,6 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 
 		if (part.getPartTypeName().equals(NPU_PART_UNIT)
 				&& SnomedUtils.isEmpty(part.getPartNumber())) {
-			//NPU Concepts without a unit will be given a default unit of measure
-			attributesToAdd.add(defaultUnitOfMeasureAttribute);
 			slotTermMap.put(NPU_PART_UNIT, "");
 		}
 
