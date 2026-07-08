@@ -205,8 +205,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check IFCC technique");
 		}
 
-		if (externalIdentifier.equals("NPU04998")) {
-			LOGGER.debug("Check enzymatic method term");
+		if (externalIdentifier.equals("30905-4")) {
+			LOGGER.debug("Check term exception #8");
 		}
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);

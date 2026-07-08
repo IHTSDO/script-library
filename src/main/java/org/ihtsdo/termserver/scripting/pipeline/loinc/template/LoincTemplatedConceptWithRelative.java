@@ -8,6 +8,7 @@ import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,7 @@ import java.util.Set;
 public class LoincTemplatedConceptWithRelative extends LoincTemplatedConcept {
 
 	protected static final String SEPARATOR = "#SEPARATOR#";
+	public static final String COMP_ADJUSTMENT = "COMP_ADJUSTMENT";
 
 	protected static Set<Concept> calculationConcepts;
 
@@ -27,8 +29,15 @@ public class LoincTemplatedConceptWithRelative extends LoincTemplatedConcept {
 		templatedConcept.populateTypeMapCommonItems();
 		templatedConcept.typeMap.put("DIVISORS", gl.getConcept("704325000 |Relative to (attribute)|"));
 		templatedConcept.typeMap.put("UNITS", gl.getConcept("415067009 |Percentage unit (qualifier value)|"));
-		templatedConcept.setTermTemplate("[PROPERTY] of [COMPONENT] to [DIVISORS] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+		String termTemplate = "[PROPERTY] of [COMPONENT] to [DIVISORS] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]";
+		templatedConcept.setTermTemplate(templatedConcept.addAdjustmentToTermTemplate(termTemplate));
 		return templatedConcept;
+	}
+
+	protected String addAdjustmentToTermTemplate(String termTemplate) {
+		//Special Naming Conditions #8 will append the CompSubPart3 name into the [COMP_ADJUSTMENT] slot.  But by default it will be blank
+		slotTermMap.put(COMP_ADJUSTMENT, "");
+		return termTemplate + " [COMP_ADJUSTMENT]";
 	}
 
 	@Override
@@ -55,6 +64,17 @@ public class LoincTemplatedConceptWithRelative extends LoincTemplatedConcept {
 				addProcessingFlag(ProcessingFlag.SUPPRESS_DIVISOR_TERM);
 			}
 		}
+
+		//Special naming condition #8: IF template is ‘Quality observable with Component and Relative to for LOINC’ OR ‘Quality observable with Component and Relative to for LOINC Ratios’ AND COMPSUBPART3_PN includes a value
+		//THEN include the name of the COMPSUBPART3_PN in the SNOMED FSN and acceptable description appended to the end of the term (right before the semantic tag)
+		if (!StringUtils.hasLength(slotTermMap.get(COMP_ADJUSTMENT))) {
+			LoincDetail adjustment = getLoincDetailForColNameIfPresent(COMPSUBPART3_PN);
+			if (adjustment != null) {
+				slotTermMap.put(COMP_ADJUSTMENT, adjustment.getPartName());
+				addReasonForInterest("LE-61");
+			}
+		}
+
 		super.applyTemplateSpecificModellingRules(attributes, part, rt);
 	}
 

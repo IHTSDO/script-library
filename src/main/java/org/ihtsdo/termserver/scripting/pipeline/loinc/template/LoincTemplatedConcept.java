@@ -655,9 +655,14 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			}
 		}
 
-		addSubPartDetailIfPresent(COMPSUBPART3_PN, attributes, componentAttribType);
+		if (!(this instanceof LoincTemplatedConceptWithRelative)) {
+			addSubPartDetailIfPresent(COMPSUBPART3_PN, attributes, componentAttribType);
+		} else if (detailPresent(COMPSUBPART3_PN)) {
+			addReasonForInterest("LE-61 Type 2");
+		}
 		addSubPartDetailIfPresent(COMPSUBPART4_PN, attributes, componentAttribType);
 	}
+
 
 	private void addSubPartDetailIfPresent(String subPartName, List<RelationshipTemplate> attributes, Concept componentAttribType) throws TermServerScriptException {
 		if (detailPresent(subPartName)) {

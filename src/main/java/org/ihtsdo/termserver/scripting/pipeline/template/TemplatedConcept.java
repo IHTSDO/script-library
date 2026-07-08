@@ -303,7 +303,9 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 			//Couple of things we might need here
 			//1.  The existing description might be inactive so we'd need to reactivate
 			//2.  We might need to merge the acceptability map on an existing description
-			LOGGER.debug("Check {} already has description {}", concept, externalTerm);
+			//Use the external identifier if we don't have an SCTID
+			String identifier = concept.getId() == null ? getExternalIdentifier() : concept.getId();
+			LOGGER.debug("Check {}|{} already has description '{}'", identifier, concept.getFsn(), externalTerm);
 		}
 	}
 
