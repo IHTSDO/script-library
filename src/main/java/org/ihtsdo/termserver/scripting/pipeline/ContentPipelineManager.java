@@ -99,7 +99,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			importPartMap();
 			preModelling();
 			doModeling();
-			checkSpecificConcepts();
 			TemplatedConcept.reportStats(getTab(TAB_SUMMARY));
 			if (tabExists(TAB_MAP_ME)) {
 				reportMissingMappings(getTab(TAB_MAP_ME));
@@ -201,12 +200,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	protected TemplatedConcept modelExternalConcept(String externalIdentifier) throws TermServerScriptException {
 
-		if (externalIdentifier.equals("NPU19652")) {
-			LOGGER.debug("Check IFCC technique");
-		}
-
-		if (externalIdentifier.equals("30905-4")) {
-			LOGGER.debug("Check term exception #8");
+		if (externalIdentifier.equals("NPU26879")) {
+			LOGGER.debug("Check Blood");
 		}
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
@@ -235,7 +230,13 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		TemplatedConcept tc = getAppropriateTemplate(externalConcept);
 
 		if (!(tc instanceof TemplatedConceptNull)) {
-			tc.populateTemplate();
+			try {
+				tc.populateTemplate();
+			} catch (TermServerScriptException e) {
+				LOGGER.error("Failed to populate template for {}", externalIdentifier, e);
+				tc.getConcept().addIssue(e.getMessage());
+				tc.addProcessingFlag(ProcessingFlag.DROP_OUT);
+			}
 		} else if (externalConcept.isHighUsage()) {
 			//This is a 'highest usage' term, which is out of scope
 			incrementSummaryCount(ContentPipelineManager.HIGH_USAGE_COUNTS, "High Usage Out of Scope");
@@ -690,7 +691,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	
 	protected void reportIncludedExcludedConcepts(int tabIdx) throws TermServerScriptException {
 		Set<String> successfullyModelledExternalIds = successfullyModelled.stream()
-				.map(tc -> tc.getExternalIdentifier())
+				.map(TemplatedConcept::getExternalIdentifier)
 				.collect(Collectors.toSet());
 
 		//Collect both included and excluded terms by property
@@ -750,49 +751,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	public static final List<String> HARDCODED_DROP_OUT = new ArrayList<>();
 
-	protected static final List<String> ITEMS_OF_INTEREST = new ArrayList<>();
-
 	public static final Map<String, String> MANUALLY_MAINTAINED_ITEMS = new HashMap<>();
-
-	public static String getSpecialInterestIndicator(String externameIdentifer) {
-		return ITEMS_OF_INTEREST.contains(externameIdentifer) ? "Y" : "";
-	}
-
-	private static final String TOP_88 = "Top 88";
-	private static final String TOP_2K = "Top 2000";
-	private void checkSpecificConcepts() throws TermServerScriptException {
-		reportStatusOfSpecificItemsOfInterest(TOP_88, ITEMS_OF_INTEREST);
-		//Generate set of external concepts which are of highest interest
-		List<String> top20KExternalConcepts = externalConceptMap.values().stream()
-				.filter(ExternalConcept::isHighestUsage)
-				.map(ExternalConcept::getExternalIdentifier)
-				.toList();
-		reportStatusOfSpecificItemsOfInterest(TOP_2K, top20KExternalConcepts);
-	}
-
-	private void reportStatusOfSpecificItemsOfInterest(String reportKey, List<String> itemsOfInterest) throws TermServerScriptException {
-		for (String loincNum : itemsOfInterest) {
-			boolean found = false;
-			if (MANUALLY_MAINTAINED_ITEMS.containsKey(loincNum)) {
-				report(getTab(ContentPipeLineConstants.TAB_ITEMS_OF_INTEREST),reportKey, loincNum, "Modelled manually", MANUALLY_MAINTAINED_ITEMS.get(loincNum));
-				continue;
-			}
-
-			for (TemplatedConcept tc : successfullyModelled) {
-				if (tc.getExternalIdentifier().equals(loincNum)) {
-					report(getTab(ContentPipeLineConstants.TAB_ITEMS_OF_INTEREST), reportKey, tc.getExternalIdentifier(), "Modelled",tc.getConcept());
-					found = true;
-					break;
-				}
-			}
-
-			if (!found) {
-				report(getTab(ContentPipeLineConstants.TAB_ITEMS_OF_INTEREST),reportKey, loincNum, "Not Modelled");
-			}
-		}
-	}
-
-
 
 	public abstract List<String> getMappingsAllowedAbsent();
 	
@@ -877,6 +836,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		String existingConceptId = existingConcept == null ? "N/A" : existingConcept.getId();
 		report(getTab(TAB_PROPOSED_MODEL_COMPARISON),
 				tc.getExternalIdentifier(),
+				tc.getReasonsForInterest(),
 				proposedConcept != null ? proposedConcept.getId() : existingConceptId,
 				tc.getIterationIndicator(),
 				tc.getClass().getSimpleName(),
@@ -909,66 +869,67 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			incrementSummaryCount("Missing External Identifier","Identifier not found in source file - " + externalIdentifier);
 		} else if (externalConceptMap.get(externalIdentifier).isHighUsage() && templatedConcept != null) {
 			//Templates that come back as null will already have been counted as out of scope
-			String usageLevel = "High";
 			incrementSummaryCount(ContentPipelineManager.HIGH_USAGE_COUNTS,"High Usage Mapping Failure");
 			if (externalConceptMap.get(externalIdentifier).isHighestUsage()) {
 				incrementSummaryCount(ContentPipelineManager.HIGHEST_USAGE_COUNTS,"Highest Usage Mapping Failure");
-				usageLevel = "Highest";
 			}
-			report(getTab(ContentPipeLineConstants.TAB_ITEMS_OF_INTEREST), usageLevel + " Usage Mapping Failure", externalIdentifier);
 		}
 		return false;
 	}
 
-	protected void validateTemplatedConcept(TemplatedConcept templatedConcept) throws TermServerScriptException {
-		String externalIdentifier = templatedConcept.getExternalIdentifier();
-		if (templatedConcept.getConcept() == null) {
+	protected void validateTemplatedConcept(TemplatedConcept tc) throws TermServerScriptException {
+		String externalIdentifier = tc.getExternalIdentifier();
+		if (tc.getConcept() == null) {
 			if (externalConceptMap.get(externalIdentifier) == null) {
 				report(getTab(TAB_MODELING_ISSUES),
 						externalIdentifier,
-						ContentPipelineManager.getSpecialInterestIndicator(externalIdentifier),
+						tc.getReasonsForInterest(),
 						"N/A",
-						templatedConcept.getClass().getSimpleName(),
+						tc.getClass().getSimpleName(),
 						"Critical: External identifier not found in external concept map");
 			} else {
 				report(getTab(TAB_MODELING_ISSUES),
 						externalIdentifier,
-						ContentPipelineManager.getSpecialInterestIndicator(externalIdentifier),
+						tc.getReasonsForInterest(),
 						externalConceptMap.get(externalIdentifier).getLongDisplayName(),
-						templatedConcept.getClass().getSimpleName(),
+						tc.getClass().getSimpleName(),
 						"Concept not created");
 			}
 			return;
 		}
 
-		ExternalConcept externalConcept = templatedConcept.getExternalConcept();
-		Concept concept = templatedConcept.getConcept();
+		ExternalConcept externalConcept = tc.getExternalConcept();
+		Concept concept = tc.getConcept();
 
-		if (templatedConcept instanceof TemplatedConceptNull) {
+		if (tc instanceof TemplatedConceptNull) {
 			report(getTab(TAB_MODELING_ISSUES),
 					externalConcept.getExternalIdentifier(),
-					ContentPipelineManager.getSpecialInterestIndicator(externalConcept.getExternalIdentifier()),
+					tc.getReasonsForInterest(),
 					externalConcept.getLongDisplayName(),
 					"Does not meet criteria for template match",
-					templatedConcept.getClass().getSimpleName(),
+					tc.getClass().getSimpleName(),
 					"Property: " + externalConcept.getProperty());
-		} else {
+		} else if (!tc.hasProcessingFlag(ProcessingFlag.DROP_OUT)) {
 			String fsn = concept.getFsn();
 			boolean insufficientTermPopulation = fsn.contains("[");
 			//Some panels have words like '[Moles/volume]' in them, so check also for slot token names (all caps).  Not Great.
 			if (insufficientTermPopulation && hasAllCapsSlot(fsn)) {
 				concept.addIssue(FSN_FAILURE + " to populate required slot: " + fsn);
-				templatedConcept.addProcessingFlag(ProcessingFlag.DROP_OUT);
+				tc.addProcessingFlag(ProcessingFlag.DROP_OUT);
 			}
+		}
 
-			if (concept.hasIssues() ) {
-				report(getTab(TAB_MODELING_ISSUES),
-						externalConcept.getExternalIdentifier(),
-						ContentPipelineManager.getSpecialInterestIndicator(externalConcept.getExternalIdentifier()),
-						externalConcept.getLongDisplayName(),
-						templatedConcept.getClass().getSimpleName(),
-						templatedConcept.getConcept().getIssues(",\n"));
-			}
+		if (tc.hasProcessingFlag(ProcessingFlag.DROP_OUT) && !concept.hasIssues()) {
+			LOGGER.warn("Concept with drop out flag does not list any problems {}", tc);
+		}
+
+		if (concept.hasIssues() ) {
+			report(getTab(TAB_MODELING_ISSUES),
+					externalConcept.getExternalIdentifier(),
+					tc.getReasonsForInterest(),
+					externalConcept.getLongDisplayName(),
+					tc.getClass().getSimpleName(),
+					tc.getConcept().getIssues(",\n"));
 		}
 		flushFilesSoft();
 	}
@@ -992,7 +953,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			} else if (normaliseLCN(externalConcept).contains(" " + objectionableWord + " ")) {
 				report(getTab(TAB_MODELING_ISSUES),
 						externalConcept.getExternalIdentifier(),
-						ContentPipelineManager.getSpecialInterestIndicator( externalConcept.getExternalIdentifier()),
+						"",
 						externalConcept.getLongDisplayName(),
 						"",
 						"Contains objectionable word - " + objectionableWord);
@@ -1011,7 +972,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		if (!externalConceptMap.containsKey(externalIdentifier)) {
 			report(getTab(TAB_MODELING_ISSUES),
 					externalIdentifier,
-					ContentPipelineManager.getSpecialInterestIndicator(externalIdentifier),
+					"",
 					"N/A",
 					"N/A",
 					"Failed integrity. Identifier " + externalIdentifier + " from detail file, not known in main external concept file.");

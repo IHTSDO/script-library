@@ -214,7 +214,12 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 	}
 
 	private void checkForBloodCellProcessing(List<RelationshipTemplate> attributes, Part part, RelationshipTemplate rt) throws TermServerScriptException {
-		if (!knownBloodCells.contains(part.getPartNumber())) {
+		//Now we see this as, for example QU60585,MSHD001769 which is reticulocytes with a modifier of blood.
+		//So I'll assume for now that we're alway going to have that modifier, treat the two parts separately,
+		//and exception out if the modifier is not blood.
+		String[] partParts = part.getPartNumber().split(",");
+
+		if (!knownBloodCells.contains(partParts[0])) {
 			return;
 		}
 
@@ -224,6 +229,12 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			rt.setType(ScriptConstants.INHERES_IN);
 			//The particular cell eg (Leukocyte) will already be present
 			slotTermMap.put(NPU_PART_COMPONENT, rt.getTarget().getPreferredSynonym());
+
+			if (partParts.length != 2 || !partParts[1].equals("MSHD001769")) {
+				addReasonForInterest("Blood cell example 2");
+			} else {
+				addReasonForInterest("Blood cell example 1");
+			}
 
 			//Recover the specification and add that as the inherent location
 			//Not sure that I need to.  The fact that we've found a type of blood cell tells us we're in blood
