@@ -10,7 +10,7 @@ public class MAINT2904_InactivateCNCIndicators extends DeltaGeneratorWithAutoImp
 
 	enum Mode { INT, MS }
 
-	private static final Mode MODE = Mode.MS;
+	private static final Mode MODE = Mode.INT;
 
 	public static void main(String[] args) throws TermServerScriptException {
 		MAINT2904_InactivateCNCIndicators delta = new MAINT2904_InactivateCNCIndicators();
@@ -31,9 +31,8 @@ public class MAINT2904_InactivateCNCIndicators extends DeltaGeneratorWithAutoImp
 						} else if (MODE == Mode.INT && !SnomedUtils.isCore(rm)) {
 							LOGGER.warn("Encountered non-core CNC indicator {}", rm);
 						} else {
-							//Set the concept to be clean so we don't try and output anything there
-							c.setClean();
 							rm.setActive(false, true);  //Force dirty
+							c.setModified();
 							report(c, Severity.LOW, ReportActionType.REFSET_MEMBER_INACTIVATED, d, rm);
 						}
 					}
