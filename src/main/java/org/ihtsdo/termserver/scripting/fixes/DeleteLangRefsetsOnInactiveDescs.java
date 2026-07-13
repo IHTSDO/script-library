@@ -8,7 +8,6 @@ import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * INFRA-7940
@@ -24,20 +23,7 @@ public class DeleteLangRefsetsOnInactiveDescs extends BatchFix {
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		DeleteLangRefsetsOnInactiveDescs fix = new DeleteLangRefsetsOnInactiveDescs(null);
-		try {
-			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_UPDATES);
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.runStandAlone = false;  //Need to look up the project for MS extensions
-			fix.getArchiveManager().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.loadProjectSnapshot(false);  //Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new DeleteLangRefsetsOnInactiveDescs(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override
