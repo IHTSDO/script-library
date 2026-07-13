@@ -43,7 +43,6 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 			TAB_PROPOSED_MODEL_COMPARISON,
 			TAB_MAP_ME,
 			TAB_IMPORT_STATUS,
-			TAB_ITEMS_OF_INTEREST,
 			TAB_STATS};
 	
 	public static void main(String[] args) throws TermServerScriptException {
@@ -110,11 +109,10 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		String[] columnHeadings = new String[] {
 				"Item, Info, Details, ,",
 				"LoincPartNum, LoincPartName, PartType, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
-				"LoincNum, Item of Special Interest, LoincName, Template, Issues, details",
-				"LoincNum, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, "  + COMMON_LOINC_COLUMNS,
+				"LoincNum, Item of Interest, LoincName, Template, Issues, details",
+				"LoincNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, "  + COMMON_LOINC_COLUMNS,
 				"PartNum, PartName, PartType, Needed for High Usage Mapping, Needed for Highest Usage Mapping, PriorityIndex, Usage Count,Top Priority Usage, Higest Rank, HighestUsageCount",
 				"Concept, FSN, SemTag, Severity, Action, LoincNum, Descriptions, Expression, Status, , ",
-				"Category, LoincNum, Detail, , , ",
 				"Property, In Scope, Included, Included in Top 2K, Excluded, Excluded in Top 2K"
 		};
 
@@ -124,17 +122,6 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		namespace = "1010000";
 		discouragementAnnotationType = gl.getConcept("665161010000107 |LOINC comment (attribute)| ", false, true);
 		getReportManager().disableTab(getTab(TAB_IMPORT_STATUS));
-
-		ITEMS_OF_INTEREST.addAll(List.of("882-1","881-3","61151-7","1751-7","9318-7","1759-0","33037-3","41276-7","10466-1",
-				"5767-9","33511-7","5769-5","11555-0","24321-2","1968-7","925-8","933-2","936-5",
-				"62292-8","14155-6","9830-1","9322-9","2106-3","14979-9","5902-2","6301-6","38875-1",
-				"50553-7","24323-8","35591-7","49024-3","39004-7","5787-7","11277-1","33219-7","12258-0",
-				"788-0","30384-2","30385-9","21000-5","785-6","28539-5","786-4","28540-3","787-2",
-				"30428-7","6742-1","4537-7","30341-2","58413-6","19048-8","27353-2","53553-4","49541-6",
-				"48058-2","33914-3","77147-7","62238-1","48643-1","48642-3","51584-1","53115-2","34165-1",
-				"38518-7","71695-1","4544-3","31100-1","56888-1","2500-7","2502-3","2532-0","24318-8",
-				"26485-3","53797-7","664-3","2695-5","2708-6","32623-1","28542-9","2890-2","8251-1",
-				"2965-2","5811-5","50562-8","53326-5","66746-9","3097-3","44734-2"));
 
 		HARDCODED_DROP_OUT.addAll( List.of("53564-1", "53563-3", "53565-8"));  //Last 3 duplicate with 5992-3
 
@@ -306,21 +293,13 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 				if (newFSN.equals(newFsnForExisting)) {
 					LOGGER.warn("Unable to resolve FSN duplication {} vs {}", ltc, existingLtc);
 					incrementSummaryCount("FSN Issues Encountered", "Duplicate FSN Pairs Unresolved");
-					report(getTab(TAB_ITEMS_OF_INTEREST),
-							"FSN Duplication unresolvable",
-							ltc.getExternalIdentifier(),
-							ltc,
-							existingLtc);
+					ltc.addReasonForInterest("FSN Duplication unresolvable");
 				} else {
 					fsnMap.put(newFSN, ltc);
 					fsnMap.put(newFsnForExisting, existingLtc);
 					fsnMap.remove(fsn);
 					incrementSummaryCount("FSN Issues Encountered", "Duplicate FSN Pairs Resolved");
-					report(getTab(TAB_ITEMS_OF_INTEREST),
-							"FSN Duplication resolved using scale",
-							ltc.getExternalIdentifier(),
-							ltc,
-							existingLtc);
+					ltc.addReasonForInterest("FSN Duplication resolved using scale");
 				}
 			}
 		} else {

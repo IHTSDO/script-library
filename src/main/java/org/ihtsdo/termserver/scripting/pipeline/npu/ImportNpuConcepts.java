@@ -42,7 +42,6 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 			TAB_PROPOSED_MODEL_COMPARISON,
 			TAB_MAP_ME,
 			TAB_IMPORT_STATUS,
-			TAB_ITEMS_OF_INTEREST,
 			TAB_STATS};
 
 	public static void main(String[] args) throws TermServerScriptException {
@@ -58,10 +57,9 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		String[] columnHeadings = new String[] {
 				"npu_code, shortDefinition, system, component, kindOfProperty, proc, unit, specialty, contextDependent, group, scaleType, active, , ",
 				"npu_code, Item of Interest, External Concept Long Name, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
-				"NpuNum, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, , , , , , , , , , , , , , , , , ",
+				"NpuNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, , , , , , , , , , , , , , , , , ",
 				"NPU Element Code, Element Name, Category, High Usage, Highest Usage, , Concepts Affected, , , ",
 				"PartNum, PartName, PartType, Needed for High Usage Mapping, Needed for Highest Usage Mapping, PriorityIndex, Usage Count,Top Priority Usage, Higest Rank, HighestUsageCount",
-				"Concept, FSN, SemTag, Severity, Action, NpuNum, Descriptions, Expression, Status, , ",
 				"Category, NpuNum, Detail, , , "
 		};
 
@@ -214,13 +212,6 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		} catch (IOException e) {
 			throw new TermServerScriptException("Failed to read NPU codes from file", e);
 		}
-	}
-
-	@Override
-	protected void postModelling(TemplatedConcept tc) throws TermServerScriptException {
-		NpuConcept npuConcept = (NpuConcept)tc.getExternalConcept();
-		report(getTab(TAB_ITEMS_OF_INTEREST), npuConcept.asArray());
-		super.postModelling(tc);
 	}
 
 	@Override

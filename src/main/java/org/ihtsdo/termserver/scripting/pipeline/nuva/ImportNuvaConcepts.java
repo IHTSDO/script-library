@@ -26,7 +26,6 @@ public class ImportNuvaConcepts extends ContentPipelineManager implements NuvaCo
 			TAB_MODELING_ISSUES,
 			TAB_PROPOSED_MODEL_COMPARISON,
 			TAB_IMPORT_STATUS,
-			TAB_ITEMS_OF_INTEREST,
 			TAB_STATS};
 	
 	public static void main(String[] args) throws TermServerScriptException {
@@ -41,8 +40,8 @@ public class ImportNuvaConcepts extends ContentPipelineManager implements NuvaCo
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"Category, Item, Count",
-				"NUVANum, Item of Special Interest, Severity, Actions, Issue, detail",
-				"NUVANum, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, detail, detail, detail, detail",
+				"NUVANum, Item of Interest, Severity, Actions, Issue, detail",
+				"NUVANum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, detail, detail, detail, detail",
 				"SCTID, FSN, SemTag, Severity, Action, , Descriptions, Stated Expression, , ",
 				"Concept, FSN, SemTag, Severity, Action, NUVANum, Descriptions, Expression, Status, , ",
 				"Category, NUVANum, Detail, , , "

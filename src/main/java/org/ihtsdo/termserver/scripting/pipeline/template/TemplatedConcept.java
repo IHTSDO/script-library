@@ -51,6 +51,8 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 	protected Map<String, String> slotTermMap = new HashMap<>();
 	protected Map<String, String> slotTermAppendMap = new HashMap<>();
 
+	protected Set<String> reasonsForInterest;
+
 	public static void initialise(ContentPipelineManager cpm) throws TermServerScriptException {
 		TemplatedConcept.cpm = cpm;
 		TemplatedConcept.gl = cpm.getGraphLoader();
@@ -544,6 +546,20 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 			concept.getRelationships().remove(r);
 			LOGGER.warn("Removed a redundant {} from {}",r, this);
 		}
+	}
+
+	public String getReasonsForInterest() {
+		if (reasonsForInterest == null) {
+			return "";
+		}
+		return String.join(",\n", reasonsForInterest);
+	}
+
+	public void addReasonForInterest(String reasonForInterest) {
+		if (reasonsForInterest == null) {
+			reasonsForInterest = new HashSet<>();
+		}
+		reasonsForInterest.add(reasonForInterest);
 	}
 
 }

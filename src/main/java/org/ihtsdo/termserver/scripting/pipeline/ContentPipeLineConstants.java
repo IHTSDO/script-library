@@ -18,7 +18,6 @@ public interface ContentPipeLineConstants {
 	String TAB_PROPOSED_MODEL_COMPARISON = "Proposed Model Comparison";
 	String TAB_MAP_ME = "Map Me!";
 	String TAB_IMPORT_STATUS = "Import Status";
-	String TAB_ITEMS_OF_INTEREST = "Items of Interest";
 	String TAB_STATS = "Property Stats";
 
 	String NAME = "NAME";
