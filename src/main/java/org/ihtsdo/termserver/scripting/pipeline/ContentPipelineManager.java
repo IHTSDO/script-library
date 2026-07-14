@@ -51,10 +51,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	
 	protected static final RunMode runMode = RunMode.INCREMENTAL_DELTA;
 	
-	protected static final int FILE_IDX_CONCEPT_IDS = 7;
-	protected static final int FILE_IDX_DESC_IDS = 8;
-	protected static final int FILE_IDX_REL_IDS = 9;
-	
 	protected Map<String, ExternalConcept> externalConceptMap = new HashMap<>();
 	protected AttributePartMapManager attributePartMapManager;
 	protected Map<String, Part> partMap = new HashMap<>();
@@ -92,7 +88,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			init(args);
 			loadProjectSnapshot(false);
 			postInit();
-			conceptCreator = Rf2ConceptCreator.build(this, getInputFile(FILE_IDX_CONCEPT_IDS), getInputFile(FILE_IDX_DESC_IDS), getInputFile(FILE_IDX_REL_IDS), this.getNamespace());
+			conceptCreator = Rf2ConceptCreator.build(this, args);
 			conceptCreator.initialiseDeltaGeneratorSpecifics(new String[]{"-nS",this.getNamespace(), "-m", getExternalContentModuleId()});
 			TemplatedConcept.initialise(this);
 			loadSupportingInformation();

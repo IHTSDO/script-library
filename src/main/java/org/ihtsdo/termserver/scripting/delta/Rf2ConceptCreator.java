@@ -12,27 +12,29 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
 public class Rf2ConceptCreator extends DeltaGenerator {
 
-	public static Rf2ConceptCreator build(TermServerScript clone, File conIdFile, File descIdFile, File relIdFile, String namespace) throws TermServerScriptException {
-		Rf2ConceptCreator conceptCreator = Rf2ConceptCreator.preBuild(clone);
-		conceptCreator.conIdGenerator = conceptCreator.initialiseIdGenerator(conIdFile, PartitionIdentifier.CONCEPT, namespace);
-		conceptCreator.descIdGenerator = conceptCreator.initialiseIdGenerator(descIdFile, PartitionIdentifier.DESCRIPTION, namespace);
-		conceptCreator.relIdGenerator = conceptCreator.initialiseIdGenerator(relIdFile, PartitionIdentifier.RELATIONSHIP, namespace);
-	
-		return conceptCreator;
-	}
-
-	public static Rf2ConceptCreator build(TermServerScript clone) throws TermServerScriptException {
-		Rf2ConceptCreator conceptCreator = Rf2ConceptCreator.preBuild(clone);
+	public static Rf2ConceptCreator build(TermServerScript clone, String[] args) throws TermServerScriptException {
+		Rf2ConceptCreator conceptCreator = Rf2ConceptCreator.preBuild(clone, args);
 		if (clone instanceof DeltaGenerator deltaGenerator) {
 			conceptCreator.conIdGenerator = deltaGenerator.conIdGenerator;
 			conceptCreator.descIdGenerator = deltaGenerator.descIdGenerator;
 			conceptCreator.relIdGenerator = deltaGenerator.relIdGenerator;
 		}
-
+		conceptCreator.setReportName(clone.getClass().getSimpleName());
 		return conceptCreator;
 	}
 
-	private static Rf2ConceptCreator preBuild(TermServerScript clone)  throws TermServerScriptException {
+	public static Rf2ConceptCreator build(TermServerScript clone) throws TermServerScriptException {
+		Rf2ConceptCreator conceptCreator = Rf2ConceptCreator.preBuild(clone, null);
+		if (clone instanceof DeltaGenerator deltaGenerator) {
+			conceptCreator.conIdGenerator = deltaGenerator.conIdGenerator;
+			conceptCreator.descIdGenerator = deltaGenerator.descIdGenerator;
+			conceptCreator.relIdGenerator = deltaGenerator.relIdGenerator;
+		}
+		conceptCreator.setReportName(clone.getClass().getSimpleName());
+		return conceptCreator;
+	}
+
+	private static Rf2ConceptCreator preBuild(TermServerScript clone, String[] args)  throws TermServerScriptException {
 		Rf2ConceptCreator conceptCreator = new Rf2ConceptCreator();
 		if (clone != null) {
 			conceptCreator.setReportManager(clone.getReportManager());
@@ -43,6 +45,10 @@ public class Rf2ConceptCreator extends DeltaGenerator {
 		}
 		conceptCreator.initialiseOutputDirectory();
 		conceptCreator.initialiseFileHeaders();
+
+		if (args != null && args.length > 0) {
+			conceptCreator.initialiseDeltaGeneratorSpecifics(args);
+		}
 		return conceptCreator;
 	}
 

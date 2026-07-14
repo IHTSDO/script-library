@@ -151,7 +151,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected IdGenerator initialiseIdGenerator(String filePath, PartitionIdentifier partition) throws TermServerScriptException {
 		//We'll tell the generator which class it's being used with, to prevent confusion between successive runs
 		//of different transformations
-		String runId = this.getClass().getSimpleName();
+		String runId = this.getReportName();
 		IdGenerator idGenerator = IdGenerator.initiateIdGenerator(filePath, partition, runId);
 		idGenerator.setNamespace(nameSpace);
 		idGenerator.isExtension(isExtension);
