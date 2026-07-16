@@ -10,6 +10,7 @@ import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConceptUsage;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
+import org.ihtsdo.termserver.scripting.pipeline.loinc.template.LoincTemplatedConceptWithRelative;
 import org.ihtsdo.termserver.scripting.util.CaseSensitivityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -357,12 +358,13 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		} else {
 			ptTemplateStr = populateTermTemplateFromAttribute(regex, templateItem, ptTemplateStr);
 		}
+
 		return ptTemplateStr;
 	}
 
 	private String includePrepositionInDeletion(String regex, String ptTemplateStr) {
 		// Find the position of the regex (slot) in the template string
-		int slotIndex = ptTemplateStr.indexOf(regex.replaceAll("\\\\", ""));
+		int slotIndex = ptTemplateStr.indexOf(regex.replace("\\\\", ""));
 		if (slotIndex == -1) {
 			return regex; // fallback, not found
 		}
@@ -515,14 +517,16 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 	protected String tidyUpTerm(String term) {
 		if (term == null) {
 			LOGGER.error("Check what's going on here with a null term");
-			return term;
+			return null;
 		}
 		term = removeUnpopulatedTermSlot(term, " at [TIME]");
 		term = removeUnpopulatedTermSlot(term, " by [METHOD]");
 		term = removeUnpopulatedTermSlot(term, " in [SYSTEM]");
 		term = removeUnpopulatedTermSlot(term, " using [DEVICE]");
 		term = removeUnpopulatedTermSlot(term, " [CHALLENGE]");
+		term = term.replaceAll(" {3}", " ");
 		term = term.replaceAll(" {2}", " ");
+		term = term.trim();
 		return term;
 	}
 

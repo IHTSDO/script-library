@@ -76,6 +76,9 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			"Hemoglobin XXX", "tested for",
 			"actual/normal", "normal/actual"));
 
+	protected static Set<String> allowedUnknownIndicatorExceptions = new HashSet<>(List.of(
+			"lymphocytes.abnormal"));
+
 	//These currently only apply to the COAG class, but wait until we have another requirement
 	//for another class before constructing this as a map
 	protected static Set<String> knownPrimitiveIndicators = new HashSet<>(Arrays.asList(
@@ -485,7 +488,17 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 	private boolean containsUnknownPhrase(String partName) {
 		partName = partName.toLowerCase();
 		for (String wordIndicatingUnknown : unknownIndicators){
-			if (partName.contains(wordIndicatingUnknown)) {
+			if (partName.contains(wordIndicatingUnknown)
+					&& !partNameContainsUnknownIndicatorException(partName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean partNameContainsUnknownIndicatorException(String partName) {
+		for (String wordIndicatingException : allowedUnknownIndicatorExceptions){
+			if (partName.contains(wordIndicatingException)) {
 				return true;
 			}
 		}
