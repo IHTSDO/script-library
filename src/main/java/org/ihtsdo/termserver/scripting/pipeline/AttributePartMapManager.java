@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import com.google.gdata.data.Entry;
 import org.apache.commons.io.input.BOMInputStream;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.GraphLoader;
@@ -76,6 +77,7 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		// Source code[0]   Source display  Status  PartTypeName    Target code[4]  Target display  Relationship type code  Relationship type display   No map flag[8] Status[9]
 		populateConceptReplacements();
 		populateHardCodedMappings();
+		validateHardCodedMappings();
 		int lineNum = 0;
 		int problemsEncountered = 0;
 		Set<String> partsSeen = new HashSet<>();
@@ -117,6 +119,24 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 
 		if (!fileLoadedSuccessfully) {
 			//throw new TermServerScriptException("Failed to read " + attributeMapFile + ". See log for individual line issues, total issue count " + problemsEncountered);
+		}
+	}
+
+	private void validateHardCodedMappings() throws TermServerScriptException {
+		int invalidMapTargetCount = 0;
+		for (Map.Entry<String, List<Concept>> entry : hardCodedMappings.entrySet()) {
+			for (Concept mapTargetProto : entry.getValue()) {
+				String conceptId = mapTargetProto.getConceptId();
+				Concept mapTarget = gl.getConceptSafely(conceptId, false, false);
+				if (mapTarget == null || mapTarget.getFSNDescription() == null) {
+					LOGGER.warn("Invalid map target for part {}: {}", entry.getKey(), conceptId);
+					invalidMapTargetCount++;
+				}
+			}
+		}
+
+		if (invalidMapTargetCount > 0) {
+			throw new TermServerScriptException("Hard coded mappings contained " + invalidMapTargetCount + " invalid map targets");
 		}
 	}
 

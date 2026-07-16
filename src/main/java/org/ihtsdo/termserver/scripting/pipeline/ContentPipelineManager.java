@@ -56,7 +56,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	protected Map<String, Part> partMap = new HashMap<>();
 	protected Map<String, String> partMapNotes = new HashMap<>();
 	protected Map<Part, Set<ExternalConcept>> missingPartMappings = new HashMap<>();
-	
+	public static final Map<String, String> ITEM_OF_INTEREST_MAP = new HashMap<>();
+
 	protected Concept scheme;
 	protected String namespace;
 	protected String externalContentModuleId;
@@ -162,6 +163,11 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	protected void postModelling(TemplatedConcept tc) throws TermServerScriptException {
 		validateTemplatedConcept(tc);
 		tc.populateAlternateIdentifier();
+
+		//Is this an item of interest?
+		if (ITEM_OF_INTEREST_MAP.containsKey(tc.getExternalIdentifier())) {
+			tc.addReasonForInterest(ITEM_OF_INTEREST_MAP.get(tc.getExternalIdentifier()));
+		}
 	}
 
 	private boolean tabExists(String tabName) {
@@ -200,6 +206,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check Blood");
 		}
 
+		if (externalIdentifier.equals("75033-1")) {
+			LOGGER.debug("Check LE-160");
+		}
+
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
 		if (!confirmExternalIdentifierExists(externalIdentifier) ||
 				(containsObjectionableWord(externalConcept) && !MANUALLY_MAINTAINED_ITEMS.containsKey(externalIdentifier))) {
@@ -229,7 +239,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			try {
 				tc.populateTemplate();
 			} catch (TermServerScriptException e) {
-				LOGGER.error("Failed to populate template for {}", externalIdentifier, e);
+				LOGGER.info("Failed to populate template for {}", externalIdentifier);
 				tc.getConcept().addIssue(e.getMessage());
 				tc.addProcessingFlag(ProcessingFlag.DROP_OUT);
 			}

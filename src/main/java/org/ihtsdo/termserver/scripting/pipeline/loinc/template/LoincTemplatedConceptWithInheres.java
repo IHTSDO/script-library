@@ -58,7 +58,7 @@ public class LoincTemplatedConceptWithInheres extends LoincTemplatedConcept {
 			}
 		}
 
-		if (!expectNullMap) {
+		if (!expectNullMap && !hasProcessingFlag(ProcessingFlag.ALTERNATIVE_COMPONENT_SUPPLIED)) {
 			ensureComponentMappedOrRepresentedInTerm(attributes);
 		}
 		return attributes;

@@ -76,18 +76,23 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 	}
 
 	private TemplatedConcept createTemplateBasedOnProperties(ExternalConcept externalConcept) throws TermServerScriptException {
-		if (externalConcept.getExternalIdentifier().equals(ContentPipelineManager.DUMMY_EXTERNAL_IDENTIFIER)) {
+		String loincNum = externalConcept.getExternalIdentifier();
+		if (loincNum.equals(ContentPipelineManager.DUMMY_EXTERNAL_IDENTIFIER)) {
 			//Pick one just to say that this type is "in scope".
 			return LoincTemplatedConceptWithInheres.create(externalConcept);
 		}
 
 		//We would normally check a detail from within the templated concept itself
-		Map<String, LoincDetail> loincDetailMap = loincDetailMapOfMaps.get(externalConcept.getExternalIdentifier());
+
+		Map<String, LoincDetail> loincDetailMap = loincDetailMapOfMaps.get(loincNum);
+		LoincTerm loincTerm = getLoincTerm(loincNum);
 		if (loincDetailMap != null) {
 			if (loincDetailMap.containsKey("COMPNUM_PN")) {
 				String partNum = loincDetailMap.get("COMPNUM_PN").getPartNumber();
 				if (partNum.equals(LOINC_PART_OBSERVATION)) {
 					return LoincTemplatedConceptWithInheresNoComponent.create(externalConcept);
+				} else if (loincTerm.getLoincClass().equals("MOLPATH.MUT")) {
+					return LoincTemplatedConceptWithInheresAndInherent.create(externalConcept);
 				} else {
 					return LoincTemplatedConceptWithInheres.create(externalConcept);
 				}
@@ -133,6 +138,11 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 				"9322-9", "580251010000102 |Cholesterol.total/Cholesterol in HDL [Percentile] (observable entity)|",
 				"56888-1", "570211010000106 |Presence of HIV 1/2 Ab and/or p24 Ag (observable entity)|",
 				"24318-8", "513641010000108 |Manual Differential panel - Blood (observable entity)|"
+		));
+
+		ITEM_OF_INTEREST_MAP.putAll(Map.of(
+				"115741-1", "LE-154",
+				"115742-9", "LE-154"
 		));
 	}
 

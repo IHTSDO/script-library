@@ -332,7 +332,12 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		}
 
 		for (String templateItem : templateItems) {
-			ptTemplateStr = populateTemplateItem(templateItem, ptTemplateStr);
+			try {
+				ptTemplateStr = populateTemplateItem(templateItem, ptTemplateStr);
+			} catch (TermServerScriptException e) {
+				String message = "Failed to populate %s slot in %s".formatted(templateItem, getExternalIdentifier());
+				throw new TermServerScriptException(message, e);
+			}
 		}
 		return ptTemplateStr;
 	}

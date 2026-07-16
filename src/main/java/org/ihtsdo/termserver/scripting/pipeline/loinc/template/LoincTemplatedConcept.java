@@ -597,7 +597,10 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			return !additionalAttributes.isEmpty();
 		} catch (TermServerScriptException e) {
 			//If we've not found the COMPNUM_PN then we're not going to go ahead with this Loinc Term
-			if (loincDetail.getLDTColumnName().equals("COMPNUM_PN")) {
+			//UNLESS we supplied it through an alternative route eg in LoincTemplatedConceptWithInheresAndInherent
+			if (hasProcessingFlag(ProcessingFlag.ALTERNATIVE_COMPONENT_SUPPLIED)) {
+				LOGGER.debug("Non COMPNUM_PN component successfully supplied in {}", getExternalIdentifier());
+			} else if (loincDetail.getLDTColumnName().equals(COMPNUM_PN)) {
 				concept.addIssue(e.getMessage());
 				addProcessingFlag(ProcessingFlag.DROP_OUT);
 			} else if (!hasProcessingFlag(ProcessingFlag.EXPECT_BLANK_COMPONENT)){
@@ -608,7 +611,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		return false;
 	}
 
-	private List<RelationshipTemplate> getAdditionalAttributes(LoincDetail loincDetail, Concept attributeType) throws TermServerScriptException {
+	protected List<RelationshipTemplate> getAdditionalAttributes(LoincDetail loincDetail, Concept attributeType) throws TermServerScriptException {
 		String loincNum = getExternalIdentifier();
 		String loincPartNum = loincDetail.getPartNumber();
 		List<RelationshipTemplate> additionalAttributes = cpm.getAttributePartManager().getPartMappedAttributeForType(this, loincPartNum, attributeType);
@@ -680,8 +683,9 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		//And in fact, don't map this term at all
 		if (attributes.isEmpty()) {
 			attributes.add(null);
-			if ((!hasProcessingFlag(ProcessingFlag.EXPECT_BLANK_COMPONENT) && !hasProcessingFlag(ProcessingFlag.ALLOW_UNMODELLED_COMPONENT))
-				&& !slotTermMap.containsKey(LOINC_PART_TYPE_COMPONENT)) {
+			if ((!hasProcessingFlag(ProcessingFlag.EXPECT_BLANK_COMPONENT)
+					&& !hasProcessingFlag(ProcessingFlag.ALLOW_UNMODELLED_COMPONENT))
+					&& !slotTermMap.containsKey(LOINC_PART_TYPE_COMPONENT)) {
 				addProcessingFlag(ProcessingFlag.DROP_OUT);
 			}
 		}
