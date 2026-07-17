@@ -41,10 +41,10 @@ public interface LoincScriptConstants extends ContentPipeLineConstants {
 	String COMPONENTCORE_PN = "COMPONENTCORE_PN";
 	String SYSTEM_PN = "SYSTEM_PN";
 
-	int FILE_IDX_LOINC_PARTS_MAP_BASE_FILE = 1;
-	int FILE_IDX_LOINC_PARTS = 3;
-	int FILE_IDX_LOINC_FULL = 4;
-	int FILE_IDX_LOINC_DETAIL = 5;
-	int FILE_IDX_PANELS = 6;
+	int FILE_IDX_LOINC_FULL = 1;
+	int FILE_IDX_LOINC_PARTS = 2;
+	int FILE_IDX_LOINC_DETAIL = 3;
+	int FILE_IDX_LOINC_PARTS_MAP_BASE_FILE = 4;
+	int FILE_IDX_PANELS = 5;
 
 }
