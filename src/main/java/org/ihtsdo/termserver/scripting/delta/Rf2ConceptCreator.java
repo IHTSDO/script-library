@@ -10,7 +10,7 @@ import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-public class Rf2ConceptCreator extends DeltaGenerator {
+public class Rf2ConceptCreator extends DeltaGeneratorWithAutoImport {
 
 	public static Rf2ConceptCreator build(TermServerScript clone, String[] args) throws TermServerScriptException {
 		Rf2ConceptCreator conceptCreator = Rf2ConceptCreator.preBuild(clone, args);
@@ -199,6 +199,8 @@ public class Rf2ConceptCreator extends DeltaGenerator {
 		File archive = SnomedUtils.createArchive(new File(outputDirName));
 		report(tabIdx, "");
 		report(tabIdx, ReportActionType.INFO, "Created " + archive.getName());
+
+		importArchiveToTask(archive);
 	}
 
 	public void copyStatedRelsToInferred(Concept c) {

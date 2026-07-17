@@ -31,7 +31,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	public static final String HIGHEST_USAGE_COUNTS = "Highest usage counts";
 	public static final String CONTENT_COUNT = "Content counts";
 	public static final String INTERNAL_MAP_COUNT = "Internal map counts";
-	public static final String REFSET_COUNT = "Refset counts";
 	public static final String FAILED_TO_LOAD = "Failed to load ";
 	public static final String LANG_REFSET_REMOVAL = "Lang Refset Removal";
 
@@ -56,7 +55,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	protected Map<String, Part> partMap = new HashMap<>();
 	protected Map<String, String> partMapNotes = new HashMap<>();
 	protected Map<Part, Set<ExternalConcept>> missingPartMappings = new HashMap<>();
-	public static final Map<String, String> ITEM_OF_INTEREST_MAP = new HashMap<>();
+	protected static final Map<String, String> ITEM_OF_INTEREST_MAP = new HashMap<>();
 
 	protected Concept scheme;
 	protected String namespace;
@@ -112,6 +111,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 					throw new TermServerScriptException("Unrecognised Run Mode :" + runMode);
 			}
 			reportSummaryCounts(getTab(TAB_SUMMARY));
+			flushFiles(false);
 			conceptCreator.createOutputArchive(getTab(TAB_IMPORT_STATUS));
 		} finally {
 			while (additionalThreadCount > 0) {
