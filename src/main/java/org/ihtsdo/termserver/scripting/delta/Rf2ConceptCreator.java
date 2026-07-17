@@ -37,11 +37,7 @@ public class Rf2ConceptCreator extends DeltaGeneratorWithAutoImport {
 	private static Rf2ConceptCreator preBuild(TermServerScript clone, String[] args)  throws TermServerScriptException {
 		Rf2ConceptCreator conceptCreator = new Rf2ConceptCreator();
 		if (clone != null) {
-			conceptCreator.setReportManager(clone.getReportManager());
-			conceptCreator.project = clone.getProject();
-			conceptCreator.tsClient = clone.getTSClient();
-			conceptCreator.edition = "INT";
-			conceptCreator.dryRun = clone.isDryRun();
+			conceptCreator.copyScriptState(clone);
 		}
 		conceptCreator.initialiseOutputDirectory();
 		conceptCreator.initialiseFileHeaders();

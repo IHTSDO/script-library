@@ -16,7 +16,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.termserver.scripting.AxiomUtils;
 import org.ihtsdo.termserver.scripting.IdGenerator;
 import org.ihtsdo.termserver.scripting.TermServerScript;
-import org.ihtsdo.termserver.scripting.client.TermServerClient;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -186,6 +185,12 @@ public abstract class DeltaGenerator extends TermServerScript {
 		if (newIdsRequired && descIdGenerator == null && relIdGenerator == null && conIdGenerator == null) {
 			throw new TermServerScriptException("Command line arguments must supply a list of available sctid using the -iC/D/R option, or specify newIdsRequired=false");
 		}
+	}
+
+	@Override
+	public void copyScriptState(TermServerScript clone) {
+		this.edition = "INT";
+		super.copyScriptState(clone);
 	}
 
 	private void determineMostLikelySourceModuleFromProject() throws TermServerScriptException {

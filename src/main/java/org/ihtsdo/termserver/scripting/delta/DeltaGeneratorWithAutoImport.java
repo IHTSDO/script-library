@@ -37,7 +37,7 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 		//Check if we're going to rename the file to be the task prefix
 		print("Rename " + archive.getName() + " to " + taskPrefix + ".zip ? Y/N [Y]: ");
 		String response = STDIN.nextLine().trim();
-		if (response.isEmpty() || !response.equalsIgnoreCase("N")) {
+		if (!response.equalsIgnoreCase("N")) {
 			File oldFile = archive;
 			archive = new File(archive.getParentFile(), taskPrefix + ".zip");
 			if (!oldFile.renameTo(archive)) {
@@ -45,8 +45,17 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 			}
 		}
 
+		print("Import into same environment? Y/N [Y]: ");
+		response = STDIN.nextLine().trim();
+		if (response.equalsIgnoreCase("N")) {
+			determineEnvironment(true);
+			initialiseSnomedServiceClients();
+		}
+
 		print("Import onto which project? : ");
 		projectName = STDIN.nextLine().trim();
+		//We might have changed environment, so recopy state into importer
+		importer.copyScriptState(this);
 		importer.recoverProjectFromProjectName(projectName);
 
 		//Do we want to import onto an existing task?
