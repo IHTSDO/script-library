@@ -44,7 +44,9 @@ public interface LoincScriptConstants extends ContentPipeLineConstants {
 	int FILE_IDX_LOINC_FULL = 1;
 	int FILE_IDX_LOINC_PARTS = 2;
 	int FILE_IDX_LOINC_DETAIL = 3;
-	int FILE_IDX_LOINC_PARTS_MAP_BASE_FILE = 4;
+	int FILE_IDX_LOINC_PART_MAP_FILE = 4;
 	int FILE_IDX_PANELS = 5;
+	int FILE_IDX_LOINC_CONCEPT_MAP_FILE = 4;
 
 }
+

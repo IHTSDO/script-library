@@ -8,8 +8,8 @@ import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 
 public class LoincAttributePartMapManager extends AttributePartMapManager implements LoincScriptConstants {
 
-	public LoincAttributePartMapManager (LoincScript ls, Map<String, Part> partMap, Map<String, String> partMapNotes) {
-		super(ls, partMap, partMapNotes);
+	public LoincAttributePartMapManager (LoincScript ls, Map<String, Part> partMap) {
+		super(ls, partMap);
 	}
 
 	protected void populateConceptReplacements() throws TermServerScriptException {

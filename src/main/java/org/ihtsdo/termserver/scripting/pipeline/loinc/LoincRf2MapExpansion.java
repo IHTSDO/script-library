@@ -55,9 +55,9 @@ public class LoincRf2MapExpansion extends LoincScript {
 
 	private void runReport() throws TermServerScriptException, IOException {
 		loadLoincParts();
-		attributePartManager = new LoincAttributePartMapManager(this, partMap, null);
+		attributePartManager = new LoincAttributePartMapManager(this, partMap);
 		loadLoincDetail();
-		expandRf2Map(PRIMARY_REPORT, getInputFile(FILE_IDX_LOINC_PARTS_MAP_BASE_FILE));
+		expandRf2Map(PRIMARY_REPORT, getInputFile(FILE_IDX_LOINC_PART_MAP_FILE));
 	}
 
 	private void expandRf2Map(int tabIdx, File attributeMapFile) throws IOException, TermServerScriptException {

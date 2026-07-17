@@ -4,12 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.domain.Concept;
-import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.pipeline.AttributePartMapManager;
 import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineManager;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
-import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +16,7 @@ public class NpuAttributePartMapManager extends AttributePartMapManager {
 
 	protected NpuAttributePartMapManager(ContentPipelineManager cpm, Map<String, Part> parts,
 			Map<String, String> partMapNotes) {
-		super(cpm, parts, partMapNotes);
+		super(cpm, parts);
 	}
 
 	@Override

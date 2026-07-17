@@ -23,12 +23,12 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 	private static final Logger LOGGER = LoggerFactory.getLogger(ImportLoincTerms.class);
 
 	private static final String COMMON_LOINC_COLUMNS = "COMPONENT, PROPERTY, TIME_ASPCT, SYSTEM, SCALE_TYP, METHOD_TYP, CLASS, CLASSTYPE, VersionLastChanged, CHNG_TYPE, STATUS, STATUS_REASON, STATUS_TEXT, ORDER_OBS, LONG_COMMON_NAME, COMMON_TEST_RANK, COMMON_ORDER_RANK, COMMON_SI_TEST_RANK, PanelType, , , , , ";
-	//-f "G:\My Drive\018_Loinc\2023\LOINC Top 100 - loinc.tsv" 
-	//-f1 "G:\My Drive\018_Loinc\2023\LOINC Top 100 - Parts Map 2023.tsv"  
-	//-f2 "G:\My Drive\018_Loinc\2023\LOINC Top 100 - LoincPartLink_Primary.tsv"
-	//-f3 "C:\Users\peter\Backup\Loinc_2.73\AccessoryFiles\PartFile\Part.csv"
-	//-f4 "C:\Users\peter\Backup\Loinc_2.73\LoincTable\Loinc.csv"
-	//-f5 "G:\My Drive\018_Loinc\2023\Loinc_Detail_Type_1_2.75_Active_Lab_NonVet.tsv"
+//	-f1 "/Users/peter/GDrive/018_Loinc/2026/2.83/Loinc.csv"
+//	-f2 "/Users/peter/GDrive/018_Loinc/2026/2.83/Part.csv"
+//	-f3 "/Users/peter/GDrive/018_Loinc/2026/2.83/LDT1.tsv"
+//	-f4 "/Users/peter/GDrive/018_Loinc/2026/2.83/LOINC Part to SNOMED CT Concept Map_0.2.9.tsv"
+//	-f5 /Users/peter/GDrive/018_Loinc/2025/2.81/2025_08_05_Panel_Terms.tsv
+
 
 	private final Set<UUID> existingEnGbLangRefsetIds = new HashSet<>();
 
@@ -38,7 +38,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 	
 	protected String[] tabNames = new String[] {
 			TAB_SUMMARY,
-			TAB_LOINC_DETAIL_MAP_NOTES,
+			TAB_MAP_ISSUES,
 			TAB_MODELING_ISSUES,
 			TAB_PROPOSED_MODEL_COMPARISON,
 			TAB_MAP_ME,
@@ -113,7 +113,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"Item, Info, Details, ,",
-				"LoincPartNum, LoincPartName, PartType, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
+				"Source, Issue, , , ",
 				"LoincNum, Item of Interest, LoincName, Template, Issues, details",
 				"LoincNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, "  + COMMON_LOINC_COLUMNS,
 				"PartNum, PartName, PartType, Needed for High Usage Mapping, Needed for Highest Usage Mapping, PriorityIndex, Usage Count,Top Priority Usage, Higest Rank, HighestUsageCount",
@@ -155,8 +155,8 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 
 	@Override
 	protected void importPartMap() throws TermServerScriptException {
-		attributePartMapManager = new LoincAttributePartMapManager(this, partMap, partMapNotes);
-		attributePartMapManager.populatePartAttributeMap(getInputFile(FILE_IDX_LOINC_PARTS_MAP_BASE_FILE));
+		attributePartMapManager = new LoincAttributePartMapManager(this, partMap);
+		attributePartMapManager.populatePartAttributeMap(getInputFile(FILE_IDX_LOINC_PART_MAP_FILE));
 		LoincTemplatedConcept.initialise(this, loincDetailMapOfMaps);
 	}
 

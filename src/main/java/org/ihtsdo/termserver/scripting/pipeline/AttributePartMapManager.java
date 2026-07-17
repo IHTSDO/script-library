@@ -1,13 +1,9 @@
 package org.ihtsdo.termserver.scripting.pipeline;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import com.google.gdata.data.Entry;
-import org.apache.commons.io.input.BOMInputStream;
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
@@ -16,33 +12,21 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AttributePartMapManager implements ContentPipeLineConstants {
+public abstract class AttributePartMapManager extends AbstractMapManager {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AttributePartMapManager.class);
-	private static final String MAP_IMPORT = "Map Import";
 
-	// Fixed header names
-	public static final String COL_PART_NUM = "Source code";
-	public static final String COL_STATUS = "Status";
-	public static final String COL_NO_MAP = "No map flag";
-	public static final String COL_TARGET = "Target code";
-
-	protected ContentPipelineManager cpm;
-	protected GraphLoader gl;
 	protected Map<String, Part> parts;
 	protected Map<String, List<Concept>> partToAttributeValueMap = new HashMap<>();
 	protected Map<String, List<Concept>> hardCodedMappings = new HashMap<>();
 	protected Map<Concept, Concept> knownReplacementMap = new HashMap<>();
 	protected Map<Concept, Concept> hardCodedTypeReplacementMap = new HashMap<>();
-	protected final Map<String, String> partMapNotes;
 
 	protected boolean allowStatusMapped = false;
 	
-	protected AttributePartMapManager(ContentPipelineManager cpm, Map<String, Part> parts, Map<String, String> partMapNotes) {
-		this.cpm = cpm;
-		this.gl = cpm.getGraphLoader();
+	protected AttributePartMapManager(ContentPipelineManager cpm, Map<String, Part> parts) {
+		super(cpm);
 		this.parts = parts;
-		this.partMapNotes = partMapNotes;
 	}
 
 	protected abstract void populateConceptReplacements() throws TermServerScriptException;
@@ -78,48 +62,11 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		populateConceptReplacements();
 		populateHardCodedMappings();
 		validateHardCodedMappings();
-		int lineNum = 0;
-		int problemsEncountered = 0;
 		Set<String> partsSeen = new HashSet<>();
-		boolean fileLoadedSuccessfully = true;
 		List<String> mappingNotes = new ArrayList<>();
 
-		try {
-			LOGGER.info("Loading Part Attribute Map File: {}", attributeMapFile);
-			try (
-					BOMInputStream bomIn = BOMInputStream.builder()
-							.setInputStream(new FileInputStream(attributeMapFile))
-							// .setByteOrderMarks(...)   // optionally specify which BOMs to detect (defaults to UTF-8)
-							.setInclude(false)           // whether to include the BOM in the stream or exclude it
-							.get();
-					InputStreamReader isr = new InputStreamReader(bomIn, StandardCharsets.UTF_8);
-					BufferedReader br = new BufferedReader(isr)
-			) {
-				String line;
-				while ((line = br.readLine()) != null) {
-					lineNum++;
-					if (lineNum == 1) {
-						// Header line - discover indexes
-						ColIdx.initialize(line);
-					} else if (!line.isEmpty()) {
-						try {
-							processPartMapFileLine(line, partsSeen, mappingNotes);
-						} catch (TermServerScriptException e) {
-							fileLoadedSuccessfully = false;
-							problemsEncountered++;
-							LOGGER.warn("Problem processing line {}: {}", lineNum, e.getMessage());
-						}
-					}
-				}
-			}
-			LOGGER.info("Populated map of {} parts to attributes", partToAttributeValueMap.size());
-		} catch (Exception e) {
-			throw new TermServerScriptException("Failed to read " + attributeMapFile + " at line " + lineNum, e);
-		}
-
-		if (!fileLoadedSuccessfully) {
-			//throw new TermServerScriptException("Failed to read " + attributeMapFile + ". See log for individual line issues, total issue count " + problemsEncountered);
-		}
+		loadMapFile(attributeMapFile, items -> processPartMapFileLine(items, partsSeen, mappingNotes));
+		LOGGER.info("Populated map of {} parts to attributes", partToAttributeValueMap.size());
 	}
 
 	private void validateHardCodedMappings() throws TermServerScriptException {
@@ -140,8 +87,7 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		}
 	}
 
-	private void processPartMapFileLine(String line, Set<String> partsSeen, List<String> mappingNotes) throws TermServerScriptException {
-		String[] items = line.split("\t");
+	private void processPartMapFileLine(String[] items, Set<String> partsSeen, List<String> mappingNotes) throws TermServerScriptException {
 		String partNum = items[ColIdx.idx(COL_PART_NUM)];
 
 		//Quick check that the part we're talking about here is actually known to the input files
@@ -170,7 +116,7 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 		}
 
 		if (!mappingNotes.isEmpty()) {
-			partMapNotes.put(partNum, String.join("\n", mappingNotes));
+			mapNotes.put(partNum, String.join("\n", mappingNotes));
 			mappingNotes.clear();
 		}
 	}
@@ -230,27 +176,5 @@ public abstract class AttributePartMapManager implements ContentPipeLineConstant
 
 	public void allowStatusMapped(boolean allowStatusMapped) {
 		this.allowStatusMapped = allowStatusMapped;
-	}
-
-	public static final class ColIdx {
-		// Runtime-discovered indexes
-		private static final Map<String, Integer> indexMap = new HashMap<>();
-
-		/** Discover column positions from header line */
-		public static void initialize(String headerLine) {
-			String[] headers = headerLine.split("\t", -1);
-			for (int i = 0; i < headers.length; i++) {
-				indexMap.put(headers[i].trim(), i);
-			}
-		}
-
-		/** Retrieve index for a given column name */
-		public static int idx(String columnName) {
-			Integer idx = indexMap.get(columnName);
-			if (idx == null) {
-				throw new IllegalStateException("Column not found in header: " + columnName);
-			}
-			return idx;
-		}
 	}
 }
