@@ -87,6 +87,9 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);  //Needed for working out if we're deleteing or inactivating
 			init(args);
 			loadProjectSnapshot();
+			LOGGER.debug("start full clean - don't need this if existing rels are not detected dirty");
+			gl.getAllComponents().forEach(Component::setClean);
+			LOGGER.debug("finish full clean");
 			postInit();
 			conceptCreator = Rf2ConceptCreator.build(this, args);
 			conceptCreator.initialiseDeltaGeneratorSpecifics(new String[]{"-nS",this.getNamespace(), "-m", getExternalContentModuleId()});
@@ -521,19 +524,19 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	private void processComponentComparison(TemplatedConcept tc, ComponentComparisonResult componentComparisonResult) throws TermServerScriptException {
 		Component existingComponent = componentComparisonResult.getLeft();
-		Component newlyModelledComponent = componentComparisonResult.getRight();
+		Component modifiedOrNewComponent = componentComparisonResult.getRight();
 
 		if (!componentComparisonResult.isMatch()) {
 			tc.recordDifferenceFromExistingConcept(componentComparisonResult.getComponentTypeStr());
 		}
 
 		//If we have both, then just output the change
-		if (existingComponent != null && newlyModelledComponent != null) {
-			newlyModelledComponent.setId(existingComponent.getId());
+		if (existingComponent != null && modifiedOrNewComponent != null) {
+			modifiedOrNewComponent.setId(existingComponent.getId());
 			if (componentComparisonResult.isMatch()) {
-				newlyModelledComponent.setClean();
+				modifiedOrNewComponent.setClean();
 			} else {
-				newlyModelledComponent.setDirty();
+				modifiedOrNewComponent.setDirty();
 			}
 
 			//Any component specific actions?
@@ -542,20 +545,20 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 					alignAlternateIdentifier(tc.getConcept(), tc.getExistingConcept());
 					break;
 				case DESCRIPTION:
-					Description newDesc = (Description)newlyModelledComponent;
+					Description newDesc = (Description)modifiedOrNewComponent;
 					newDesc.setConceptId(tc.getExistingConcept().getId());
 					alignLangRefsetEntries(newDesc, (Description)existingComponent);
 					break;
 				case SIMPLE_REFSET_MEMBER:
 				case COMPONENT_ANNOTATION:
-					alignRefsetMember(componentComparisonResult.isMatch(), (RefsetMember)newlyModelledComponent, (RefsetMember)existingComponent);
+					alignRefsetMember(componentComparisonResult.isMatch(), (RefsetMember)modifiedOrNewComponent, (RefsetMember)existingComponent);
 					TemplatedConcept.IterationIndicator indicator = componentComparisonResult.isMatch() ? TemplatedConcept.IterationIndicator.UNCHANGED : TemplatedConcept.IterationIndicator.MODIFIED;
-					recordRefsetMemberSummaryCount(newlyModelledComponent, indicator);
+					recordRefsetMemberSummaryCount(modifiedOrNewComponent, indicator);
 					break;
 				default:
 					break;
 			}
-		} else if (existingComponent != null && newlyModelledComponent == null) {
+		} else if (existingComponent != null && modifiedOrNewComponent == null) {
 			//If we have an existing component, and it has no newly Modelled counterpart, then inactivate it
 			existingComponent.setActive(false);
 			existingComponent.setDirty();
@@ -573,15 +576,15 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		} else {
 			//If we only have a newly modelled component, give it an id
 			//and prepare to output
-			conceptCreator.populateComponentId(tc.getExistingConcept(), newlyModelledComponent, externalContentModuleId);
-			newlyModelledComponent.setDirty();
-			recordRefsetMemberSummaryCount(newlyModelledComponent, TemplatedConcept.IterationIndicator.NEW);
+			conceptCreator.populateComponentId(tc.getExistingConcept(), modifiedOrNewComponent, externalContentModuleId);
+			modifiedOrNewComponent.setDirty();
+			recordRefsetMemberSummaryCount(modifiedOrNewComponent, TemplatedConcept.IterationIndicator.NEW);
 		}
 
 		//If we don't have an ID at this point, we've gone wrong somewhere
-		if ((newlyModelledComponent != null && newlyModelledComponent.getId() == null)
+		if ((modifiedOrNewComponent != null && modifiedOrNewComponent.getId() == null)
 				|| (existingComponent != null && existingComponent.getId() == null)) {
-			throw new IllegalStateException("Component encountered without Id " + newlyModelledComponent);
+			throw new IllegalStateException("Component encountered without Id " + modifiedOrNewComponent);
 		}
 	}
 

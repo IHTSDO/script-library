@@ -511,10 +511,17 @@ public abstract class DeltaGenerator extends TermServerScript {
 		outputComponentAnnotations(h);
 		return componentOutput;
 	}
-	
+
+	Set<String> axiomsOutput = new HashSet<>();
 	protected boolean outputRF2(AxiomEntry a) throws TermServerScriptException {
 		boolean componentOutput = false;
 		if (a.isDirty()) {
+			//Have we seen this axiom before?
+			if (axiomsOutput.contains(a.getId())) {
+				throw new IllegalStateException("Axiom entry already output during this execution.");
+			} else{
+				axiomsOutput.add(a.getId());
+			}
 			writeToRF2File(owlDeltaFilename, a.toRF2());
 			a.setClean();
 			componentOutput = true;
@@ -559,7 +566,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 				conceptComponentOutput = true;
 			}
 		}
-		
+
 		//Do we have Stated Relationships that need to be converted to axioms?
 		//We'll try merging those with any existing axioms.
 		if (hasDirtyStatedRelationships(c)) {

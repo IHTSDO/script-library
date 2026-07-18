@@ -67,16 +67,18 @@ public class Rf2ConceptCreator extends DeltaGeneratorWithAutoImport {
 		if (super.outputRF2(concept)) {
 			incrementSummaryInformation("Concepts output to RF2");
 			report(tabIdx, concept, Severity.LOW, ReportActionType.CONCEPT_ADDED, info, SnomedUtils.getDescriptions(concept), expression, "OK");
-
-			//Set that concept to clean so we don't output it twice
-			SnomedUtils.getAllComponents(concept).forEach(Component::setClean);
 		}
 	}
 
 	public void outputRF2Inactivation(Concept concept) throws TermServerScriptException {
 		//We'll do inactivations quietly
+		//We only want to output inactive components, so set everything else clean
+		for (Component c : SnomedUtils.getAllComponents(concept)) {
+			if (c.isActiveSafely()) {
+				c.setClean();
+			}
+		}
 		super.outputRF2(concept);
-		SnomedUtils.getAllComponents(concept).forEach(Component::setClean);
 	}
 
 
