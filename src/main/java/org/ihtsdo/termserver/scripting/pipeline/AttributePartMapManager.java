@@ -102,6 +102,19 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 			mappingNotes.add("Map indicates part mapped to 'No Map'");
 		} else if (items[ColIdx.idx(COL_STATUS)].equals("ACCEPTED") ||
 				(allowStatusMapped && items[ColIdx.idx(COL_STATUS)].equals("MAPPED"))) {
+			processAcceptedMapItem(items, partsSeen, mappingNotes, partNum);
+		} else if (!items[ColIdx.idx(COL_STATUS)].equals("UNMAPPED")) {
+			mappingNotes.add("Map indicates non-viable map status - " + items[ColIdx.idx(COL_STATUS)]);
+		}
+
+		if (!mappingNotes.isEmpty()) {
+			mapNotes.put(partNum, String.join("\n", mappingNotes));
+			mappingNotes.clear();
+		}
+	}
+
+	private void processAcceptedMapItem(String[] items, Set<String> partsSeen, List<String> mappingNotes, String partNum) throws TermServerScriptException {
+		try {
 			partsSeen.add(partNum);
 			Concept attributeValue = gl.getConcept(items[ColIdx.idx(COL_TARGET)], false, true);
 			attributeValue = replaceValueIfRequired(mappingNotes, attributeValue);
@@ -109,15 +122,13 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 				mappingNotes.add("Inactive concept");
 			}
 			partToAttributeValueMap.computeIfAbsent(partNum, k -> new ArrayList<>()).add(attributeValue);
-		} else if (items[ColIdx.idx(COL_STATUS)].equals("UNMAPPED")) {
-			//Skip this one without mentioning it
-		} else {
-			mappingNotes.add("Map indicates non-viable map status - " + items[ColIdx.idx(COL_STATUS)]);
-		}
-
-		if (!mappingNotes.isEmpty()) {
-			mapNotes.put(partNum, String.join("\n", mappingNotes));
-			mappingNotes.clear();
+		} catch (TermServerScriptException e) {
+			String errMsg = e.getMessage();
+			if (errMsg.startsWith("Unable")) {
+				mappingNotes.add(e.getMessage());
+			} else {
+				throw e;
+			}
 		}
 	}
 
