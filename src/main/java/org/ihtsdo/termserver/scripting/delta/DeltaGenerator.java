@@ -295,7 +295,6 @@ public abstract class DeltaGenerator extends TermServerScript {
 					setDependencyArchives(List.of(response));
 				}
 			}
-			getSnapshotConfiguration().setLoadDependencyPlusExtensionArchive(getDependencyArchives() != null);
 		}
 	}
 
