@@ -56,6 +56,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	protected Map<String, String> partMapNotes = new HashMap<>();
 	protected Map<Part, Set<ExternalConcept>> missingPartMappings = new HashMap<>();
 	protected static final Map<String, String> ITEM_OF_INTEREST_MAP = new HashMap<>();
+	protected static final Map<String, String> PART_OF_INTEREST_MAP = new HashMap<>();
 
 	protected Concept scheme;
 	protected String namespace;
@@ -1005,4 +1006,11 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		this.primaryLangRefset = primaryLangRefset;
 	}
 
+	public boolean isPartOfInterest(String partId) {
+		return PART_OF_INTEREST_MAP.containsKey(partId);
+	}
+
+	public String getPartOfInterest(String partId) {
+		return PART_OF_INTEREST_MAP.getOrDefault(partId, null);
+	}
 }

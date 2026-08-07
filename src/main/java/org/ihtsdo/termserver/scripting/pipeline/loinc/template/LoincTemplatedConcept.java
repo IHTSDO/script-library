@@ -394,7 +394,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			prepareConceptDefaultedForModule(SCTID_LOINC_EXTENSION_MODULE);
 		}
 
-		//Add additional check for LOINC Concept being deprecated
+		//Add an additional check for LOINC Concept being deprecated
 		if (getLoincTerm().getStatus().equals("DEPRECATED")) {
 			addProcessingFlag(ProcessingFlag.DROP_OUT);
 			getConcept().addIssue("Concept marked as deprecated, although present in detail file");
@@ -403,6 +403,10 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		Set<String> partTypeSeen = new HashSet<>();
 		for (LoincDetail loincDetail : loincDetailMap.values()) {
 			populatePart(loincDetail, partTypeSeen);
+
+			if (cpm.isPartOfInterest(loincDetail.getPartNumber())) {
+				addReasonForInterest(cpm.getPartOfInterest(loincDetail.getPartNumber()));
+			}
 		}
 		
 		//Ensure attributes are unique (considering both type and value)

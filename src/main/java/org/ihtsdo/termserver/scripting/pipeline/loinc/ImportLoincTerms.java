@@ -128,7 +128,8 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		discouragementAnnotationType = gl.getConcept("665161010000107 |LOINC comment (attribute)| ", false, true);
 		getReportManager().disableTab(getTab(TAB_IMPORT_STATUS));
 
-		HARDCODED_DROP_OUT.addAll( List.of("53564-1", "53563-3", "53565-8"));  //Last 3 duplicate with 5992-3
+		HARDCODED_DROP_OUT.addAll( List.of("53564-1", "53563-3", "53565-8", //Duplicate with 5992-3 - has different units
+				"114868-3")); //Duplicate with 114867-5
 
 		MANUALLY_MAINTAINED_ITEMS.putAll(Map.of(
 				"8251-1", "580221010000109 |Service comment (observable entity)|",
@@ -143,6 +144,11 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		ITEM_OF_INTEREST_MAP.putAll(Map.of(
 				"115741-1", "LE-154",
 				"115742-9", "LE-154"
+		));
+
+		PART_OF_INTEREST_MAP.putAll(Map.of(
+				"LP451871-0", "LE-174",
+				"LP452305-8", "LE-174"
 		));
 	}
 
