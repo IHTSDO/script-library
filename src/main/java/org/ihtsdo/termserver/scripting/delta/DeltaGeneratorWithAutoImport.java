@@ -28,6 +28,13 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 
 		//Let's output the processing report so the user can review it before making decisions
 		println("Processing Report: " + getReportManager().getUrl());
+
+		print("Do you want to proceed with auto-import? Y/N [Y]: ");
+		String response = STDIN.nextLine().trim();
+		if (response.equalsIgnoreCase("N")) {
+			return false;
+		}
+
 		//Quite often forget to set a task prefix, so let's prompt for it
 		if (StringUtils.isEmpty(taskPrefix)) {
 			print("What INFRA/MSSP/XDS ticket are you working here: ");
@@ -36,7 +43,7 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 
 		//Check if we're going to rename the file to be the task prefix
 		print("Rename " + archive.getName() + " to " + taskPrefix + ".zip ? Y/N [Y]: ");
-		String response = STDIN.nextLine().trim();
+		response = STDIN.nextLine().trim();
 		if (!response.equalsIgnoreCase("N")) {
 			File oldFile = archive;
 			archive = new File(archive.getParentFile(), taskPrefix + ".zip");
@@ -54,7 +61,7 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 
 		print("Import onto which project? : ");
 		projectName = STDIN.nextLine().trim();
-		//We might have changed environment, so recopy state into importer
+		//We might have changed the environment, so recopy state into importer
 		importer.copyScriptState(this);
 		importer.recoverProjectFromProjectName(projectName);
 
