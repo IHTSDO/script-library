@@ -147,9 +147,10 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			if (otherPart != null) {
 				//Check for additional modeling rules relating to this part
 				applyTemplateSpecificModellingRules(additionalAttributes, otherPart, null);
-				//Did we populate the append map already?  Don't do it twice
+				//Did we populate the "append map" already?  Don't do it twice
 				if (!slotTermAppendMap.containsKey(NPU_PART_UNIT)) {
-					slotTermAppendMap.put(NPU_PART_UNIT, " with reference to " + otherPart.getPartName());
+					slotTermAppendMap.put(NPU_PART_UNIT, " and traceability to " + otherPart.getPartName());
+					addReasonForInterest("NPU-21");
 				}
 			}
 			//In this case we don't need to report the compound key as a missing mapping
@@ -203,7 +204,8 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 
 		//Rule for detected enzymatic method NPU-19
 		if (part.getPartNumber().equals("QU50721")) {
-			slotTermAppendMap.put(NPU_PART_UNIT, " with reference to enzymatic method");
+			slotTermAppendMap.put(NPU_PART_UNIT, " with reference to enzymatic principle");
+			addReasonForInterest("NPU-21");
 			removeProcessingFlag(ProcessingFlag.MARK_AS_PRIMITIVE);
 			RelationshipTemplate attr = new RelationshipTemplate(TECHNIQUE,
 					gl.getConcept("258026004 |Enzyme method (qualifier value)"));
@@ -221,8 +223,8 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 	}
 
 	private void checkForBloodCellProcessing(List<RelationshipTemplate> attributes, Part part, RelationshipTemplate rt) throws TermServerScriptException {
-		//Now we see this as, for example QU60585,MSHD001769 which is reticulocytes with a modifier of blood.
-		//So I'll assume for now that we're alway going to have that modifier, treat the two parts separately,
+		//Now we see this as, for example, "QU60585,MSHD001769" which is reticulocytes with a modifier of blood.
+		//So I'll assume for now that we're always going to have that modifier, treat the two parts separately,
 		//and exception out if the modifier is not blood.
 		String[] partParts = part.getPartNumber().split(",");
 
@@ -238,9 +240,9 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 			slotTermMap.put(NPU_PART_COMPONENT, rt.getTarget().getPreferredSynonym());
 
 			if (partParts.length != 2 || !partParts[1].equals("MSHD001769")) {
-				addReasonForInterest("Blood cell example 2");
+				addReasonForInterest("NPU-17 Type 2");
 			} else {
-				addReasonForInterest("Blood cell example 1");
+				addReasonForInterest("NPU-17 Type 1");
 			}
 
 			//Recover the specification and add that as the inherent location
