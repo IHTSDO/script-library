@@ -84,7 +84,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			runStandAlone = false;
 			getGraphLoader().setExcludedModules(new HashSet<>());
 			getSnapshotConfiguration().setLoadOtherReferenceSets(true);
-			getSnapshotConfiguration().setRunIntegrityChecks(false);
 			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);  //Needed for working out if we're deleteing or inactivating
 			init(args);
 			loadProjectSnapshot();
@@ -1010,7 +1009,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		return PART_OF_INTEREST_MAP.containsKey(partId);
 	}
 
-	public String getPartOfInterest(String partId) {
+	public String getReasonforPartOfInterest(String partId) {
 		return PART_OF_INTEREST_MAP.getOrDefault(partId, null);
 	}
 }

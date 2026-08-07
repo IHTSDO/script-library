@@ -152,13 +152,20 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 					slotTermAppendMap.put(NPU_PART_UNIT, " with reference to " + otherPart.getPartName());
 				}
 			}
-			//In this case we don't need report the compound key as a missing mapping
+			//In this case we don't need to report the compound key as a missing mapping
 			cpm.removeMissingMapping(part);
 		}
 		return additionalAttributes;
 	}
 
 	private void populatePart(Part part) throws TermServerScriptException {
+		String[] partParts = part.getPartNumber().split(",");
+		for (String partId : partParts) {
+			if (cpm.isPartOfInterest(partId)) {
+				addReasonForInterest(cpm.getReasonforPartOfInterest(partId));
+			}
+		}
+
 		List<RelationshipTemplate> attributesToAdd = new ArrayList<>();
 		addAttributeFromDetail(attributesToAdd, part);
 

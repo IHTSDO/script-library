@@ -405,7 +405,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			populatePart(loincDetail, partTypeSeen);
 
 			if (cpm.isPartOfInterest(loincDetail.getPartNumber())) {
-				addReasonForInterest(cpm.getPartOfInterest(loincDetail.getPartNumber()));
+				addReasonForInterest(cpm.getReasonforPartOfInterest(loincDetail.getPartNumber()));
 			}
 		}
 		

@@ -38,6 +38,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 
 	protected String[] tabNames = new String[] {
 			TAB_SUMMARY,
+			TAB_MAP_ISSUES,
 			TAB_MODELING_ISSUES,
 			TAB_PROPOSED_MODEL_COMPARISON,
 			TAB_MAP_ME,
@@ -56,6 +57,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"npu_code, shortDefinition, system, component, kindOfProperty, proc, unit, specialty, contextDependent, group, scaleType, active, , ",
+				"Source, Issue, , , ",
 				"npu_code, Item of Interest, External Concept Long Name, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
 				"NpuNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, , , , , , , , , , , , , , , , , ",
 				"NPU Element Code, Element Name, Category, High Usage, Highest Usage, , Concepts Affected, , , ",
@@ -74,6 +76,10 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 		this.setPrimaryLangRefset(GB_ENG_LANG_REFSET);
 		this.setIncludeShortNameAsPreferredTerm(true);
 		this.setIncludeLongNameDescription(true);
+
+		PART_OF_INTEREST_MAP.putAll(Map.of(
+				"QU101474", "NPU-26"
+		));
 	}
 
 	@Override

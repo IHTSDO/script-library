@@ -75,7 +75,7 @@ public class AbstractMapManager implements ContentPipeLineConstants {
 				}
 			}
 		} catch (Exception e) {
-			throw new TermServerScriptException("Failed to read " + mapFile + " at line " + lineNum, e);
+			throw new TermServerScriptException("Failed to import " + mapFile + " at line " + lineNum, e);
 		}
 
 	}
