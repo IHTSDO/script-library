@@ -1,0 +1,20 @@
+title = "script-library gitleaks config"
+
+# Extend the default gitleaks rule set rather than replacing it.
+[extend]
+useDefault = true
+
+# Findings in these commits were manually reviewed and confirmed to be false
+# positives, not live credentials:
+#   - swagger-ui commented-out example: var apiKey = "myApiKeyXXXX123456789"
+#   - OAuthCredentials.java: PEM delimiter string constants (BEGIN/END_PRIVATE_KEY),
+#     no actual key material
+[allowlist]
+description = "Verified false positives"
+commits = [
+  "06e584bd00eb21d2d849d6ce67dec8247d524914",
+  "5bc085161459f618d3c2df2fb291e6fff3734f35",
+  "f837c2648cc5bae4f4fb9b38b13d31358a586139",
+  "302b326f9469662df5682a6213a72a97e394d205",
+  "5c7ff9c83e85fb4e2cefdfafab026429c4afb4e6",
+]
