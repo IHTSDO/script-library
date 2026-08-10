@@ -147,8 +147,8 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	protected void init (String[] args) throws TermServerScriptException {
 		super.init(args);
 		LOGGER.info("Select an environment for live secondary checking ");
-		for (int i=0; i < environments.length; i++) {
-			println("  " + i + ": " + environments[i]);
+		for (int i=0; i < getEnvironments().length; i++) {
+			println("  " + i + ": " + getEnvironments()[i]);
 		}
 		print ("Choice [" + envIndex + "]: ");
 		String choice = STDIN.nextLine().trim();
@@ -156,7 +156,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		if (!choice.isEmpty()) {
 			envChoice = Integer.parseInt(choice);
 		}
-		String secondaryURL = environments[envChoice];
+		String secondaryURL = getEnvironments()[envChoice];
 		
 		if (!secondaryURL.equals(url)) {
 			print("Please enter your authenticated cookie for connection to " + url + " : ");

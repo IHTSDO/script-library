@@ -92,8 +92,8 @@ public class NamespaceStats extends TermServerReport {
 	@Override
 	public void init(String[] args) throws TermServerScriptException {
 		super.init(args);
-		String url = "https://cis.ihtsdotools.org/";
-		namespaceHelper = NamespaceHelper.create(url, authenticatedCookie);
+		//Set the secondary server URL using the -s or --server parameters
+		namespaceHelper = NamespaceHelper.create(getSecondaryServerUrl(), authenticatedCookie);
 	}
 
 	@Override

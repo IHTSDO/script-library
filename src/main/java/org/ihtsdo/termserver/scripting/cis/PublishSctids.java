@@ -23,7 +23,7 @@ import java.util.zip.ZipInputStream;
 public class PublishSctids extends TermServerReport {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PublishSctids.class);
-	private static final String THIS_TICKET = "XDS-30";
+	private static final String THIS_TICKET = "";
 	private enum ACTION {PUBLISH, REGISTER}
 
 	public static final String AVAILABLE = "Available";
@@ -91,8 +91,8 @@ public class PublishSctids extends TermServerReport {
 	@Override
 	public void init(String[] args) throws TermServerScriptException {
 		super.init(args);
-		String url = "https://cis.ihtsdotools.org/";
-		cisClient = new CisClient(url, authenticatedCookie);
+		//Set the secondary server URL using the -s or --server parameters
+		cisClient = new CisClient(getSecondaryServerUrl(), authenticatedCookie);
 	}
 
 	private void publishSCTIDS() throws TermServerScriptException {

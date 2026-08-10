@@ -35,20 +35,15 @@ eg ` -c uat-ims-ihtsdo=0IPyP4K3zs1234rdAhxFqw00 -a pwilliams -p BLKUPDATE2 `
 You may also need to supply, say, a list of relationship ids to be consumed using the -iR parameter, or a file to be processed using "-f".  A full list of command line flags can be found [here](docs/commandLineFlags.md)
 
 * It's recommended that you give the process sufficient memory to run eg `-Xms14g -Xmx16g`
-* As well as the parameters specified via the command line, the runtime code will ask for a number of options to be confirmed / selected.   Most importantly, a number from 1 - 9 which identifies which environment is to be selected.   
+* As well as the parameters specified via the command line, the runtime code will ask for a number of options to be confirmed / selected.   Most importantly, a number from 1 - N which identifies which environment is to be selected.   The list of environments can be configured in the file resources/environments.txt
 * Any default option specified in square brackets can be accepted by pressing return.
 
 ```	
 Select an environment 
   0: http://localhost:8080/
-  1: https://dev-authoring.ihtsdotools.org/
-  2: https://uat-authoring.ihtsdotools.org/
-  3: https://uat-flat-termserver.ihtsdotools.org/
-  4: https://prod-authoring.ihtsdotools.org/
-  5: https://dev-ms-authoring.ihtsdotools.org/
-  6: https://uat-ms-authoring.ihtsdotools.org/
-  7: https://prod-ms-authoring.ihtsdotools.org/
-Choice: 2
+  1: https://your.dev.server.org/
+  2: https://your.prod.server.org/
+Choice: 1
 Specify Project [DRUGJUL18]: 
 Number of concepts per task [40]: 
 Time delay between tasks (throttle) seconds [15]: 20
@@ -96,4 +91,4 @@ If the file you are working with does not come with a complete set of components
 find . -exec rename 's|Delta|Snapshot|' {} + 
 ```
 
-At the end of the process a delta RF2 zip file will be produced and saved in the directory where you ran the command.
+At the end of the process, a delta RF2 zip file will be produced and saved in the directory where you ran the command.

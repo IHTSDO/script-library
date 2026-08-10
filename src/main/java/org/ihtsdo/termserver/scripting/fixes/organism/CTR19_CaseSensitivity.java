@@ -2,13 +2,15 @@ package org.ihtsdo.termserver.scripting.fixes.organism;
 
 import java.util.*;
 
-import org.ihtsdo.otf.rest.client.authoringservices.AuthoringServicesClient;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
 CTR-19
@@ -23,10 +25,6 @@ Can you assign the associated authoring tasks to me for review and promotion (pl
 
 If any of the concepts has description(s) that don't follow the above noted patterns, I would like a report of all of them (including Concept ID, FSN, Description) for manual review.
  */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class CTR19_CaseSensitivity extends BatchFix implements ScriptConstants{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CTR19_CaseSensitivity.class);
@@ -52,31 +50,10 @@ public class CTR19_CaseSensitivity extends BatchFix implements ScriptConstants{
 			fix.populateEditPanel = false;
 			fix.selfDetermining = true;
 			fix.init(args);
-			//fix.testAS();
 			fix.loadProjectSnapshot(); //Load all descriptions
 			fix.processFile();
 		} finally {
 			fix.finish();
-		}
-	}
-	
-	private void testAS() throws Exception {
-		//AuthoringServicesClient testClient = new AuthoringServicesClient ("https://webhook.site/006a59c3-c39a-430b-8239-95141732190a","yummy");
-		//AuthoringServicesClient testClient = new AuthoringServicesClient ("http://localhost/","p3BlUbLEq2Q0snA0pY5mDQ00");
-		//AuthoringServicesClient testClient = new AuthoringServicesClient ("https://dev-authoring.ihtsdotools.org/","dev-ims-ihtsdo=p3BlUbLEq2Q0snA0pY5mDQ00");
-		AuthoringServicesClient testClient = scaClient;
-		try {
-			testClient.updateTask("DRUG2017", "DRUG2017-259", null, "foo desc", null, null);
-		} catch (Exception e) {
-			LOGGER.debug("Exception " + e);
-		}
-		
-		try {
-			//testClient = new AuthoringServicesClient ("https://dev-authoring.ihtsdotools.org/","dev-ims-ihtsdo=p3BlUbLEq2Q0snA0pY5mDQ00");
-			//testClient = testClient.clone();
-			testClient.updateTask("DRUG2017", "DRUG2017-259", null, "bar desc", null, null);
-		} catch (Exception e) {
-			LOGGER.debug("Exception " + e);
 		}
 	}
 
