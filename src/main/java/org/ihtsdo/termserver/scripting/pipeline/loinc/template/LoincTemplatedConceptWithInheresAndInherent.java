@@ -14,6 +14,8 @@ import static org.ihtsdo.termserver.scripting.pipeline.ContentPipeLineConstants.
 
 public class LoincTemplatedConceptWithInheresAndInherent extends LoincTemplatedConceptWithInheres{
 
+	private static final String MUTATIONS_TESTED_FOR_PARTNUM = "LP32421-7";
+
 	protected LoincTemplatedConceptWithInheresAndInherent(ExternalConcept externalConcept) {
 		super(externalConcept);
 	}
@@ -37,6 +39,7 @@ public class LoincTemplatedConceptWithInheresAndInherent extends LoincTemplatedC
 			//This is being used in the component slot, so tip off the FSN generation that we're
 			//looking for a different attribute type
 			typeMap.put(LOINC_PART_TYPE_COMPONENT2, ScriptConstants.INHERENT_LOCATION);
+
 			addProcessingFlag(ALTERNATIVE_COMPONENT_SUPPLIED);
 			setTermTemplate("[PROPERTY] of [COMPONENT] in [COMPONENT2] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
 		}
@@ -44,6 +47,12 @@ public class LoincTemplatedConceptWithInheresAndInherent extends LoincTemplatedC
 		if (detailPresent(COMPNUMSUFFIX_PN)) {
 			LoincDetail compSuffix = getLoincDetailOrThrow(COMPNUMSUFFIX_PN);
 			attributes.addAll(getAdditionalAttributes(compSuffix, INHERES_IN));
+
+			//See specific terming instruction related to MUTATIONS_TESTED_FOR_PARTNUM - no need to repeat ourselves
+			if (compSuffix.getPartNumber().equals(MUTATIONS_TESTED_FOR_PARTNUM)) {
+				addReasonForInterest("LE-160-2");
+				setTermTemplate("[PROPERTY] of [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]");
+			}
 		} else {
 			throw new TermServerScriptException("Inheres and Inherent without Inheres in (COMPNUMSUFFIX_PN): " + getExternalIdentifier());
 		}
