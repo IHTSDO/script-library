@@ -147,7 +147,9 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 
 		PART_OF_INTEREST_MAP.putAll(Map.of(
 				"LP451871-0", "LE-174",
-				"LP452305-8", "LE-174"
+				"LP452305-8", "LE-174",
+				"LP38359-3", "LE-176",
+				"LP7589-7", "LE-176"
 		));
 	}
 

@@ -383,6 +383,12 @@ public class LoincAttributePartMapManager extends AttributePartMapManager implem
 				gl.getConcept("1397302008|caveolin 3 gene (cell structure)|"))); // CAV3 gene
 		hardCodedMappings.put("LP19680-5", List.of(
 				gl.getConcept("1397304009|C-C motif chemokine receptor 5 gene (cell structure)|"))); // CCR5 gene
+
+		hardCodedMappings.put("LP38359-3", List.of(
+				gl.getConcept("120993002 |Human herpes simplex virus antigen (substance)|"))); // Herpes simplex virus Ag
+		hardCodedMappings.put("LP7589-7", List.of(
+				gl.getConcept("258473003 |Semen sample (specimen)|"))); // Semen
+
 		/*hardCodedMappings.put("LP422605-8", List.of(
 				gl.getConcept("1399566001|CD79a molecule gene (cell structure)|"))); // CD79A gene
 		hardCodedMappings.put("LP422606-6", List.of(
