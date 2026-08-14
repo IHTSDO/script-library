@@ -128,8 +128,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 		discouragementAnnotationType = gl.getConcept("665161010000107 |LOINC comment (attribute)| ", false, true);
 		getReportManager().disableTab(getTab(TAB_IMPORT_STATUS));
 
-		HARDCODED_DROP_OUT.addAll( List.of("53564-1", "53563-3", "53565-8", //Duplicate with 5992-3 - has different units
-				"114868-3")); //Duplicate with 114867-5
+		HARDCODED_DROP_OUT.addAll( List.of("53564-1", "53563-3", "53565-8")); //Duplicate with 5992-3 - has different units
 
 		MANUALLY_MAINTAINED_ITEMS.putAll(Map.of(
 				"8251-1", "580221010000109 |Service comment (observable entity)|",
@@ -178,15 +177,16 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 			}
 		}
 
-		for (String panelLoincNum : panelLoincNums) {
-			LoincTemplatedConcept templatedConcept = doPanelModeling(panelLoincNum);
-			if (templatedConcept != null) {
-				postModelling(templatedConcept);
-				if (conceptSufficientlyModeled("Panel", panelLoincNum, templatedConcept)) {
-					successfullyModelled.add(templatedConcept);
+		if (getRunMode() != RunMode.INCREMENTAL_DELTA_SUBSET) {
+			for (String panelLoincNum : panelLoincNums) {
+				LoincTemplatedConcept templatedConcept = doPanelModeling(panelLoincNum);
+				if (templatedConcept != null) {
+					postModelling(templatedConcept);
+					if (conceptSufficientlyModeled("Panel", panelLoincNum, templatedConcept)) {
+						successfullyModelled.add(templatedConcept);
+					}
 				}
 			}
-
 		}
 	}
 
@@ -221,6 +221,7 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 			for (LangRefsetEntry lre : d.getLangRefsetEntries(ActiveState.ACTIVE, GB_ENG_LANG_REFSET)) {
 				if (existingEnGbLangRefsetIds.contains(UUID.fromString(lre.getId()))) {
 					lre.setActive(false);
+					lre.setModuleId(SCTID_LOINC_EXTENSION_MODULE);
 					incrementSummaryCount(ContentPipelineManager.LANG_REFSET_REMOVAL, "En-gb lang refset inactivated");
 				} else {
 					d.getLangRefsetEntries().remove(lre);

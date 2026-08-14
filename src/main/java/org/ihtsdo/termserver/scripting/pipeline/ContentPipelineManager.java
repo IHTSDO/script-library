@@ -44,7 +44,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	protected String primaryLangRefset = US_ENG_LANG_REFSET;
 
-	private enum RunMode { NEW, INCREMENTAL_DELTA, INCREMENTAL_API}
+	public enum RunMode { NEW, INCREMENTAL_DELTA, INCREMENTAL_DELTA_SUBSET, INCREMENTAL_API}
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ContentPipelineManager.class);
 	
@@ -107,7 +107,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			switch (runMode) {
 				case NEW: outputAllConceptsToDelta();
 					break;
-				case INCREMENTAL_API, INCREMENTAL_DELTA:
+				case INCREMENTAL_API, INCREMENTAL_DELTA, INCREMENTAL_DELTA_SUBSET:
 					determineChangeSet();
 					break;
 				default:
@@ -209,8 +209,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check Blood");
 		}
 
-		if (externalIdentifier.equals("75033-1")) {
-			LOGGER.debug("Check LE-160");
+		if (externalIdentifier.equals("1744-2")) {
+			LOGGER.debug("Check case difference causes only description inactivation, then start list for case insensitvity checking");
 		}
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
@@ -266,8 +266,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	protected abstract Set<String> getObjectionableWords();
 
-
-
 	private void outputAllConceptsToDelta() throws TermServerScriptException {
 		for (TemplatedConcept tc : successfullyModelled) {
 			Concept concept = tc.getConcept();
@@ -292,10 +290,16 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		
 		for (TemplatedConcept tc : sortedModelled) {
 			incrementSummaryCount("Counts per template", tc.getClass().getSimpleName());
-			determineChanges(tc, externalIdentifiersProcessed);
+			try {
+				determineChanges(tc, externalIdentifiersProcessed);
+			} catch (Exception e) {
+				throw new TermServerScriptException("Fatally unable to determine changes for " + tc.getExternalIdentifier(), e);
+			}
 		}
 
-		determineInactivations(sortedModelled);
+		if (getRunMode() != RunMode.INCREMENTAL_DELTA_SUBSET) {
+			determineInactivations(sortedModelled);
+		}
 	}
 
 	private void determineInactivations(List<TemplatedConcept> sortedModelled) throws TermServerScriptException {
@@ -380,6 +384,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		Concept concept = tc.getConcept();
 		externalIdentifiersProcessed.add(tc.getExternalIdentifier());
 
+		if (tc.getExternalIdentifier().equals("1744-2")) {
+			LOGGER.debug("Check case difference causes only description inactivation, then start list for case insensitvity checking");
+		}
+
 		//Do we already have this concept?  Also, it might use freshly modelled concepts internally which need to have IDs assigned
 		//before we can compare their axioms
 		Concept existingConcept = getExistingConceptAndPopulateReferencedConcepts(tc);
@@ -389,7 +397,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 		if (existingConcept == null) {
 			//This concept is entirely new, prepare to output all
-			if (runMode.equals(RunMode.INCREMENTAL_DELTA)) {
+			if (runMode.equals(RunMode.INCREMENTAL_DELTA) || runMode.equals(RunMode.INCREMENTAL_DELTA_SUBSET)) {
 				conceptCreator.populateIds(concept);
 			}
 
@@ -409,7 +417,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		//Update the summary count based on the comparison to the previous iteration
 		incrementSummaryCount(CHANGES_SINCE_LAST_ITERATION, tc.getIterationIndicator().toString());
 
-		//Is this a high usage concept?
+		//Is this a highly used concept?
 		if (activeIndicators.contains(tc.getIterationIndicator()) && tc.isHighUsage()) {
 			incrementSummaryCount(HIGH_USAGE_COUNTS, "Active with high usage");
 		}
@@ -533,13 +541,14 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		//If we have both, then just output the change
 		if (existingComponent != null && modifiedOrNewComponent != null) {
 			modifiedOrNewComponent.setId(existingComponent.getId());
-			if (componentComparisonResult.isMatch()) {
+			boolean isActiveStateChange = checkActiveStateChange(existingComponent, modifiedOrNewComponent);
+			if (componentComparisonResult.isMatch() && !isActiveStateChange) {
 				modifiedOrNewComponent.setClean();
 			} else {
 				modifiedOrNewComponent.setDirty();
 			}
 
-			//Any component specific actions?
+			//Any component-specific actions?
 			switch (existingComponent.getComponentType()) {
 				case CONCEPT:
 					alignAlternateIdentifier(tc.getConcept(), tc.getExistingConcept());
@@ -586,6 +595,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 				|| (existingComponent != null && existingComponent.getId() == null)) {
 			throw new IllegalStateException("Component encountered without Id " + modifiedOrNewComponent);
 		}
+	}
+
+	private boolean checkActiveStateChange(Component existingComponent, Component modifiedOrNewComponent) {
+		return existingComponent.isActiveSafely() != modifiedOrNewComponent.isActiveSafely();
 	}
 
 	private void recordRefsetMemberSummaryCount(Component c, TemplatedConcept.IterationIndicator iterationIndicator) throws TermServerScriptException {
@@ -1011,5 +1024,9 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	public String getReasonforPartOfInterest(String partId) {
 		return PART_OF_INTEREST_MAP.getOrDefault(partId, null);
+	}
+
+	public RunMode getRunMode() {
+		return runMode;
 	}
 }
