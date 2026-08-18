@@ -38,12 +38,13 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	private static final boolean INCLUDE_DEPENDENCIES = true;
 	private static final boolean INCLUDE_INFERRED_PARENTS = false;  //DO NOT CHECK IN AS TRUE - NEEDED ONLY FOR DRUGS
 	private static final boolean COPY_INFERRED_PARENT_RELS_TO_STATED = false;
-	private static final boolean SELECT_CONCEPTS_VIA_REVIEW = false; //If true, then we will only process concepts that have been selected in the review panel
+	protected boolean selectViaReview = false; //If true, then we will only process concepts that have been selected in the review panel
 	private static final List<String> KNOWN_DEFECTIVE_PROJECTS = List.of("GEN");
 	private static final String SECONDARY_CHECK_PATH = "MAIN";
 
 	private final Set<Component> allModifiedConcepts = new HashSet<>();
 	private final List<Component> noMoveRequired = new ArrayList<>();
+	protected final Map<Component, String> conceptOriginTask = new HashMap<>(); //Populated by subclasses selecting concepts via review, so we can report which task a concept came from
 
 	private final Map<String, Concept> loadedConcepts = new HashMap<>();
 	TermServerClient secondaryConnection;
@@ -127,11 +128,10 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			additionalReportColumns = "Defn Status, Stated Parent(s), Additional Detail, , ";
 			postInit(GFOLDER_EXTRACT_AND_PROMOTE);
 			startTimer();
-			preProcessFile();
-			if (SELECT_CONCEPTS_VIA_REVIEW) {
-				selectConceptsViaReview();
-			}
+			List<Component> conceptsToProcess = determineConceptsToExtract();
+			preProcessConcepts(conceptsToProcess, false);
 			processFile();
+			reportSummaryCounts(SECONDARY_REPORT);
 			if (archiveBatches == null) {
 				createOutputArchive();
 			}
@@ -177,14 +177,21 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		if (butNotLaterality) {
 			attributeTypesExcludedFromInferredToStated = List.of(gl.getConcept("272741003 |Laterality (attribute)|"));
 		}
-		super.postInit(googleFolder);
+
+		String[] columnHeadings = new String[]{
+				"SCTID, FSN, SemTag, Severity, Action, Details," + additionalReportColumns,
+				"Category, Item, Count"
+		};
+
+		String[] tabNames = new String[]{
+				"Delta Records Created",
+				"Summary"
+		};
+
+		postInit(googleFolder, tabNames, columnHeadings);
 	}
 	
-	private void selectConceptsViaReview() throws TermServerScriptException {
-		preProcessConcepts(getConceptsInReview(), true);
-	}
-	
-	private void preProcessFile() throws TermServerScriptException {
+	private List<Component> determineConceptsToExtract() throws TermServerScriptException {
 		//Are we working with ecl, a hard coded list, or pulling from a file?
 		List<Component> conceptsToProcess;
 		if (componentsToProcessEcl != null) {
@@ -195,10 +202,12 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			conceptsToProcess = componentIdsToProcess.stream()
 					.map(s -> (Component)gl.getConceptSafely(s))
 					.collect(Collectors.toList());  //Not 'toList' here because we need a mutable collection
+		} else if (getInputFile(0) == null && selectViaReview) {
+			conceptsToProcess = getConceptsInReview();
 		} else {
 			conceptsToProcess = super.processFile();
 		}
-		preProcessConcepts(conceptsToProcess, false);
+		return conceptsToProcess;
 	}
 
 	protected void preProcessConcepts(List<Component> componentsOfInterest, boolean viaReview) throws TermServerScriptException {
@@ -216,9 +225,13 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			if (c.getModuleId() == null) {
 				//if (viaReview) {
 					String msg = viaReview ? "Concept appearing in review has been deleted?" : "Concept not found in target location";
+					String originTask = conceptOriginTask.get(c);
+					if (originTask != null) {
+						msg += " (originally from task " + originTask + ")";
+					}
 					report((Concept)c, Severity.HIGH, ReportActionType.VALIDATION_CHECK, msg);
 					excludeComponents.add(c);
-				/*} else { 
+				/*} else {
 					throw new IllegalArgumentException("Concept " + c + " doesn't exist.  Check list of concepts to transfer");
 				}*/
 			}
