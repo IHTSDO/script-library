@@ -12,3 +12,8 @@ output*
 running_id_config.txt
 resources
 target/*
+
+# Dummy environments.txt on the test classpath so BatchFix/DeltaGenerator subclasses
+# can be constructed in unit tests without the real (untracked) resources/environments.txt
+!src/test/resources/
+!src/test/resources/environments.txt
