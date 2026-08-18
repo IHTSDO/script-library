@@ -11,7 +11,6 @@ import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * SCTQA-321 replace teletherapy with "external beam radiation therapy" in FSNs
@@ -29,27 +28,19 @@ public class RetermConcept extends BatchFix {
 	
 	protected RetermConcept(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = true;
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		RetermConcept fix = new RetermConcept(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = true;
-			fix.populateTaskDescription = true;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new RetermConcept(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		//standardExecution() forces populateEditPanel false; this fix needs it true
+		populateEditPanel = true;
 		//termMap.put("teletherapy", "external beam radiation therapy");
 		//termMap.put("teleradiotherapy", "external beam radiation therapy");
 		termMap.put("anulus fibrosus","annulus fibrosus");

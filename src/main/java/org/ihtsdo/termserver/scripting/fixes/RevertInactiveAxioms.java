@@ -28,17 +28,7 @@ public class RevertInactiveAxioms extends BatchFix implements ScriptConstants {
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		RevertInactiveAxioms fix = new RevertInactiveAxioms(null);
-		try {
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.init(args);
-			fix.loadProjectSnapshot(); //Load all description
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new RevertInactiveAxioms(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

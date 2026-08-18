@@ -22,24 +22,12 @@ public class DeleteComponents extends BatchFix implements ScriptConstants {
 
 	protected DeleteComponents(BatchFix clone) {
 		super(clone);
+		this.populateTaskDescription = false;
+		this.worksWithConcepts = false; //Ensures doFix is called with Component
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		DeleteComponents fix = new DeleteComponents(null);
-		try {
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.runStandAlone = false;
-			fix.worksWithConcepts = false; //Ensures doFix is called with Component
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new DeleteComponents(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

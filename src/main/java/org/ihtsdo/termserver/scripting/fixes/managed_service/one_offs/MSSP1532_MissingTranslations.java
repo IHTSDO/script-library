@@ -14,7 +14,6 @@ import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * MSSP-1532 We have a file that was loaded in.  Check what happened to the descriptions
@@ -31,23 +30,13 @@ public class MSSP1532_MissingTranslations extends BatchFix {
 	
 	protected MSSP1532_MissingTranslations(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
+		inputFileHasHeaderRow = true;
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		MSSP1532_MissingTranslations fix = new MSSP1532_MissingTranslations(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.inputFileHasHeaderRow = true;
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new MSSP1532_MissingTranslations(null).standardExecution(args, ExecutionOptions.DEFAULT.withDrivenByInputFile());
 	}
 
 	@Override

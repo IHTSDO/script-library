@@ -31,29 +31,21 @@ public class QI26_AddComplication extends BatchFix {
 	
 	protected QI26_AddComplication(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		classifyTasks = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		QI26_AddComplication fix = new QI26_AddComplication(null);
-		try {
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.classifyTasks = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new QI26_AddComplication(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		acceptablePPPs = new ArrayList<>();
 		acceptablePPPs.add(COMPLICATION);
 		acceptablePPPs.add(DISEASE);
+		super.postInit();
 	}
 
 	@Override

@@ -23,23 +23,20 @@ public class HistoricalHistoricalIssues extends BatchFix implements ScriptConsta
 	
 	protected HistoricalHistoricalIssues(BatchFix clone) {
 		super(clone);
+		this.reportNoChange = true;
+		this.summaryTabIdx = SECONDARY_REPORT;
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		HistoricalHistoricalIssues fix = new HistoricalHistoricalIssues(null);
-		try {
-			fix.reportNoChange = true;
-			fix.selfDetermining = true;
-			fix.runStandAlone = true;
-			fix.summaryTabIdx = SECONDARY_REPORT;
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new HistoricalHistoricalIssues(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
 	}
 	
 	public void postInit() throws TermServerScriptException {

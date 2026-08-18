@@ -7,7 +7,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * ISRS-979 Fix for active langrefsetentries being left on inactive descriptions 
@@ -19,24 +18,11 @@ public class ActiveLangRefOnInactiveDescFix extends BatchFix {
 	
 	protected ActiveLangRefOnInactiveDescFix(BatchFix clone) {
 		super(clone);
+		this.populateTaskDescription = false;
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		ActiveLangRefOnInactiveDescFix fix = new ActiveLangRefOnInactiveDescFix(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.runStandAlone = false;  //MS projects need to work out their branch
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.loadProjectSnapshot();  //Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new ActiveLangRefOnInactiveDescFix(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

@@ -1,13 +1,11 @@
 package org.ihtsdo.termserver.scripting.fixes;
 
-import java.io.IOException;
 import java.util.*;
 
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /* ISRS-1257
  */
@@ -23,21 +21,8 @@ public class SwitchDescInactivationIndicators extends BatchFix {
 		super(clone);
 	}
 
-	public static void main(final String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		final SwitchDescInactivationIndicators fix = new SwitchDescInactivationIndicators(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.runStandAlone = false;  //We need to look up the project path for MS projects
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
-			fix.init(args);
-			fix.loadProjectSnapshot(); // Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(final String[] args) throws TermServerScriptException {
+		new SwitchDescInactivationIndicators(null).standardExecution(args, ExecutionOptions.DEFAULT.withNoIntegrityChecking());
 	}
 	
 	@Override

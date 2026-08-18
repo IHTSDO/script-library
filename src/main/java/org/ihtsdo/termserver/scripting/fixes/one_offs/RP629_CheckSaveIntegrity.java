@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
@@ -21,22 +20,13 @@ public class RP629_CheckSaveIntegrity extends BatchFix {
 	
 	protected RP629_CheckSaveIntegrity(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		populateTaskDescription = false;
+		additionalReportColumns = "Action Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		RP629_CheckSaveIntegrity fix = new RP629_CheckSaveIntegrity(null);
-		try {
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.populateTaskDescription = false;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new RP629_CheckSaveIntegrity(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

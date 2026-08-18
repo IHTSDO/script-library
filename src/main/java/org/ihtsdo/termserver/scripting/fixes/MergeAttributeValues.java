@@ -9,7 +9,6 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * INFRA-10767 Combine role groups containing Incision + drainage methods
@@ -30,23 +29,12 @@ public class MergeAttributeValues extends BatchFix {
 	
 	protected MergeAttributeValues(BatchFix clone) {
 		super(clone);
+		this.populateTaskDescription = false;
+		this.reportNoChange = true;
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		MergeAttributeValues fix = new MergeAttributeValues(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.reportNoChange = true;
-			fix.selfDetermining = true;
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new MergeAttributeValues(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	public void postInit() throws TermServerScriptException {

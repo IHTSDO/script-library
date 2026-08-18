@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -15,7 +14,6 @@ import org.ihtsdo.termserver.scripting.util.CaseSensitivityUtils;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  *INFRA-9606
@@ -49,29 +47,23 @@ public class INFRA9606_RetermMeasurementFindings extends BatchFix {
 
 	CaseSensitivityUtils nounHelper;
 	
-	protected INFRA9606_RetermMeasurementFindings(BatchFix clone) {
+	protected INFRA9606_RetermMeasurementFindings(BatchFix clone) throws TermServerScriptException {
 		super(clone);
+		populateTaskDescription = false;
+		additionalReportColumns = "Action Detail, Additional Detail";
+		nounHelper = CaseSensitivityUtils.get();
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA9606_RetermMeasurementFindings fix = new INFRA9606_RetermMeasurementFindings(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.runStandAlone = true;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail, Additional Detail";
-			fix.nounHelper = CaseSensitivityUtils.get();
-			fix.init(args);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA9606_RetermMeasurementFindings(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
 	}
 
 	@Override

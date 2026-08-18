@@ -5,6 +5,7 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.domain.Concept;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
@@ -17,25 +18,22 @@ public class INFRA11620_RemoveICDOInactive extends BatchFix {
 
 	protected INFRA11620_RemoveICDOInactive(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
+		populateTaskDescription = false;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA11620_RemoveICDOInactive fix = new INFRA11620_RemoveICDOInactive(null);
-		try {
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.runStandAlone = true;
-			fix.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
-			fix.getSnapshotConfiguration().setPopulateReleaseFlag(true);
-			fix.populateTaskDescription = false;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA11620_RemoveICDOInactive(null).standardExecution(args, ExecutionOptions.DEFAULT.withImportAllRefsets());
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
 	}
 
 	@Override

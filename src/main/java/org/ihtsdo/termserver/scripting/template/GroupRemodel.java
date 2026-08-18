@@ -47,18 +47,7 @@ public class GroupRemodel extends TemplateFix {
 	}
 	
 	public static void main(String[] args) throws TermServerScriptException {
-		GroupRemodel app = new GroupRemodel(null);
-		try {
-			ReportSheetManager.setTargetFolderId("15FSegsDC4Tz7vP5NPayGeG2Q4SB1wvnr"); //QI  / Group One Remodel
-			app.init(args);
-			app.loadProjectSnapshot();  //Load all descriptions
-			app.postInit();
-			app.processFile();
-		} catch (Exception e) {
-			LOGGER.error("Failed to Group Remodel", e);
-		} finally {
-			app.finish();
-		}
+		new GroupRemodel(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override
@@ -199,7 +188,8 @@ public class GroupRemodel extends TemplateFix {
 	@Override
 	public void postInit() throws TermServerScriptException {
 		super.postInit();
-		
+		ReportSheetManager.setTargetFolderId(GFOLDER_QI);
+
 		//Populate grouped and ungrouped attributes
 		Iterator<AttributeGroup> groupIterator = templates.get(0).getAttributeGroups().iterator();
 

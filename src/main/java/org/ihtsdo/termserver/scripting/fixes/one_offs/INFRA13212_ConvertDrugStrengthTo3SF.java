@@ -8,7 +8,6 @@ import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -19,23 +18,12 @@ public class INFRA13212_ConvertDrugStrengthTo3SF extends BatchFix {
 
 	protected INFRA13212_ConvertDrugStrengthTo3SF(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA13212_ConvertDrugStrengthTo3SF fix = new INFRA13212_ConvertDrugStrengthTo3SF(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA13212_ConvertDrugStrengthTo3SF(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	public void postInit() throws TermServerScriptException {

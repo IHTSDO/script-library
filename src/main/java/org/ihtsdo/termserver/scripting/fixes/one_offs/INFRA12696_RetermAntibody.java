@@ -8,13 +8,12 @@ import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
-import java.io.IOException;
 import java.util.*;
 
 public class INFRA12696_RetermAntibody extends BatchFix {
@@ -29,27 +28,20 @@ public class INFRA12696_RetermAntibody extends BatchFix {
 
 	protected INFRA12696_RetermAntibody(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		additionalReportColumns = "Before, After";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA12696_RetermAntibody fix = new INFRA12696_RetermAntibody(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.additionalReportColumns = "Before, After";
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.runStandAlone = true;
-			fix.selfDetermining = false;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Before, After";
-			fix.init(args);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA12696_RetermAntibody(null).standardExecution(args, ExecutionOptions.DEFAULT.withDrivenByInputFile());
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
 	}
 
 	@Override

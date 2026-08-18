@@ -42,17 +42,8 @@ public class CTR19_CaseSensitivity extends BatchFix implements ScriptConstants{
 		super(clone);
 	}
 
-	public static void main(String[] args) throws Exception {
-		CTR19_CaseSensitivity fix = new CTR19_CaseSensitivity(null);
-		try {
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.init(args);
-			fix.loadProjectSnapshot(); //Load all descriptions
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new CTR19_CaseSensitivity(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

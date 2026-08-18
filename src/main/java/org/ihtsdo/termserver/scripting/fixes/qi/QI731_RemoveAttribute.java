@@ -24,24 +24,16 @@ public class QI731_RemoveAttribute extends BatchFix {
 	
 	protected QI731_RemoveAttribute(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		populateTaskDescription = false;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		QI731_RemoveAttribute fix = new QI731_RemoveAttribute(null);
-		try {
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.populateTaskDescription = false;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new QI731_RemoveAttribute(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
-	
+
+
 	@Override
 	public void postInit() throws TermServerScriptException {
 		removeMe = new RelationshipTemplate(DUE_TO, gl.getConcept("773760007 |Traumatic event (event)|"));

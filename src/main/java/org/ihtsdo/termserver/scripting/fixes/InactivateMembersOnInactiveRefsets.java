@@ -4,10 +4,10 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.domain.Concept;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import java.util.*;
 
@@ -20,21 +20,7 @@ public class InactivateMembersOnInactiveRefsets extends BatchFix {
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		InactivateMembersOnInactiveRefsets fix = new InactivateMembersOnInactiveRefsets(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.runStandAlone = false;  //Need to look up the project for MS extensions
-			fix.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.loadProjectSnapshot();  //Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new InactivateMembersOnInactiveRefsets(null).standardExecution(args, ExecutionOptions.DEFAULT.withImportAllRefsets());
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.managed_service.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -10,7 +9,6 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 public class INFRA9963_DeleteLangRefsetInDelta extends BatchFix {
 	
@@ -21,24 +19,20 @@ public class INFRA9963_DeleteLangRefsetInDelta extends BatchFix {
  	
 	protected INFRA9963_DeleteLangRefsetInDelta(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "DescriptionId, Action Detail, Details";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA9963_DeleteLangRefsetInDelta fix = new INFRA9963_DeleteLangRefsetInDelta(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "DescriptionId, Action Detail, Details";
-			fix.runStandAlone = true;
-			fix.selfDetermining = true;
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA9963_DeleteLangRefsetInDelta(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
 	}
 
 	@Override

@@ -5,8 +5,8 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.domain.Concept;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import java.util.List;
 
@@ -17,20 +17,7 @@ public class InactivateSimpleRefsetMembersWithInactiveReferencedComponents exten
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		InactivateSimpleRefsetMembersWithInactiveReferencedComponents fix = new InactivateSimpleRefsetMembersWithInactiveReferencedComponents(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.loadProjectSnapshot();  //Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new InactivateSimpleRefsetMembersWithInactiveReferencedComponents(null).standardExecution(args, ExecutionOptions.DEFAULT.withImportAllRefsets());
 	}
 
 	@Override

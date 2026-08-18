@@ -23,27 +23,21 @@ public class NormalizeGroupersViaDisposition extends DrugBatchFix implements Scr
 	
 	protected NormalizeGroupersViaDisposition(BatchFix clone) {
 		super(clone);
+		inputFileHasHeaderRow = true;
+		reportNoChange = true;
+		populateTaskDescription = true;
+		additionalReportColumns = "ACTION_DETAIL, ATTRIBUTE_COUNT, SYNONYM_COUNT";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		NormalizeGroupersViaDisposition fix = new NormalizeGroupersViaDisposition(null);
-		try {
-			fix.inputFileHasHeaderRow = true;
-			fix.reportNoChange = true;
-			fix.populateEditPanel = true;
-			fix.populateTaskDescription = true;
-			fix.additionalReportColumns = "ACTION_DETAIL, ATTRIBUTE_COUNT, SYNONYM_COUNT";
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(); //Need full descriptions so we can get PT of target (not loaded from TS)
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new NormalizeGroupersViaDisposition(null).standardExecution(args, ExecutionOptions.DEFAULT.withDrivenByInputFile());
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		//standardExecution() forces populateEditPanel false; this fix originally wanted it true
+		populateEditPanel = true;
 		Concept parentConcept =  gl.getConcept(newParent);
 		newParentRel = new Relationship(null, IS_A, parentConcept, 0);
 	}

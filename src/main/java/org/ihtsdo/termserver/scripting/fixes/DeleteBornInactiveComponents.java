@@ -7,6 +7,7 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.domain.Relationship;
 import org.ihtsdo.termserver.scripting.domain.ScriptConstants;
 
@@ -16,24 +17,12 @@ public class DeleteBornInactiveComponents extends BatchFix implements ScriptCons
 
 	protected DeleteBornInactiveComponents(BatchFix clone) {
 		super(clone);
+		this.populateTaskDescription = false;
+		this.worksWithConcepts = false; //Ensures doFix is called with Component
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		DeleteBornInactiveComponents fix = new DeleteBornInactiveComponents(null);
-		try {
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.runStandAlone = false;
-			fix.worksWithConcepts = false; //Ensures doFix is called with Component
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new DeleteBornInactiveComponents(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

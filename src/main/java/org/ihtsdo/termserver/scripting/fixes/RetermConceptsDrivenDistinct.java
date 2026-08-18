@@ -9,38 +9,32 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * LOINC-389
  * Reterm concepts as driven by file
  */
 public class RetermConceptsDrivenDistinct extends BatchFix {
-	
+
 	Map<Concept, String> currentExpectedFSN = new HashMap<>();
 	Map<Concept, String> replacementTermMap = new HashMap<>();
 	String semTag = " (observable entity)";
-	
+
 	protected RetermConceptsDrivenDistinct(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		RetermConceptsDrivenDistinct fix = new RetermConceptsDrivenDistinct(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.reportNoChange = true;
-			fix.selfDetermining = false;
-			fix.runStandAlone = true;
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new RetermConceptsDrivenDistinct(null).standardExecution(args, ExecutionOptions.DEFAULT.withDrivenByInputFile());
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 
 import org.ihtsdo.otf.utils.ExceptionUtils;
@@ -13,7 +12,6 @@ import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -38,28 +36,16 @@ public class INFRA10900_Reterm_Taxonomy extends BatchFix {
 	
 	protected INFRA10900_Reterm_Taxonomy(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail, Additional Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA10900_Reterm_Taxonomy fix = new INFRA10900_Reterm_Taxonomy(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail, Additional Detail";
-			fix.init(args);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA10900_Reterm_Taxonomy(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
-	
 
+	@Override
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"TaskId, TaskDesc,SCTID, FSN, Severity, Action, Details, , , ",

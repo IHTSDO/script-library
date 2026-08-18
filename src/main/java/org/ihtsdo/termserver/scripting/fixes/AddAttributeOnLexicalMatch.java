@@ -7,7 +7,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * DEVICES-99 A set of tickets adding attributes to concepts based on matching terms in the FSN
@@ -15,7 +14,7 @@ import org.snomed.otf.script.dao.ReportSheetManager;
  * INFRA-5794 Add parent to 'Idiopathic' if required
  */
 public class AddAttributeOnLexicalMatch extends BatchFix {
-	
+
 	private Concept subHierarchy;
 	private Map<String, RelationshipTemplate> searchTermAttributeMap;
 	private Set<String> exclusions;
@@ -23,26 +22,15 @@ public class AddAttributeOnLexicalMatch extends BatchFix {
 
 	protected AddAttributeOnLexicalMatch(BatchFix clone) {
 		super(clone);
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		AddAttributeOnLexicalMatch fix = new AddAttributeOnLexicalMatch(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new AddAttributeOnLexicalMatch(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subHierarchy = gl.getConcept("64572001 |Disease (disorder)|");
 		exclusions = new HashSet<>();
 

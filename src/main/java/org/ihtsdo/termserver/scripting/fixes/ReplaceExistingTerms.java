@@ -34,19 +34,7 @@ public class ReplaceExistingTerms extends BatchFix implements ScriptConstants{
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		ReplaceExistingTerms fix = new ReplaceExistingTerms(null);
-		try {
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(); //Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new ReplaceExistingTerms(null).standardExecution(args, ExecutionOptions.DEFAULT.withNoIntegrityChecking());
 	}
 
 	@Override

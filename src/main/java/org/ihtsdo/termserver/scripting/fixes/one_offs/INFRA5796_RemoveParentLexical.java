@@ -25,22 +25,13 @@ public class INFRA5796_RemoveParentLexical extends BatchFix {
 	
 	protected INFRA5796_RemoveParentLexical(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		populateTaskDescription = false;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA5796_RemoveParentLexical fix = new INFRA5796_RemoveParentLexical(null);
-		try {
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.populateTaskDescription = false;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA5796_RemoveParentLexical(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

@@ -7,14 +7,13 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.domain.Relationship;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,30 +37,18 @@ public class QI1279_Reterm_RAST extends BatchFix {
 
 	protected QI1279_Reterm_RAST(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		reportNoChange = true;
+		maxFailures = 9999;
+		groupByIssue = true;
+		additionalReportColumns = "Action Detail, Additional Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		QI1279_Reterm_RAST fix = new QI1279_Reterm_RAST(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.maxFailures = 9999;
-			fix.groupByIssue = true;
-			fix.additionalReportColumns = "Action Detail, Additional Detail";
-			fix.init(args);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new QI1279_Reterm_RAST(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
-	
 
+	@Override
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"TaskId, TaskDesc,SCTID, FSN, Severity, Action, Details, , , ",

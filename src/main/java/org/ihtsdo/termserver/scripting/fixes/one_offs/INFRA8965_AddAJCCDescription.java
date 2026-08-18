@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -10,7 +9,6 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * INFRA-8965 Add additional description to AJCC Cancer Concepts
@@ -24,26 +22,16 @@ public class INFRA8965_AddAJCCDescription extends BatchFix {
 	
 	protected INFRA8965_AddAJCCDescription(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA8965_AddAJCCDescription fix = new INFRA8965_AddAJCCDescription(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA8965_AddAJCCDescription(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subsetECL = "<< 1222584008 |American Joint Committee on Cancer allowable value (qualifier value)|";
 		exclusionTexts = new HashSet<>();
 		exclusionTexts.add("federation of gynecology and obstetrics");

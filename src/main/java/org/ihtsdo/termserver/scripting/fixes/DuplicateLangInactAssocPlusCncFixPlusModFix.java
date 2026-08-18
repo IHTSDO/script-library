@@ -10,7 +10,6 @@ import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 import org.springframework.web.client.RestClientResponseException;
 
 import org.slf4j.Logger;
@@ -38,20 +37,7 @@ public class DuplicateLangInactAssocPlusCncFixPlusModFix extends BatchFix {
 	}
 
 	public static void main(final String[] args) throws TermServerScriptException {
-		final DuplicateLangInactAssocPlusCncFixPlusModFix fix = new DuplicateLangInactAssocPlusCncFixPlusModFix(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.runStandAlone = false;  //We need to look up the project path for MS projects
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
-			fix.init(args);
-			fix.loadProjectSnapshot(); // Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new DuplicateLangInactAssocPlusCncFixPlusModFix(null).standardExecution(args, ExecutionOptions.DEFAULT.withNoIntegrityChecking());
 	}
 	
 	@Override

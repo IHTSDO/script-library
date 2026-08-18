@@ -24,25 +24,21 @@ public class FixWrongModuleId extends BatchFix implements ScriptConstants{
 	
 	protected FixWrongModuleId(BatchFix clone) {
 		super(clone);
+		this.reportNoChange = false;  //Might just be langrefset which we'll modify directly
+		this.populateTaskDescription = false;
+		this.additionalReportColumns = "Active, Details";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		FixWrongModuleId fix = new FixWrongModuleId(null);
-		try {
-			fix.reportNoChange = false;  //Might just be langrefset which we'll modify directly
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.runStandAlone = true;
-			fix.init(args);
-			fix.additionalReportColumns = "Active, Details";
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new FixWrongModuleId(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
 	}
 
 	@Override

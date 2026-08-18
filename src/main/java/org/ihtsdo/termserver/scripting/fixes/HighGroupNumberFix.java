@@ -8,7 +8,6 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * INFRA-4792 Seeing concepts using large numbers for groupId
@@ -17,23 +16,19 @@ public class HighGroupNumberFix extends BatchFix {
 
 	protected HighGroupNumberFix(BatchFix clone) {
 		super(clone);
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		HighGroupNumberFix fix = new HighGroupNumberFix(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = true;  //Actually only found a couple
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new HighGroupNumberFix(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		//standardExecution() forces populateEditPanel false; this fix originally wanted it true
+		//(the old main() comment noted: "Actually only found a couple")
+		populateEditPanel = true;
 	}
 
 	@Override

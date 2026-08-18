@@ -21,16 +21,7 @@ public class AlignComponentModuleToOwningConcept extends BatchFix implements Scr
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		AlignComponentModuleToOwningConcept fix = new AlignComponentModuleToOwningConcept(null);
-		try {
-			fix.selfDetermining = true;
-			fix.init(args);
-			fix.loadProjectSnapshot(); //Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new AlignComponentModuleToOwningConcept(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

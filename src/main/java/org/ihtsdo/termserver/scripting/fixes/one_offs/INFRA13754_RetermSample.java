@@ -6,8 +6,8 @@ import org.ihtsdo.otf.utils.ExceptionUtils;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 public class INFRA13754_RetermSample extends BatchFix {
 
@@ -19,25 +19,21 @@ public class INFRA13754_RetermSample extends BatchFix {
 
 	protected INFRA13754_RetermSample(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = true;
+		reportNoChange = true;
+		inputFileHasHeaderRow = true;
+		additionalReportColumns = "Action Detail, Additional Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA13754_RetermSample fix = new INFRA13754_RetermSample(null);
-		try {
-			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_UPDATES);
-			fix.populateEditPanel = true;
-			fix.populateTaskDescription = true;
-			fix.reportNoChange = true;
-			fix.inputFileHasHeaderRow = true;
-			fix.additionalReportColumns = "Action Detail, Additional Detail";
-			fix.init(args);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA13754_RetermSample(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		//standardExecution forces populateEditPanel to false; this fix relies on the edit panel being populated
+		populateEditPanel = true;
 	}
 
 	@Override

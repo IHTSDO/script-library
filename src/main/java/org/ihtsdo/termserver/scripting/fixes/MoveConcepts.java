@@ -36,28 +36,20 @@ public class MoveConcepts extends BatchFix implements ScriptConstants{
 	
 	protected MoveConcepts(BatchFix clone) {
 		super(clone);
+		this.inputFileHasHeaderRow = true;
+		this.expectNullConcepts = true;
+		this.reportNoChange = true;
+		this.populateTaskDescription = true;
+		this.additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, ATTRIBUTES, STATED CHILDREN, INFERRED_CHILDREN";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		MoveConcepts fix = new MoveConcepts(null);
-		try {
-			fix.inputFileHasHeaderRow = true;
-			fix.expectNullConcepts = true;
-			fix.reportNoChange = true;
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = true;
-			fix.additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, ATTRIBUTES, STATED CHILDREN, INFERRED_CHILDREN";
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new MoveConcepts(null).standardExecution(args, ExecutionOptions.DEFAULT.withDrivenByInputFile());
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
 		Concept parentConcept =  gl.getConcept(parentNewLocation);
 		newParentRel = new Relationship(null, IS_A, parentConcept, 0);
 		if (reassignOrphans) {

@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,7 +13,6 @@ import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 public class INFRA7048_Reterm_SubstanceGrouperReferences extends BatchFix {
 
@@ -51,24 +49,13 @@ public class INFRA7048_Reterm_SubstanceGrouperReferences extends BatchFix {
 	
 	protected INFRA7048_Reterm_SubstanceGrouperReferences(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		reportNoChange = true;
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA7048_Reterm_SubstanceGrouperReferences fix = new INFRA7048_Reterm_SubstanceGrouperReferences(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.init(args);
-			fix.getSnapshotConfiguration().setPopulateReleaseFlag(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA7048_Reterm_SubstanceGrouperReferences(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 	
 	public void postInit() throws TermServerScriptException {

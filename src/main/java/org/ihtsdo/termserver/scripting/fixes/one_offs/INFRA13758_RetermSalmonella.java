@@ -7,7 +7,6 @@ import org.ihtsdo.otf.utils.ExceptionUtils;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import java.util.*;
 
@@ -18,25 +17,20 @@ public class INFRA13758_RetermSalmonella extends BatchFix {
 
 	protected INFRA13758_RetermSalmonella(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = true;
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail, Additional Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA13758_RetermSalmonella fix = new INFRA13758_RetermSalmonella(null);
-		try {
-			ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_UPDATES);
-			fix.populateEditPanel = true;
-			fix.populateTaskDescription = true;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail, Additional Detail";
-			fix.init(args);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA13758_RetermSalmonella(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		//standardExecution() forces populateEditPanel false; this fix originally wanted it true
+		populateEditPanel = true;
 	}
 
 	@Override

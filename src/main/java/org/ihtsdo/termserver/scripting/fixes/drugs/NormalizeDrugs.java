@@ -29,26 +29,20 @@ public class NormalizeDrugs extends DrugBatchFix implements ScriptConstants{
 	
 	protected NormalizeDrugs(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		populateTaskDescription = true;
+		additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, PARENT_COUNT, ATTRIBUTE_COUNT";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		NormalizeDrugs fix = new NormalizeDrugs(null);
-		try {
-			fix.reportNoChange = true;
-			fix.populateEditPanel = true;
-			fix.populateTaskDescription = true;
-			fix.additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, PARENT_COUNT, ATTRIBUTE_COUNT";
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new NormalizeDrugs(null).standardExecution(args, ExecutionOptions.DEFAULT.withDrivenByInputFile());
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		//standardExecution() forces populateEditPanel false; this fix originally wanted it true
+		populateEditPanel = true;
 		Concept parentConcept =  gl.getConcept(newParent);
 		parentConcept.setFsn("Medicinal product (product)");
 		newParentRel = new Relationship(null, IS_A, parentConcept, 0);

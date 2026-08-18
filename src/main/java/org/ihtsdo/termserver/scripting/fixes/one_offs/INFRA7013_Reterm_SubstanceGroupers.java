@@ -12,7 +12,6 @@ import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 public class INFRA7013_Reterm_SubstanceGroupers extends BatchFix {
 
@@ -20,24 +19,13 @@ public class INFRA7013_Reterm_SubstanceGroupers extends BatchFix {
 
 	protected INFRA7013_Reterm_SubstanceGroupers(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		reportNoChange = true;
+		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA7013_Reterm_SubstanceGroupers fix = new INFRA7013_Reterm_SubstanceGroupers(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.init(args);
-			fix.getSnapshotConfiguration().setPopulateReleaseFlag(true);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA7013_Reterm_SubstanceGroupers(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

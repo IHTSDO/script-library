@@ -27,16 +27,7 @@ public class RemoveFSNCounterparts extends BatchFix implements ScriptConstants{
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		RemoveFSNCounterparts fix = new RemoveFSNCounterparts(null);
-		try {
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new RemoveFSNCounterparts(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

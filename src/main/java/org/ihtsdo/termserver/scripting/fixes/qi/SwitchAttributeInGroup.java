@@ -28,25 +28,16 @@ public class SwitchAttributeInGroup extends BatchFix {
 
 	protected SwitchAttributeInGroup(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		SwitchAttributeInGroup fix = new SwitchAttributeInGroup(null);
-		try {
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new SwitchAttributeInGroup(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		Concept findValue = gl.getConcept("113276009"); // |Intestinal structure (body structure)|
 		findRel = new RelationshipTemplate(FINDING_SITE, findValue);
 		

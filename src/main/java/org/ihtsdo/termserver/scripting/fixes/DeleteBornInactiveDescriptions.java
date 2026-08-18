@@ -14,26 +14,13 @@ public class DeleteBornInactiveDescriptions extends BatchFix implements ScriptCo
 	
 	protected DeleteBornInactiveDescriptions(BatchFix clone) {
 		super(clone);
+		reportNoChange = false;  //Might just be langrefset which we'll modify directly
+		populateTaskDescription = false;
+		additionalReportColumns = "Active, Details";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		DeleteBornInactiveDescriptions fix = new DeleteBornInactiveDescriptions(null);
-		try {
-			fix.reportNoChange = false;  //Might just be langrefset which we'll modify directly
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.runStandAlone = false;
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.additionalReportColumns = "Active, Details";
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new DeleteBornInactiveDescriptions(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

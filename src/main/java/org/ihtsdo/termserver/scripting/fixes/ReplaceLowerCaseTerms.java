@@ -26,16 +26,7 @@ public class ReplaceLowerCaseTerms extends BatchFix implements ScriptConstants{
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		ReplaceLowerCaseTerms fix = new ReplaceLowerCaseTerms(null);
-		try {
-			fix.selfDetermining = true;
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(); //Load all descriptions
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new ReplaceLowerCaseTerms(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

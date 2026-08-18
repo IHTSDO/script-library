@@ -6,11 +6,11 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.domain.ScriptConstants;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import java.util.Comparator;
 import java.util.List;
@@ -21,24 +21,12 @@ public class AlignLangRefsetMembersToDescriptionModule extends BatchFix implemen
 
 	protected AlignLangRefsetMembersToDescriptionModule(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		reportNoChange = true;
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		AlignLangRefsetMembersToDescriptionModule fix = new AlignLangRefsetMembersToDescriptionModule(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.init(args);
-			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new AlignLangRefsetMembersToDescriptionModule(null).standardExecution(args, ExecutionOptions.DEFAULT.withNoIntegrityChecking());
 	}
 
 	@Override

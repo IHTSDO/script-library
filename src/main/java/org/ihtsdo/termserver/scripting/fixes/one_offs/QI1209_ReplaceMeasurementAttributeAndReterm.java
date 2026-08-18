@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -12,7 +11,6 @@ import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * QI-1209
@@ -27,25 +25,15 @@ public class QI1209_ReplaceMeasurementAttributeAndReterm extends BatchFix {
 	
 	protected QI1209_ReplaceMeasurementAttributeAndReterm(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		QI1209_ReplaceMeasurementAttributeAndReterm fix = new QI1209_ReplaceMeasurementAttributeAndReterm(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new QI1209_ReplaceMeasurementAttributeAndReterm(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
-	
+
+	@Override
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"Task Key, Task Description, Concept SCTID,FSN, ,Severity, Action, Details, Details, Details, , ,",

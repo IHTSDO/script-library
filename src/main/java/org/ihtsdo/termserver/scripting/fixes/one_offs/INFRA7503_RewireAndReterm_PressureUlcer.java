@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -10,7 +9,6 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * 399912005 |Pressure ulcer (disorder)|will be inactivated and the remaining 
@@ -32,36 +30,26 @@ public class INFRA7503_RewireAndReterm_PressureUlcer extends BatchFix {
 	
 	protected INFRA7503_RewireAndReterm_PressureUlcer(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail, Further Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA7503_RewireAndReterm_PressureUlcer fix = new INFRA7503_RewireAndReterm_PressureUlcer(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail, Further Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA7503_RewireAndReterm_PressureUlcer(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subsetECL = "< 399912005 |Pressure ulcer (disorder)|";
 		addTemplate = null;
-		replaceTemplate = new RelationshipTemplate(ASSOC_MORPH, 
+		replaceTemplate = new RelationshipTemplate(ASSOC_MORPH,
 				gl.getConcept("1163215007 |Pressure injury (disorder)|"));
-		searchTemplate = new RelationshipTemplate(ASSOC_MORPH, 
+		searchTemplate = new RelationshipTemplate(ASSOC_MORPH,
 				gl.getConcept("420226006 |Pressure ulcer (morphologic abnormality) |"));
-		
+
 		exclusionTexts = new HashSet<>();
 		exclusionTexts.add("stage");
-		
+
 		searchAndReplaceText = new HashMap<>();
 		searchAndReplaceText.put("Pressure ulcer", "Pressure injury");
 		searchAndReplaceText.put("pressure ulcer", "pressure injury");

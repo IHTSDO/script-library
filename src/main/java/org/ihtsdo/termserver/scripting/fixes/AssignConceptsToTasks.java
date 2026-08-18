@@ -6,7 +6,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import java.util.*;
 
@@ -17,28 +16,30 @@ public class AssignConceptsToTasks extends BatchFix {
 
 	protected AssignConceptsToTasks(BatchFix clone) {
 		super(clone);
+		taskPrefix = "TherapeuticProc_";
+		taskThrottle = 0;  //No need to slow down, not taking up any time on the Terminology Server
+		additionalReportColumns = "ActionDetail, Descriptions, Inferred Expression";
+		conceptThrottle = 0;
+		reportNoChange = false;
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		AssignConceptsToTasks fix = new AssignConceptsToTasks(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.taskPrefix = "TherapeuticProc_";
-			fix.taskThrottle = 0;  //No need to slow down, not taking up any time on the Terminology Server
-			fix.additionalReportColumns = "ActionDetail, Descriptions, Inferred Expression";
-			fix.conceptThrottle = 0;
-			fix.populateEditPanel = true;
-			fix.populateTaskDescription = true;
-			fix.selfDetermining = true;
-			fix.runStandAlone = true;
-			fix.reportNoChange = false;
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new AssignConceptsToTasks(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
+	}
+
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		//standardExecution() forces populateEditPanel false; this fix originally wanted it true
+		populateEditPanel = true;
 	}
 
 	@Override

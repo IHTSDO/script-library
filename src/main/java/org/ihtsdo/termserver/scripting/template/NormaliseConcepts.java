@@ -32,19 +32,7 @@ public class NormaliseConcepts extends BatchFix {
 	}
 	
 	public static void main(String[] args) throws TermServerScriptException {
-		NormaliseConcepts app = new NormaliseConcepts(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1Ay_IwhPD1EkeIYWuU6q7xgWBIzfEf6dl");  // QI/Normalization
-			app.selfDetermining = true;  // NormaliseConceptsDriven sets this to false
-			app.init(args);
-			app.loadProjectSnapshot();  //Load all descriptions
-			app.postInit();
-			app.processFile();
-		} catch (Exception e) {
-			LOGGER.error("Failed to NormaliseTemplateCompliantConcepts", e);
-		} finally {
-			app.finish();
-		}
+		new NormaliseConcepts(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override
@@ -68,6 +56,7 @@ public class NormaliseConcepts extends BatchFix {
 		};
 		//ppp = gl.getConcept("239762007 |Flail joint (disorder)|")
 		super.postInit(tabNames, columnHeadings, false);
+		ReportSheetManager.setTargetFolderId(GFOLDER_QI_NORMALIZATION);
 	}
 
 	@Override

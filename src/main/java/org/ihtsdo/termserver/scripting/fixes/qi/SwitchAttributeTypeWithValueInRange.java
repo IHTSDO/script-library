@@ -30,25 +30,18 @@ public class SwitchAttributeTypeWithValueInRange extends BatchFix {
 	
 	protected SwitchAttributeTypeWithValueInRange(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		SwitchAttributeTypeWithValueInRange fix = new SwitchAttributeTypeWithValueInRange(null);
-		try {
-			fix.populateEditPanel = true;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new SwitchAttributeTypeWithValueInRange(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		//standardExecution() forces populateEditPanel false; this fix needs it true
+		populateEditPanel = true;
 		findType = gl.getConcept("118170007 |Specimen source identity (attribute)|");
 		replaceType = gl.getConcept("370133003 |Specimen substance (attribute)|");
 		findValueRange = findConcepts("<< 260787004 |Physical object (physical object)|");

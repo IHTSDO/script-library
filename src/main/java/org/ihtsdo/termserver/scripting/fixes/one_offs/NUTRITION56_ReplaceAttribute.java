@@ -9,56 +9,47 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
- * NUTRITION-56 Batch change of Modified substance diet 
+ * NUTRITION-56 Batch change of Modified substance diet
  */
 public class NUTRITION56_ReplaceAttribute extends BatchFix {
 
 	private RelationshipTemplate matchTemplate;
 	private RelationshipTemplate replaceTemplate;
 	private List<RelationshipTemplate> groupWith;
-	
+
 	protected NUTRITION56_ReplaceAttribute(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		NUTRITION56_ReplaceAttribute fix = new NUTRITION56_ReplaceAttribute(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = true;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new NUTRITION56_ReplaceAttribute(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		//standardExecution() forces populateEditPanel false; this fix originally wanted it true
+		populateEditPanel = true;
 		//subsetECL = "<< 182922004 |Dietary regime (regime/therapy)| : 424361007 |Using substance (attribute)| = *";
-		subsetECL = " << 435581000124102 |Carbohydrate modified diet (regime/therapy)| OR " + 
-				" << 435671000124101 |Cholesterol modified diet (regime/therapy)| OR " + 
-				" << 435711000124102 |Fat modified diet (regime/therapy)| OR " + 
-				" << 435721000124105 |Fiber modified diet (regime/therapy)| OR " + 
-				" << 435781000124109 |Mineral modified diet (regime/therapy)| OR " + 
-				" << 435691000124100 |Diet modified for specific foods or ingredients (regime/therapy)| OR " + 
-				" << 762104002 |Modified fluid diet (regime/therapy)| OR " + 
-				" << 435791000124107 |Protein modified diet (regime/therapy)| OR " + 
+		subsetECL = " << 435581000124102 |Carbohydrate modified diet (regime/therapy)| OR " +
+				" << 435671000124101 |Cholesterol modified diet (regime/therapy)| OR " +
+				" << 435711000124102 |Fat modified diet (regime/therapy)| OR " +
+				" << 435721000124105 |Fiber modified diet (regime/therapy)| OR " +
+				" << 435781000124109 |Mineral modified diet (regime/therapy)| OR " +
+				" << 435691000124100 |Diet modified for specific foods or ingredients (regime/therapy)| OR " +
+				" << 762104002 |Modified fluid diet (regime/therapy)| OR " +
+				" << 435791000124107 |Protein modified diet (regime/therapy)| OR " +
 				" << 435811000124106 |Vitamin modified diet (regime/therapy)|";
 		matchTemplate = new RelationshipTemplate(gl.getConcept("424361007 |Using substance (attribute)|"), null);
-		replaceTemplate = new RelationshipTemplate(gl.getConcept("260686004 |Method (attribute)| "), 
+		replaceTemplate = new RelationshipTemplate(gl.getConcept("260686004 |Method (attribute)| "),
 				gl.getConcept("129445006 |Administration - action (qualifier value)|"));
 		groupWith = new ArrayList<>();
 		groupWith.add(new RelationshipTemplate(gl.getConcept("363701004 |Direct substance (attribute)|"), null));
 		groupWith.add(new RelationshipTemplate(gl.getConcept("363702006 |Has focus (attribute)|"), null));
-		super.postInit();
 	}
 
 	@Override

@@ -5,7 +5,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * NUTRITION-58 Inactivate attributes matching a particular patern
@@ -16,30 +15,22 @@ public class InactivateAttributes extends BatchFix {
 	
 	protected InactivateAttributes(BatchFix clone) {
 		super(clone);
+		this.reportNoChange = true;
+		this.additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		InactivateAttributes fix = new InactivateAttributes(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = true;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new InactivateAttributes(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subsetECL = "<< 364393001 |Nutritional observable (observable entity)| :  370132008 |Scale type (attribute)| = 30766002 |Quantitative (qualifier value)| ";
-		inactivateTemplate = new RelationshipTemplate(gl.getConcept("370132008 |Scale type (attribute)|"), 
+		inactivateTemplate = new RelationshipTemplate(gl.getConcept("370132008 |Scale type (attribute)|"),
 				gl.getConcept("30766002 |Quantitative (qualifier value)|"));
 		super.postInit();
+		//standardExecution() forces populateEditPanel false; this fix originally wanted it true
+		populateEditPanel = true;
 	}
 
 	@Override

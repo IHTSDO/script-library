@@ -9,7 +9,6 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * NUTRITION-50 Batch change of estimated/measured nutritional intake observable content
@@ -23,33 +22,23 @@ public class NUTRITION50_ReplaceAttributeAndReterm extends BatchFix {
 	
 	protected NUTRITION50_ReplaceAttributeAndReterm(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		NUTRITION50_ReplaceAttributeAndReterm fix = new NUTRITION50_ReplaceAttributeAndReterm(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new NUTRITION50_ReplaceAttributeAndReterm(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subsetECL = "<< 363787002 |Observable entity (observable entity)| : 370130000 |Property (attribute)| = 118544000 |Mass rate (property) (qualifier value)|";
 		addTemplate = null;
-		replaceTemplate = new RelationshipTemplate(gl.getConcept("370130000 |Property (attribute)|"), 
+		replaceTemplate = new RelationshipTemplate(gl.getConcept("370130000 |Property (attribute)|"),
 				gl.getConcept("118597006 |Quantity rate (property) (qualifier value)| "));
-		matchTemplate = new RelationshipTemplate(gl.getConcept("370130000 |Property (attribute)|"), 
+		matchTemplate = new RelationshipTemplate(gl.getConcept("370130000 |Property (attribute)|"),
 				gl.getConcept("118544000 |Mass rate (property) (qualifier value)|"));
-		
+
 		exclusionTexts = new HashSet<>();
 		exclusionTexts.add("contrast");
 		super.postInit();

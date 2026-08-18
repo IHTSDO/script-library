@@ -10,49 +10,38 @@ import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
- * INFRA-5204 Add "Contrast" to FSN and attribute 
+ * INFRA-5204 Add "Contrast" to FSN and attribute
  */
 public class INFRA5204_AddContrastAttributeAndFsn extends BatchFix {
 
 	private Set<String> exclusionTexts;
 	private RelationshipTemplate addTemplate;
 	private RelationshipTemplate matchTemplate;
-	
+
 	protected INFRA5204_AddContrastAttributeAndFsn(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA5204_AddContrastAttributeAndFsn fix = new INFRA5204_AddContrastAttributeAndFsn(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA5204_AddContrastAttributeAndFsn(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
 		//INFRA-5204
 		subsetECL = "<< 420040002|Fluoroscopic angiography (procedure)|";
-		addTemplate = new RelationshipTemplate(gl.getConcept("424361007|Using substance (attribute)|"), 
+		addTemplate = new RelationshipTemplate(gl.getConcept("424361007|Using substance (attribute)|"),
 				gl.getConcept("385420005|Contrast media (substance)|"));
-		matchTemplate = new RelationshipTemplate(METHOD, 
+		matchTemplate = new RelationshipTemplate(METHOD,
 				gl.getConcept("312275004|Fluoroscopic imaging - action (qualifier value)|"));
-		
+
 		exclusionTexts = new HashSet<>();
 		exclusionTexts.add("contrast");
-		super.postInit();
 	}
 
 	@Override

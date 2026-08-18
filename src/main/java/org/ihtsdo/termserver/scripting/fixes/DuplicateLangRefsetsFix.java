@@ -7,8 +7,8 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.*;
 import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.GraphLoader.DuplicatePair;
 import org.ihtsdo.termserver.scripting.domain.Concept;
+import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
 import org.ihtsdo.termserver.scripting.domain.LangRefsetEntry;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,20 +22,7 @@ public class DuplicateLangRefsetsFix extends BatchFix {
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		DuplicateLangRefsetsFix fix = new DuplicateLangRefsetsFix(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.selfDetermining = true;
-			fix.populateEditPanel = false;
-			fix.runStandAlone = false;  //Need to look up the project for MS extensions
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			fix.loadProjectSnapshot();  //Load all descriptions
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new DuplicateLangRefsetsFix(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

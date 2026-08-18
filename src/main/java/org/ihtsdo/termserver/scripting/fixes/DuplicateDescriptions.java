@@ -7,7 +7,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 
 /* INFRA-4133 Fix issue of multiple descriptions with the same term - unpublished and active
@@ -28,20 +27,7 @@ public class DuplicateDescriptions extends BatchFix implements ScriptConstants{
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		DuplicateDescriptions fix = new DuplicateDescriptions(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-Hoc Batch Updates
-			//fix.runStandAlone = false;  //Was causing issues with historical associations not being set
-			fix.selfDetermining = true;
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(); //Just
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new DuplicateDescriptions(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override

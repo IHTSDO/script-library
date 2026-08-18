@@ -12,7 +12,6 @@ import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * QI-256
@@ -33,27 +32,17 @@ public class QI256_AddClinicalCourse extends BatchFix {
 	
 	protected QI256_AddClinicalCourse(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		classifyTasks = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		QI256_AddClinicalCourse fix = new QI256_AddClinicalCourse(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.classifyTasks = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new QI256_AddClinicalCourse(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		aCache = gl.getAncestorsCache();
 		clinicalCourse = gl.getConcept("263502005 |Clinical course (attribute)|");
 		acuteUlcer = gl.getConcept("26317001 |Acute ulcer (morphologic abnormality)|");

@@ -9,7 +9,6 @@ import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * INFRA-5204 Add "NCEP" description inactivation indicator where not present
@@ -20,26 +19,16 @@ public class SetDescriptionInactivationIndicator extends BatchFix {
 
 	protected SetDescriptionInactivationIndicator(BatchFix clone) {
 		super(clone);
+		this.reportNoChange = true;
+		this.additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		SetDescriptionInactivationIndicator fix = new SetDescriptionInactivationIndicator(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new SetDescriptionInactivationIndicator(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		//INFRA-5204
 		subsetECL = "<< 420040002|Fluoroscopic angiography (procedure)|";
 		super.postInit();

@@ -20,26 +20,13 @@ public class SetAttribute extends BatchFix implements ScriptConstants{
 	
 	protected SetAttribute(BatchFix clone) {
 		super(clone);
+		this.reportNoChange = true;
+		this.populateTaskDescription = true;
+		this.additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, PARENT_COUNT, ATTRIBUTE_COUNT";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		SetAttribute fix = new SetAttribute(null);
-		try {
-			fix.reportNoChange = true;
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = true;
-			fix.additionalReportColumns = "ACTION_DETAIL, DEF_STATUS, PARENT_COUNT, ATTRIBUTE_COUNT";
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
-	}
-
-	private void postLoadInit() throws TermServerScriptException {
+		new SetAttribute(null).standardExecution(args, ExecutionOptions.DEFAULT.withDrivenByInputFile());
 	}
 
 	@Override

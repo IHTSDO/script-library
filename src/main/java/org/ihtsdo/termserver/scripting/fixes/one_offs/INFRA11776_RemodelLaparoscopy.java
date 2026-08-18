@@ -11,9 +11,7 @@ import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,26 +33,16 @@ public class INFRA11776_RemodelLaparoscopy extends BatchFix implements ScriptCon
 
 	protected INFRA11776_RemodelLaparoscopy(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		INFRA11776_RemodelLaparoscopy fix = new INFRA11776_RemodelLaparoscopy(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new INFRA11776_RemodelLaparoscopy(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subsetECL = "(< 71388002 |Procedure| : << 424226004 |using device| = << 86174004 |laparoscope)| ) MINUS << 73632009 |Laparoscopy|";
 		matchGroup = new RelationshipGroup(NOT_SET);
 		matchGroup.addRelationship(new RelationshipTemplate(METHOD, gl.getConcept("129284003 |Surgical action|")));

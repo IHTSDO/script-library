@@ -27,24 +27,20 @@ public class FixMultipleFsnPTs extends BatchFix implements ScriptConstants{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(FixMultipleFsnPTs.class);
 
+	private static final String GFOLDER_MS_ADHOC_UPDATES = "1u6YLvJWX2GwAVJazFqJeKcVTwBbw96cc";  //MS Ad-Hoc Batch fixes
+
 	protected FixMultipleFsnPTs(BatchFix clone) {
 		super(clone);
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		FixMultipleFsnPTs fix = new FixMultipleFsnPTs(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1u6YLvJWX2GwAVJazFqJeKcVTwBbw96cc");  //MS Ad-Hoc Batch fixes
-			fix.selfDetermining = true;
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-			fix.init(args);
-			//Recover the current project state from TS (or local cached archive) to allow quick searching of all concepts
-			fix.loadProjectSnapshot(); //Just
-			fix.postInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new FixMultipleFsnPTs(null).standardExecution(args, ExecutionOptions.DEFAULT);
+	}
+
+	@Override
+	public void postInit() throws TermServerScriptException {
+		super.postInit();
+		ReportSheetManager.setTargetFolderId(GFOLDER_MS_ADHOC_UPDATES);
 	}
 
 	@Override

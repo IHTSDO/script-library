@@ -8,43 +8,31 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 /**
  * INFRA-9382 Add Interprets/Has Interpretation pair and also set PPP if required
  */
 public class AddRoleGroupWithParents extends BatchFix {
-	
+
 	private Set<String> exclusions;
 	private Concept ppp = null;
 	private Set<Concept> parentsToRemove = new HashSet<>();
 	private Set<Concept> parentsToAdd = new HashSet<>();
 	private List<RelationshipGroupTemplate> groupsToAdd = new ArrayList<>();
-	
+
 	protected AddRoleGroupWithParents(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		classifyTasks = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		AddRoleGroupWithParents fix = new AddRoleGroupWithParents(null);
-		try {
-			ReportSheetManager.setTargetFolderId("1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m");  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.classifyTasks = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new AddRoleGroupWithParents(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		//INFRA-9382
 		subsetECL = "<< 110359009 |Intellectual disability (disorder)| : * =  308490002 |Pathological developmental process (qualifier value)| ";
 		

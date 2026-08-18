@@ -38,32 +38,25 @@ public class QI75_HerniaRemodel extends BatchFix {
 	
 	protected QI75_HerniaRemodel(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		classifyTasks = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		QI75_HerniaRemodel fix = new QI75_HerniaRemodel(null);
-		try {
-			fix.populateEditPanel = true;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.classifyTasks = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new QI75_HerniaRemodel(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
+		//standardExecution() forces populateEditPanel false; this fix needs it true
+		populateEditPanel = true;
 		hWithO = gl.getConcept("8377001 |Hernia, with obstruction (disorder)|");
 		hWithG = gl.getConcept("79990007 |Hernia, with gangrene (disorder)|");
 		complicationParent = new Relationship(IS_A, COMPLICATION);
 		hWithOParent = new Relationship(IS_A, hWithO);
 		hWithGParent = new Relationship(IS_A, hWithG);
-		
+
 		//Populate all known types of hernia
 		Concept hernia = gl.getConcept("52515009 |Hernia of abdominal cavity (disorder)|");
 		typesOfHernia = new HashMap<>();
@@ -72,6 +65,7 @@ public class QI75_HerniaRemodel extends BatchFix {
 			typesOfHernia.put(term, c);
 		}
 		LOGGER.info("Mapped " + typesOfHernia.size() + " types of hernia");
+		super.postInit();
 	}
 
 	@Override

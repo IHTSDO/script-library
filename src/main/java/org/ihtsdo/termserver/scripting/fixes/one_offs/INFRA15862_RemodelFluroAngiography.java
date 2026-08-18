@@ -6,7 +6,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +15,8 @@ public class INFRA15862_RemodelFluroAngiography extends BatchFix implements Scri
 
 	protected INFRA15862_RemodelFluroAngiography(BatchFix clone) {
 		super(clone);
+		reportNoChange = true;
+		additionalReportColumns = "Action Detail";
 	}
 
 	Concept insertion;
@@ -25,23 +26,11 @@ public class INFRA15862_RemodelFluroAngiography extends BatchFix implements Scri
 	private Pass pass = Pass.FIRST_PASS;
 
 	public static void main(String[] args) throws TermServerScriptException {
-		INFRA15862_RemodelFluroAngiography fix = new INFRA15862_RemodelFluroAngiography(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+		new INFRA15862_RemodelFluroAngiography(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subsetECL = "<< 1296925008 |Insertion of stent (procedure)|: 260686004 |Method| = << 312275004 |Fluoroscopic imaging - action (qualifier value)|, [0..0] 363703001 |Has intent (attribute)| = 429892002 |Guidance intent (qualifier value)|";
 		insertion = gl.getConcept("257867005 |Insertion - action (qualifier value)|");
 		fluoroImaging = gl.getConcept("312275004 |Fluoroscopic imaging - action (qualifier value)|");

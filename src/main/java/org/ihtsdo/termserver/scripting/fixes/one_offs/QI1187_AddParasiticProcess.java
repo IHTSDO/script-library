@@ -1,6 +1,5 @@
 package org.ihtsdo.termserver.scripting.fixes.one_offs;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -12,7 +11,6 @@ import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate.Mode;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.otf.script.dao.ReportSheetManager;
 
 public class QI1187_AddParasiticProcess extends BatchFix {
 	
@@ -27,28 +25,24 @@ public class QI1187_AddParasiticProcess extends BatchFix {
 	
 	protected QI1187_AddParasiticProcess(BatchFix clone) {
 		super(clone);
+		populateTaskDescription = false;
+		additionalReportColumns = "Action Detail";
 	}
 
-	public static void main(String[] args) throws TermServerScriptException, IOException, InterruptedException {
-		QI1187_AddParasiticProcess fix = new QI1187_AddParasiticProcess(null);
-		try {
-			ReportSheetManager.targetFolderId = "1fIHGIgbsdSfh5euzO3YKOSeHw4QHCM-m";  //Ad-hoc batch updates
-			fix.populateEditPanel = false;
-			fix.runStandAlone = true;
-			fix.populateTaskDescription = false;
-			fix.selfDetermining = true;
-			fix.reportNoChange = true;
-			fix.additionalReportColumns = "Action Detail";
-			fix.init(args);
-			fix.loadProjectSnapshot();
-			fix.postLoadInit();
-			fix.processFile();
-		} finally {
-			fix.finish();
-		}
+	public static void main(String[] args) throws TermServerScriptException {
+		new QI1187_AddParasiticProcess(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
-	private void postLoadInit() throws TermServerScriptException {
+	@Override
+	protected void init(String[] args) throws TermServerScriptException {
+		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//this fix needs it true, and postInit() runs too late to affect that resolution
+		runStandAlone = true;
+		super.init(args);
+	}
+
+	@Override
+	public void postInit() throws TermServerScriptException {
 		subsetECL = "(< 404684003 |Clinical finding| : { 246075003 |Causative agent (attribute)| = ( <<417396000 |Kingdom Protozoa (organism)| OR " + 
 				"<<441649000 |Class Cestoda and/or Class Trematoda and/or Phylum Nemata (organism)| OR " + 
 				"<<11950008 |Phylum Acanthocephala (organism)| OR " + 
