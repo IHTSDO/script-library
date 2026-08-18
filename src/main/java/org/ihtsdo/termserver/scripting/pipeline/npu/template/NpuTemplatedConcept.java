@@ -20,7 +20,6 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 	private static final Logger LOGGER = LoggerFactory.getLogger(NpuTemplatedConcept.class);
 
 	private static Concept unitsAttribute;
-	private static RelationshipTemplate defaultUnitOfMeasureAttribute;
 	private static RelationshipTemplate fastingPreconditionAttribute;
 	private static Map<String, NpuDetail> npuDetailMap;
 	private static Set<String> knownBloodCells;
@@ -33,10 +32,7 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 	                              Map<String, NpuDetail> npuDetailMap) throws TermServerScriptException {
 		TemplatedConcept.initialise(cpm);
 		NpuTemplatedConcept.npuDetailMap = npuDetailMap;
-		Concept unitOfMeasure = gl.getConcept("767524001 |Unit of measure| ");
 		unitsAttribute = gl.getConcept("246514001 |Units|");
-		defaultUnitOfMeasureAttribute = new RelationshipTemplate(unitsAttribute, unitOfMeasure);
-
 		Concept precondition = gl.getConcept("704326004 |Precondition|");
 		Concept fasting = gl.getConcept("726055006 |After calorie fasting (qualifier value)|");
 		fastingPreconditionAttribute = new RelationshipTemplate(precondition, fasting);

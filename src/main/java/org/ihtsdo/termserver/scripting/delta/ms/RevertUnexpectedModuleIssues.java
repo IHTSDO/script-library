@@ -13,6 +13,9 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.otf.scheduler.domain.*;
 import org.snomed.otf.script.dao.ReportSheetManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * MSSP-1425 Find eg descriptions with core namespace SCTIDs which have switched
  * module and have no effective time and check with a published branch if we can
@@ -22,10 +25,6 @@ import org.snomed.otf.script.dao.ReportSheetManager;
  * effective time.  So we need a snapshot export to fix it, because the delta won't give
  * you any component that still has an effective tim
  */
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RevertUnexpectedModuleIssues extends DeltaGenerator {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RevertUnexpectedModuleIssues.class);
@@ -123,7 +122,7 @@ public class RevertUnexpectedModuleIssues extends DeltaGenerator {
 		return published;
 	}
 	
-	RefsetMember loadMember(String uuid) throws TermServerScriptException {
+	RefsetMember loadMember(String uuid) {
 		RefsetMember published = publishedMemberCache.get(uuid);
 		if (published == null) {
 			published = loadRefsetMember(uuid, INT_RELEASE_BRANCH);

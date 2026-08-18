@@ -10,7 +10,6 @@ import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConceptUsage;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
-import org.ihtsdo.termserver.scripting.pipeline.loinc.template.LoincTemplatedConceptWithRelative;
 import org.ihtsdo.termserver.scripting.util.CaseSensitivityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

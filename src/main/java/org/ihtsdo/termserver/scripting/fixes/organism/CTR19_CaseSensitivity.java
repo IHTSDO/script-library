@@ -27,8 +27,6 @@ If any of the concepts has description(s) that don't follow the above noted patt
  */
 public class CTR19_CaseSensitivity extends BatchFix implements ScriptConstants{
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(CTR19_CaseSensitivity.class);
-
 	String[] textsToMatch = new String[] { "Clade","Class","Division",
 			"Domain","Family","Genus","Infraclass",
 			"Infraclass","Infrakingdom","Infraorder",

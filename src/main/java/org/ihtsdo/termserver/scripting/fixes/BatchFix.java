@@ -18,7 +18,6 @@ import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate.Mode;
 import org.ihtsdo.termserver.scripting.fixes.batch_import.BatchImport;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
-import org.ihtsdo.termserver.scripting.snapshot.ArchiveManager;
 import org.ihtsdo.termserver.scripting.util.AcceptabilityMode;
 import org.ihtsdo.termserver.scripting.util.DialectChecker;
 import org.ihtsdo.termserver.scripting.util.HistAssocUtils;

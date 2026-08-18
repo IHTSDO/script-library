@@ -18,7 +18,6 @@ import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuDetail;
 import org.ihtsdo.termserver.scripting.pipeline.npu.domain.NpuPart;
 import org.ihtsdo.termserver.scripting.pipeline.npu.template.NpuTemplatedConcept;
 import org.ihtsdo.termserver.scripting.pipeline.npu.template.NpuTemplatedConceptWithComponent;
-import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

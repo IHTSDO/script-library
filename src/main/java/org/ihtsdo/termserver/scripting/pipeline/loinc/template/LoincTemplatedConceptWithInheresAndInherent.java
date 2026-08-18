@@ -1,7 +1,6 @@
 package org.ihtsdo.termserver.scripting.pipeline.loinc.template;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.domain.ScriptConstants;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
@@ -28,8 +27,8 @@ public class LoincTemplatedConceptWithInheresAndInherent extends LoincTemplatedC
 		return templatedConcept;
 	}
 
+	@Override
 	protected List<RelationshipTemplate> determineComponentAttributes(boolean expectNullMap) throws TermServerScriptException {
-
 		List<RelationshipTemplate> attributes = new ArrayList<>();
 
 		if (detailPresent(COMPONENTCORE_PN)) {
