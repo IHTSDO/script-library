@@ -209,9 +209,14 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check Blood");
 		}
 
-		if (externalIdentifier.equals("1744-2")) {
-			LOGGER.debug("Check case difference causes only description inactivation, then start list for case insensitvity checking");
+		if (externalIdentifier.equals("35048-8")) {
+			LOGGER.debug("Check White");
 		}
+
+		if (externalIdentifier.equals("35048-8")) {
+			LOGGER.debug("Check Horowitcz");
+		}
+
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
 		if (!confirmExternalIdentifierExists(externalIdentifier) ||
