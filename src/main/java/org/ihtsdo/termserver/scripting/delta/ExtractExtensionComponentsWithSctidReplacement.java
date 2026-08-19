@@ -17,7 +17,7 @@ public class ExtractExtensionComponentsWithSctidReplacement extends ExtractExten
 
 	private Map<String,String> sctIdReplacmentMap = new HashMap<>();
 	public static void main(String[] args) throws TermServerScriptException {
-		new ExtractExtensionComponentsWithSctidReplacement().doExtensionComponentExtraction(args);
+		new ExtractExtensionComponentsWithSctidReplacement().doComponentExtraction(args);
 	}
 
 	@Override

@@ -33,6 +33,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExtractExtensionComponents.class);
 	private static final Integer CONCEPTS_PER_ARCHIVE = Integer.MAX_VALUE;
 	private static final boolean AUTO_IMPORT = true;
+	private static final boolean INTRA_MODULE_EXTRACTION = true; //DO NOT CHECK IN AS TRUE
 	private static final boolean EXCLUDE_NON_ENGLISH_TERMS = true;
 	private static final boolean CONTAINS_REPLACEMENT_FSNS = false;  //If true, extra column needed in input file!
 	private static final boolean INCLUDE_DEPENDENCIES = true;
@@ -44,7 +45,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 	private final Set<Component> allModifiedConcepts = new HashSet<>();
 	private final List<Component> noMoveRequired = new ArrayList<>();
-	protected final Map<Component, String> conceptOriginTask = new HashMap<>(); //Populated by subclasses selecting concepts via review, so we can report which task a concept came from
+	protected final Map<Component, List<String>> conceptOriginTask = new HashMap<>(); //Populated by subclasses selecting concepts via review, so we can report which task(s) a concept came from
 
 	private final Map<String, Concept> loadedConcepts = new HashMap<>();
 	TermServerClient secondaryConnection;
@@ -66,12 +67,14 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	protected List<String> componentIdsToProcess = null; //If it's just a couple, no need for a file, just specify here.
 	protected String componentsToProcessEcl = null; // (<<64572001 |Disease|:116676008 |Associated morphology|=46360000 |Abnormal curvature|) {{ C moduleId = 890108001 }}
 
+	protected ReportActionType defaultAction = INTRA_MODULE_EXTRACTION ? ReportActionType.COMPONENT_UPDATED : ReportActionType.MODULE_CHANGE_MADE;
+
 	public static void main(String[] args) throws TermServerScriptException {
-		new ExtractExtensionComponents().doExtensionComponentExtraction(args);
+		new ExtractExtensionComponents().doComponentExtraction(args);
 		// ExtractExtensionComponents delta = new ExtractExtensionComponentsAndLateralize();
 	}
 
-	protected void doExtensionComponentExtraction(String[] args) throws TermServerScriptException {
+	protected void doComponentExtraction(String[] args) throws TermServerScriptException {
 		try {
 			ReportSheetManager.setTargetFolderId("12ZyVGxnFVXZfsKIHxr3Ft2Z95Kdb7wPl"); //Extract and Promote
 			taskPrefix = "";
@@ -212,37 +215,42 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 	protected void preProcessConcepts(List<Component> componentsOfInterest, boolean viaReview) throws TermServerScriptException {
 		archiveBatches = new ArrayDeque<>();
+		Set<Component> excludeComponents = identifyComponentsToExclude(componentsOfInterest, viaReview);
+		componentsOfInterest.removeAll(excludeComponents);
+		assignToArchiveBatches(componentsOfInterest);
+	}
+
+	private Set<Component> identifyComponentsToExclude(List<Component> componentsOfInterest, boolean viaReview) throws TermServerScriptException {
 		Set<Component> excludeComponents = new HashSet<>();
 		Set<Component> componentsSeen = new HashSet<>();
 		for (Component c : componentsOfInterest) {
-			if (componentsSeen.contains(c)) {
+			if (!componentsSeen.add(c)) {
 				LOGGER.warn("Duplicate concept identified for transfer: {}", c);
 				continue;
-			} else {
-				componentsSeen.add(c);
 			}
 
 			if (c.getModuleId() == null) {
-				//if (viaReview) {
-					String msg = viaReview ? "Concept appearing in review has been deleted?" : "Concept not found in target location";
-					String originTask = conceptOriginTask.get(c);
-					if (originTask != null) {
-						msg += " (originally from task " + originTask + ")";
-					}
-					report((Concept)c, Severity.HIGH, ReportActionType.VALIDATION_CHECK, msg);
-					excludeComponents.add(c);
-				/*} else {
-					throw new IllegalArgumentException("Concept " + c + " doesn't exist.  Check list of concepts to transfer");
-				}*/
+				reportMissingConcept(c, viaReview);
+				excludeComponents.add(c);
 			}
-			
+
 			if (ensureConceptsHaveBeenReleased && !c.isReleased()) {
 				throw new IllegalStateException(c + " has not been released");
 			}
 		}
-		
-		componentsOfInterest.removeAll(excludeComponents);
-		
+		return excludeComponents;
+	}
+
+	private void reportMissingConcept(Component c, boolean viaReview) throws TermServerScriptException {
+		String msg = viaReview ? "Concept appearing in review has been deleted?" : "Concept not found in target location";
+		List<String> originTasks = conceptOriginTask.get(c);
+		if (originTasks != null && !originTasks.isEmpty()) {
+			msg += " (originally from task " + String.join(", ", originTasks) + ")";
+		}
+		report((Concept)c, Severity.HIGH, ReportActionType.VALIDATION_CHECK, msg);
+	}
+
+	private void assignToArchiveBatches(List<Component> componentsOfInterest) throws TermServerScriptException {
 		//If we can fit everything we're loading into a single batch file, then we don't need
 		//to worry about what concepts go in what Zip file.
 		if (batchDelimitersDetected) {
@@ -483,14 +491,12 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		incrementSummaryInformation("Concepts specified", componentsToProcess.size());
 		LOGGER.info("Extracting specified concepts");
 		for (Component thisComponent : componentsToProcess) {
-			extractComponent(thisComponent, componentsToProcess, true);
+			extractComponent((Concept)thisComponent, componentsToProcess, true);
 		}
 		return componentsToProcess;
 	}
 
-	protected void extractComponent(Component thisComponent, List<Component> componentsToProcess, boolean doAdditionalProcessing) throws TermServerScriptException {
-		Concept thisConcept = (Concept)thisComponent;
-
+	protected void extractComponent(Concept thisConcept, List<Component> componentsToProcess, boolean doAdditionalProcessing) throws TermServerScriptException {
 		//We will not copy inferred relationship to stated if there is no stated modelling, because we'll pick up the whole concept
 		//further down.
 		if (copyInferredRelationshipsToStatedWhereMissing && hasStatedModeling(thisConcept)) {
@@ -515,7 +521,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		}
 		try {
 			if (!switchModule(thisConcept, componentsToProcess)) {
-				addSummaryInformation("Specified but no movement: " + thisConcept, null);
+				addSummaryInformation("Specified but no movement", thisConcept);
 				incrementSummaryInformation("Concepts no movement required");
 			} else if (thisConcept.getDefinitionStatus().equals(DefinitionStatus.FULLY_DEFINED) &&
 					SnomedUtils.countAttributes(thisConcept, CharacteristicType.STATED_RELATIONSHIP) == 0) {
@@ -578,7 +584,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		gl.populateComponentMapForConcept(c);
 		
 		if (conceptAlreadyTransferred) {
-			incrementSummaryInformation("Existing concept, additional components moved.");
+			incrementSummaryInformation("Existing concept, additional components moved");
 		}
 		
 		return true;
@@ -657,14 +663,16 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		//Changing the moduleId won't mark concept dirty unless it really does change
 		//Don't move any concepts already in the model module
 		if (componentsToProcess.contains(c)) {
-			if (!c.getModuleId().equals(SCTID_MODEL_MODULE)) {
+			if (INTRA_MODULE_EXTRACTION || !c.getModuleId().equals(SCTID_MODEL_MODULE)) {
 				c.setModuleId(targetModuleId);
-				if (c.getModuleId().equals(targetModuleId)) {
+				if (c.getModuleId().equals(targetModuleId) && !INTRA_MODULE_EXTRACTION) {
 					report(c, Severity.HIGH, ReportActionType.NO_CHANGE, "Specified concept already in target module: " + c.getModuleId() + " checking for additional modeling in source module.");
 				} else {
-					String msg = "Odd Situation. Concept " + c + " already exists at destination in module " + conceptOnTS.getModuleId() + " and also in local content in module " + c.getModuleId();
+					String expectationModified = INTRA_MODULE_EXTRACTION ? "" : "Odd situation. ";
+					String furtherDetail = INTRA_MODULE_EXTRACTION ? "." : " in module " + conceptOnTS.getModuleId() + " and also in local content in module " + c.getModuleId() + ".";
+					String msg = expectationModified + "Concept already exists at destination" + furtherDetail;
 					LOGGER.warn(msg);
-					report(c, Severity.HIGH, ReportActionType.INFO, msg + ".  Looking for additional modelling anyway.");
+					report(c, Severity.HIGH, ReportActionType.INFO, msg + " Looking for additional modelling anyway.");
 				}
 			}
 		} else {
@@ -684,7 +692,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		String parents = parentsToString(c);
 
 		if (componentsToProcess.contains(c)) {
-			report(c, Severity.LOW, ReportActionType.MODULE_CHANGE_MADE, "Specified concept, module set to " + targetModuleId, c.getDefinitionStatus().toString(), parents);
+			report(c, Severity.LOW, defaultAction, "Specified concept, module set to " + targetModuleId, c.getDefinitionStatus().toString(), parents);
 		} else {
 			report(c, Severity.MEDIUM, ReportActionType.CONCEPT_CHANGE_MADE, "Dependency concept, module set to " + targetModuleId, c.getDefinitionStatus().toString(), parents);
 		}
@@ -1020,7 +1028,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		
 		//If we didn't need to transfer the concept, then do report the movement of its subcomponents.
 		if (!conceptOnTS.equals(NULL_CONCEPT)) {
-			report(r.getSource(), Severity.MEDIUM, ReportActionType.MODULE_CHANGE_MADE, r, r.getId());
+			report(r.getSource(), Severity.MEDIUM, defaultAction, r, r.getId());
 		}
 		return true;
 	}
@@ -1040,7 +1048,13 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 					//If this target is inactive, find an alternative target and create a replacement relationship
 					//TODO in the stated form, we'll need to re-write the axiom if we see this!
 					if (!loadedTarget.isActiveSafely()) {
-						String reason = loadedTarget.getInactivationIndicator().toString();
+						String reason = "Not Stated";
+						InactivationIndicator ii = loadedTarget.getInactivationIndicator();
+						if (ii == null) {
+							LOGGER.warn("No active inactivation indicator for {}, used in {}", target, r.getSource());
+						} else {
+							reason = loadedTarget.getInactivationIndicator().toString();
+						}
 						Concept replacement = knownReplacements.get(loadedTarget);
 						if (replacement == null) {
 							replacement = getReplacement(PRIMARY_REPORT, r.getSource(), loadedTarget, isIsA);
@@ -1152,11 +1166,11 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		//If we didn't need to transfer the concept, then do report the movement of its subcomponents.
 		if (!conceptOnTS.equals(NULL_CONCEPT)) {
 			if (doShiftDescription) {
-				report(c, Severity.MEDIUM, ReportActionType.MODULE_CHANGE_MADE, d, d.getId());
+				report(c, Severity.MEDIUM, defaultAction, d, d.getId());
 			} else {
 				for (LangRefsetEntry l : d.getLangRefsetEntries()) {
 					if (l.isDirty()) {
-						report(c, Severity.MEDIUM, ReportActionType.MODULE_CHANGE_MADE, l, d);
+						report(c, Severity.MEDIUM, defaultAction, l, d);
 					}
 				}
 			}
@@ -1184,8 +1198,12 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	}
 
 	private void moveExistingLangRefsetEntries(Description d, boolean usGbVariance, boolean doShiftDescription, Description enGbPT) throws TermServerScriptException {
+		//If we're doing a transfer within a module, we might also want to shift inactive langrefsets
+		//to match inactivations of existing descriptions
+		ActiveState activeStateSelection = INTRA_MODULE_EXTRACTION ? ActiveState.BOTH : ActiveState.ACTIVE;
+
 		boolean hasUSLangRefset = false;
-		for (LangRefsetEntry usEntry : d.getLangRefsetEntries(ActiveState.ACTIVE, US_ENG_LANG_REFSET)) {
+		for (LangRefsetEntry usEntry : d.getLangRefsetEntries(activeStateSelection, US_ENG_LANG_REFSET)) {
 			hasUSLangRefset = true;
 			//Only move if there's a difference
 			//Note we cannot get LangRefsetEntries from TS because browser format only uses AcceptabilityMap
@@ -1194,7 +1212,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			}
 		}
 
-		for (LangRefsetEntry gbEntry : d.getLangRefsetEntries(ActiveState.ACTIVE, GB_ENG_LANG_REFSET)) {
+		for (LangRefsetEntry gbEntry : d.getLangRefsetEntries(activeStateSelection, GB_ENG_LANG_REFSET)) {
 			gbEntry.setModuleId(targetModuleId);
 			gbEntry.setDirty(); //Just in case we're missing this component rather than shifting module
 			//Do we need to copy the GB Langref as the US one?  Not if we detected us/gb variance originally
