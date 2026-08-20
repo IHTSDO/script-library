@@ -9,9 +9,6 @@ import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /*
 CTR-19
 automatically fix the case sensitivity as following:

@@ -661,23 +661,22 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	private boolean switchModuleOfConceptAlreadyOnTS(Concept c, List<Component> componentsToProcess, Concept conceptOnTS) throws TermServerScriptException {
 		//Changing the moduleId won't mark concept dirty unless it really does change
 		//Don't move any concepts already in the model module
-		if (componentsToProcess.contains(c)) {
-			if (INTRA_MODULE_EXTRACTION || !c.getModuleId().equals(SCTID_MODEL_MODULE)) {
-				c.setModuleId(targetModuleId);
-				if (c.getModuleId().equals(targetModuleId) && !INTRA_MODULE_EXTRACTION) {
-					report(c, Severity.HIGH, ReportActionType.NO_CHANGE, "Specified concept already in target module: " + c.getModuleId() + " checking for additional modeling in source module.");
-				} else {
-					String expectationModified = INTRA_MODULE_EXTRACTION ? "" : "Odd situation. ";
-					String furtherDetail = INTRA_MODULE_EXTRACTION ? "." : " in module " + conceptOnTS.getModuleId() + " and also in local content in module " + c.getModuleId() + ".";
-					String msg = expectationModified + "Concept already exists at destination" + furtherDetail;
-					LOGGER.warn(msg);
-					report(c, Severity.HIGH, ReportActionType.INFO, msg + " Looking for additional modelling anyway.");
-				}
-			}
-		} else {
+		if (!componentsToProcess.contains(c)) {
 			//If this _isn't_ a concept that was originally listed for transfer, and it does exist on the target server,
 			//then we won't look any closer at it.
 			return true;
+		}
+		if (INTRA_MODULE_EXTRACTION || !c.getModuleId().equals(SCTID_MODEL_MODULE)) {
+			c.setModuleId(targetModuleId);
+			if (c.getModuleId().equals(targetModuleId) && !INTRA_MODULE_EXTRACTION) {
+				report(c, Severity.HIGH, ReportActionType.NO_CHANGE, "Specified concept already in target module: " + c.getModuleId() + " checking for additional modeling in source module.");
+			} else {
+				String expectationModified = INTRA_MODULE_EXTRACTION ? "" : "Odd situation. ";
+				String furtherDetail = INTRA_MODULE_EXTRACTION ? "." : " in module " + conceptOnTS.getModuleId() + " and also in local content in module " + c.getModuleId() + ".";
+				String msg = expectationModified + "Concept already exists at destination" + furtherDetail;
+				LOGGER.warn(msg);
+				report(c, Severity.HIGH, ReportActionType.INFO, msg + " Looking for additional modelling anyway.");
+			}
 		}
 		return false;
 	}

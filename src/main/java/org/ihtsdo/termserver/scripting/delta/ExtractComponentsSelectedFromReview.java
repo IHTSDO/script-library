@@ -11,6 +11,7 @@ import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("java:S110")
 public class ExtractComponentsSelectedFromReview extends ExtractExtensionComponents {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExtractComponentsSelectedFromReview.class);

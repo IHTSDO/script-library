@@ -36,7 +36,7 @@ public class QI1179_AddMalignantAttribute extends BatchFix {
 
 	@Override
 	protected void init(String[] args) throws TermServerScriptException {
-		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//standardExecution() forces runStandAlone false before init() resolves the project
 		//this fix needs it true, and postInit() runs too late to affect that resolution
 		runStandAlone = true;
 		super.init(args);
@@ -45,7 +45,7 @@ public class QI1179_AddMalignantAttribute extends BatchFix {
 	@Override
 	public void postInit() throws TermServerScriptException {
 		super.postInit();
-		//subsetECL = "< 372087000 |Primary malignant neoplasm (disorder)| MINUS ( << 269475001 |Malignant tumor of lymphoid, hemopoietic AND/OR related tissue (disorder)| OR (< 372087000 |Primary malignant neoplasm (disorder)| : 370135005 |Pathological process (attribute)| = 1234914003 |Malignant proliferation of primary neoplasm (qualifier value)|))";
+		//< 372087000 |Primary malignant neoplasm (disorder)| MINUS ( << 269475001 |Malignant tumor of lymphoid, hemopoietic AND/OR related tissue (disorder)| OR (< 372087000 |Primary malignant neoplasm (disorder)| : 370135005 |Pathological process (attribute)| = 1234914003 |Malignant proliferation of primary neoplasm (qualifier value)|))
 		subsetECL = "< 363346000 |Malignant neoplastic disease (disorder)| MINUS << 269475001 |Malignant tumor of lymphoid, hemopoietic AND/OR related tissue (disorder)| ";
 		relTemplate = new RelationshipTemplate(PATHOLOGICAL_PROCESS, gl.getConcept("1234914003 |Malignant proliferation of primary neoplasm|"));
 		workAroundToRemove = new RelationshipTemplate(ASSOC_MORPH, gl.getConcept("86049000 |Malignant neoplasm, primary (morphologic abnormality)|"));

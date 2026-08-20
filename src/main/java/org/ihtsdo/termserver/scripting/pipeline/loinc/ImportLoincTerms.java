@@ -186,6 +186,14 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 
 	@Override
 	protected void doModeling() throws TermServerScriptException {
+		doModellingForObservable();
+
+		if (getRunMode() != RunMode.INCREMENTAL_DELTA_SUBSET) {
+			doModellingForPanel();
+		}
+	}
+
+	private void doModellingForObservable() throws TermServerScriptException {
 		for (String loincNum : loincDetailMapOfMaps.keySet()) {
 			TemplatedConcept templatedConcept = modelExternalConcept(loincNum);
 			if (templatedConcept != null) {
@@ -195,15 +203,15 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 				}
 			}
 		}
+	}
 
-		if (getRunMode() != RunMode.INCREMENTAL_DELTA_SUBSET) {
-			for (String panelLoincNum : panelLoincNums) {
-				LoincTemplatedConcept templatedConcept = doPanelModeling(panelLoincNum);
-				if (templatedConcept != null) {
-					postModelling(templatedConcept);
-					if (conceptSufficientlyModeled("Panel", panelLoincNum, templatedConcept)) {
-						successfullyModelled.add(templatedConcept);
-					}
+	private void doModellingForPanel() throws TermServerScriptException {
+		for (String panelLoincNum : panelLoincNums) {
+			LoincTemplatedConcept templatedConcept = doPanelModeling(panelLoincNum);
+			if (templatedConcept != null) {
+				postModelling(templatedConcept);
+				if (conceptSufficientlyModeled("Panel", panelLoincNum, templatedConcept)) {
+					successfullyModelled.add(templatedConcept);
 				}
 			}
 		}
