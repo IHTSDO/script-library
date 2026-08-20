@@ -34,10 +34,26 @@ public class LoincTemplatedConceptWithRelative extends LoincTemplatedConcept {
 		return templatedConcept;
 	}
 
+	@Override
+	protected void determineComponentAttributesWithSubParts(List<RelationshipTemplate> attributes, Concept componentAttribType) throws TermServerScriptException {
+		LoincDetail denom = getLoincDetailForColNameIfPresent(COMPDENOM_PN);
+		if (denom == null) {
+			addAttributeFromDetailWithType(attributes, getLoincDetailOrThrow(COMPNUM_PN), componentAttribType);
+			String termTemplate = "[PROPERTY] of [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]";
+			setTermTemplate(addAdjustmentToTermTemplate(termTemplate));
+		}
+		super.determineComponentAttributesWithSubParts(attributes, componentAttribType);
+	}
+
 	protected String addAdjustmentToTermTemplate(String termTemplate) {
-		//Special Naming Conditions #8 will append the CompSubPart3 name into the [COMP_ADJUSTMENT] slot.  But by default it will be blank
+		//Special Naming Conditions #8 will append the CompSubPart3 name into the [COMP_ADJUSTMENT] slot.
+		// But by default it will be blank
 		slotTermMap.put(COMP_ADJUSTMENT, "");
-		return termTemplate + " [COMP_ADJUSTMENT]";
+		if (hasDetailForColName(COMPSUBPART3_PN)) {
+			return termTemplate + " [COMP_ADJUSTMENT]";
+		} else {
+			return termTemplate.replace("[COMPONENT]", "[COMPONENT] [COMP_ADJUSTMENT");
+		}
 	}
 
 	@Override
