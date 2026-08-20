@@ -79,7 +79,6 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			ReportSheetManager.setTargetFolderId("12ZyVGxnFVXZfsKIHxr3Ft2Z95Kdb7wPl"); //Extract and Promote
 			taskPrefix = "";
 			runStandAlone = false;
-			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			//No need to specify a module if reading from Snowstorm, we'll pick up the moduleId(s) from the branch metadata
 			//sourceModuleIds = SCTID_CORE_MODULE; //NEBCSR are using core module these days.
 			//sourceModuleIds = "911754081000004104"; //Nebraska Lexicon Pathology Synoptic module

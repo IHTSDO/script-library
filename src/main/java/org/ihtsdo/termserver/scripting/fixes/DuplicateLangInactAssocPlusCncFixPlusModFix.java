@@ -42,7 +42,6 @@ public class DuplicateLangInactAssocPlusCncFixPlusModFix extends BatchFix {
 	
 	@Override
 	public void init(String[] args) throws TermServerScriptException {
-		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		ArchiveImporter.setSkipSave(true); //No need to save to disk if we need a fresh copy every time.
 		//getSnapshotConfiguration().setRunIntegrityChecks(false);  //MSSP-1087
 		super.init(args);

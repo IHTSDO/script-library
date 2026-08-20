@@ -50,7 +50,6 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		getSnapshotConfiguration().setPopulateReleaseFlag(true);
 		getSnapshotConfiguration().setLoadOtherReferenceSets(true);
 		if (mode == Mode.PUBLISHED) {
-			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			getGraphLoader().setRecordPreviousState(true);
 		}
 	}

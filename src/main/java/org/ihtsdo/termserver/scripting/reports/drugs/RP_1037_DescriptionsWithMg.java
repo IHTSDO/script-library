@@ -26,7 +26,6 @@ public class RP_1037_DescriptionsWithMg extends TermServerReport implements Repo
 
 	@Override
 	public void init (JobRun run) throws TermServerScriptException {
-		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_REPORTS);
 		super.init(run);
 	}

@@ -28,7 +28,6 @@ public class FixSelfGroupedCrossovers extends DeltaGenerator implements ScriptCo
 	public static void main(String[] args) throws TermServerScriptException {
 		FixSelfGroupedCrossovers delta = new FixSelfGroupedCrossovers();
 		try {
-			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
 			delta.newIdsRequired = false; // We'll only be modifying existing components
 			delta.init(args);

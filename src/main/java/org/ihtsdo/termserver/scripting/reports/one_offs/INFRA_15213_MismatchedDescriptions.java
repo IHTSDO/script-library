@@ -23,7 +23,6 @@ public class INFRA_15213_MismatchedDescriptions extends TermServerReport impleme
 
 	@Override
 	public void init (JobRun run) throws TermServerScriptException {
-		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		ReportSheetManager.setTargetFolderId(GFOLDER_ADHOC_REPORTS);
 		super.init(run);
 	}

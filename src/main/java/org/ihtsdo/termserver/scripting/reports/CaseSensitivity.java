@@ -11,7 +11,6 @@ import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.CaseSensitivityUtils;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
-import org.snomed.authoringtemplate.domain.CaseSignificance;
 import org.snomed.otf.scheduler.domain.*;
 import org.snomed.otf.scheduler.domain.Job.ProductionStatus;
 import org.snomed.otf.script.dao.ReportSheetManager;
@@ -57,7 +56,6 @@ public class CaseSensitivity extends TermServerReport implements ReportClass {
 
 	@Override
 	public void init (JobRun run) throws TermServerScriptException {
-		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		super.init(run);
 		ReportSheetManager.setTargetFolderId(GFOLDER_RELEASE_QA);
 		recentChangesOnly = run.getParameters().getMandatoryBoolean(RECENT_CHANGES_ONLY);

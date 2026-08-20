@@ -27,7 +27,6 @@ public class SwitchDescInactivationIndicators extends BatchFix {
 	
 	@Override
 	public void init(String[] args) throws TermServerScriptException {
-		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		//getSnapshotConfiguration().setRunIntegrityChecks(false);  //MSSP-1087
 		super.init(args);
 	}

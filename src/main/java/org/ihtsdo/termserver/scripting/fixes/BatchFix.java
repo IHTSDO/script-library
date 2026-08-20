@@ -525,10 +525,6 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 			}
 		}
 
-		//For batch fixes we generally need to know if the components we're modifying have been
-		//released or not, so set this by default
-		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
-
 		try {
 			super.init(args);
 		} catch (Exception e) {
@@ -1715,8 +1711,6 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 	}
 
 	private void processExecutionOptions(ExecutionOptions options, String[] args) throws TermServerScriptException {
-		//If we're doing batch fixes, we generally need to know if a component is published or not, so build new snapshot each time
-		getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 		//And if we're going to do that, there's no point in saving the snapshot to disk
 		ArchiveImporter.setSkipSave(true);
 		init(args);
