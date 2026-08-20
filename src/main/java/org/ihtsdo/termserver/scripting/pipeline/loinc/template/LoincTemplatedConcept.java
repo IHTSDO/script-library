@@ -533,7 +533,7 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 		return attributes;
 	}
 
-	private void determineComponentAttributesWithSubParts(List<RelationshipTemplate> attributes, Concept componentAttribType) throws TermServerScriptException {
+	protected void determineComponentAttributesWithSubParts(List<RelationshipTemplate> attributes, Concept componentAttribType) throws TermServerScriptException {
 		LoincDetail denom = getLoincDetailForColNameIfPresent(COMPDENOM_PN);
 		if (denom != null) {
 			addAttributeFromDetailWithType(attributes, getLoincDetailOrThrow(COMPNUM_PN), componentAttribType);
