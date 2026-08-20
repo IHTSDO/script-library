@@ -24,7 +24,6 @@ public class DeleteUnpublishedInactiveDescriptions extends BatchFix implements S
 			fix.selfDetermining = true;
 			fix.runStandAlone = false;
 			fix.getSnapshotConfiguration().setRunIntegrityChecks(false);
-			fix.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			fix.init(args);
 			fix.additionalReportColumns = "Active, Details";
 			fix.loadProjectSnapshot();

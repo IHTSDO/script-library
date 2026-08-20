@@ -20,7 +20,6 @@ public class ReassertPublishedComponentState extends DeltaGeneratorWithAutoImpor
 	public static void main(String[] args) throws TermServerScriptException {
 		ReassertPublishedComponentState delta = new ReassertPublishedComponentState();
 		try {
-			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			delta.taskPrefix = "";
 			delta.runStandAlone = false;
 			delta.inputFileHasHeaderRow = true;

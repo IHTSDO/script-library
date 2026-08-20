@@ -58,7 +58,6 @@ public class RevertComponentToParentVersion extends DeltaGenerator {
 		RevertComponentToParentVersion app = new RevertComponentToParentVersion();
 		try {
 			String now = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-			app.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			app.newIdsRequired = false;
 			app.packageDir = "output" + File.separator + "Delta_" + now + File.separator;
 			app.init(args);

@@ -84,7 +84,6 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			runStandAlone = false;
 			getGraphLoader().setExcludedModules(new HashSet<>());
 			getSnapshotConfiguration().setLoadOtherReferenceSets(true);
-			getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);  //Needed for working out if we're deleteing or inactivating
 			init(args);
 			loadProjectSnapshot();
 			LOGGER.debug("start full clean - don't need this if existing rels are not detected dirty");

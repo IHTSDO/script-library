@@ -22,7 +22,6 @@ public class ReassertCoreModuleComponentInExtension extends DeltaGenerator {
 	public static void main(String[] args) throws TermServerScriptException {
 		ReassertCoreModuleComponentInExtension delta = new ReassertCoreModuleComponentInExtension();
 		try {
-			delta.getSnapshotConfiguration().setEnsureSnapshotPlusDeltaLoad(true);
 			delta.runStandAlone = false;
 			delta.inputFileHasHeaderRow = true;
 			delta.newIdsRequired = false; // We'll only be inactivating existing relationships
