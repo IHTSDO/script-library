@@ -542,62 +542,61 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			tc.recordDifferenceFromExistingConcept(componentComparisonResult.getComponentTypeStr());
 		}
 
-		//If we have both, then just output the change
-		if (existingComponent != null && modifiedOrNewComponent != null) {
-			modifiedOrNewComponent.setId(existingComponent.getId());
-			boolean isActiveStateChange = checkActiveStateChange(existingComponent, modifiedOrNewComponent);
-			if (componentComparisonResult.isMatch() && !isActiveStateChange) {
-				modifiedOrNewComponent.setClean();
-			} else {
-				modifiedOrNewComponent.setDirty();
-			}
+		if (existingComponent != null) {
+			if (modifiedOrNewComponent != null) {
+				//If we have both, then just output the change
+				modifiedOrNewComponent.setId(existingComponent.getId());
+				boolean isActiveStateChange = checkActiveStateChange(existingComponent, modifiedOrNewComponent);
+				if (componentComparisonResult.isMatch() && !isActiveStateChange) {
+					modifiedOrNewComponent.setClean();
+				} else {
+					modifiedOrNewComponent.setDirty();
+				}
 
-			//Any component-specific actions?
-			switch (existingComponent.getComponentType()) {
-				case CONCEPT:
-					alignAlternateIdentifier(tc.getConcept(), tc.getExistingConcept());
-					break;
-				case DESCRIPTION:
-					Description newDesc = (Description)modifiedOrNewComponent;
-					newDesc.setConceptId(tc.getExistingConcept().getId());
-					alignLangRefsetEntries(newDesc, (Description)existingComponent);
-					break;
-				case SIMPLE_REFSET_MEMBER:
-				case COMPONENT_ANNOTATION:
-					alignRefsetMember(componentComparisonResult.isMatch(), (RefsetMember)modifiedOrNewComponent, (RefsetMember)existingComponent);
-					TemplatedConcept.IterationIndicator indicator = componentComparisonResult.isMatch() ? TemplatedConcept.IterationIndicator.UNCHANGED : TemplatedConcept.IterationIndicator.MODIFIED;
-					recordRefsetMemberSummaryCount(modifiedOrNewComponent, indicator);
-					break;
-				default:
-					break;
-			}
-		} else if (existingComponent != null && modifiedOrNewComponent == null) {
-			//If we have an existing component, and it has no newly Modelled counterpart, then inactivate it
-			existingComponent.setActive(false);
-			existingComponent.setDirty();
-			tc.setExistingConceptHasInactivations(true);
-			recordRefsetMemberSummaryCount(existingComponent, TemplatedConcept.IterationIndicator.REMOVED);
-			switch (existingComponent.getComponentType()) {
-				case DESCRIPTION:
+				//Any component-specific actions?
+				switch (existingComponent.getComponentType()) {
+					case CONCEPT:
+						alignAlternateIdentifier(tc.getConcept(), tc.getExistingConcept());
+						break;
+					case DESCRIPTION:
+						Description newDesc = (Description) modifiedOrNewComponent;
+						newDesc.setConceptId(tc.getExistingConcept().getId());
+						alignLangRefsetEntries(newDesc, (Description) existingComponent);
+						break;
+					case SIMPLE_REFSET_MEMBER, COMPONENT_ANNOTATION:
+						alignRefsetMember(componentComparisonResult.isMatch(), (RefsetMember) modifiedOrNewComponent, (RefsetMember) existingComponent);
+						TemplatedConcept.IterationIndicator indicator = componentComparisonResult.isMatch() ? TemplatedConcept.IterationIndicator.UNCHANGED : TemplatedConcept.IterationIndicator.MODIFIED;
+						recordRefsetMemberSummaryCount(modifiedOrNewComponent, indicator);
+						break;
+					default:
+						break;
+				}
+			} else {
+				//If we have an existing component, and it has no newly Modelled counterpart, then inactivate it
+				existingComponent.setActive(false);
+				existingComponent.setDirty();
+				tc.setExistingConceptHasInactivations(true);
+				recordRefsetMemberSummaryCount(existingComponent, TemplatedConcept.IterationIndicator.REMOVED);
+				if (existingComponent.getComponentType().equals(ComponentType.DESCRIPTION)) {
 					((Description)existingComponent).getLangRefsetEntries().forEach(lre -> {
 						lre.setActive(false);  //Will set dirty if not already
 					});
-					break;
-				default:
-					break;
+				}
 			}
-		} else {
+			//If we don't have an ID at this point, we've gone wrong somewhere
+			if (existingComponent.getId() == null) {
+				throw new IllegalStateException("Component encountered without Id " + existingComponent);
+			}
+		} else if (modifiedOrNewComponent != null) {
 			//If we only have a newly modelled component, give it an id
 			//and prepare to output
 			conceptCreator.populateComponentId(tc.getExistingConcept(), modifiedOrNewComponent, externalContentModuleId);
 			modifiedOrNewComponent.setDirty();
 			recordRefsetMemberSummaryCount(modifiedOrNewComponent, TemplatedConcept.IterationIndicator.NEW);
-		}
-
-		//If we don't have an ID at this point, we've gone wrong somewhere
-		if ((modifiedOrNewComponent != null && modifiedOrNewComponent.getId() == null)
-				|| (existingComponent != null && existingComponent.getId() == null)) {
-			throw new IllegalStateException("Component encountered without Id " + modifiedOrNewComponent);
+			//If we don't have an ID at this point, we've gone wrong somewhere
+			if (modifiedOrNewComponent.getId() == null) {
+				throw new IllegalStateException("Component encountered without Id " + modifiedOrNewComponent);
+			}
 		}
 	}
 

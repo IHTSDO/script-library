@@ -35,7 +35,7 @@ public class FixWrongModuleId extends BatchFix implements ScriptConstants{
 
 	@Override
 	protected void init(String[] args) throws TermServerScriptException {
-		//standardExecution() forces runStandAlone false before init() resolves the project;
+		//standardExecution() forces runStandAlone false before init() resolves the project
 		//this fix needs it true, and postInit() runs too late to affect that resolution
 		runStandAlone = true;
 		super.init(args);
