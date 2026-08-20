@@ -450,7 +450,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 			itemStr = applyTermTweaking(rt, itemStr);
 
 			//Can we make this lower case?
-			if (CaseSensitivityUtils.isciorcI(targetPt) && !CaseSensitivityUtils.get().startsWithKnownCaseSensitiveTerm(getConcept(), itemStr)) {
+			if (CaseSensitivityUtils.isciorcI(targetPt)) {
 				itemStr = StringUtils.decapitalizeFirstLetter(itemStr);
 			}
 			return itemStr;
