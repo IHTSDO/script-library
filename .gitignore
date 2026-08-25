@@ -1,17 +1,17 @@
 secure/*
 application*.properties*
 historic-data
-reports/*
 *.txt
 *.zip
 .*
-releases
-releases/*
+/output*
+/releases
+/reports
+/resources
+/snapshots
+/target
 csr.txt
-output*
-running_id_config.txt
-resources
-target/*
+running_id_config*.txt
 
 # Dummy environments.txt on the test classpath so BatchFix/DeltaGenerator subclasses
 # can be constructed in unit tests without the real (untracked) resources/environments.txt
