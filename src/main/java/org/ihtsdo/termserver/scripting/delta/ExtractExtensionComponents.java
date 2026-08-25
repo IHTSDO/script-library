@@ -1,5 +1,6 @@
 package org.ihtsdo.termserver.scripting.delta;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,9 @@ import org.ihtsdo.termserver.scripting.client.TermServerClient;
 
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
+import org.ihtsdo.termserver.scripting.snapshot.SnapshotConfiguration;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+import org.snomed.FileType;
 import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
@@ -143,6 +146,29 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		} finally {
 			finish();
 		}
+	}
+
+	// Use this method for loading standalone edition (no dependencies) archives that are present locally in the /releases folder.
+	// For other scenarios replace it with the superclass' method that makes use of the Module Storage Coordinator.
+	@Override
+	protected void loadProjectSnapshot() throws TermServerScriptException {
+		SnapshotConfiguration config = getSnapshotConfiguration();
+
+		if (project.getKey().endsWith(".zip")) {
+			config.setSource(this.project.getKey());
+		} else {
+			config.setSource(this.project.getBranchPath());
+			config.setKey(this.project.getKey());
+		}
+
+		File archive = new File("releases/" + config.getSource());
+		if (!archive.canRead()) {
+			throw new TermServerScriptException("Unable to read " + archive);
+		}
+		ArchiveImporter archiveImporter = new ArchiveImporter(gl, config);
+		archiveImporter.loadArchive(archive, FileType.SNAPSHOT, true);
+
+		this.setReportName((String)null);
 	}
 
 	@Override
