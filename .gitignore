@@ -17,3 +17,5 @@ running_id_config*.txt
 # can be constructed in unit tests without the real (untracked) resources/environments.txt
 !src/test/resources/
 !src/test/resources/environments.txt
+
+src/main/resources/environments.txt
