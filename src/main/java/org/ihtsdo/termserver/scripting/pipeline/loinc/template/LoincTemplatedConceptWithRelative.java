@@ -6,6 +6,7 @@ import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
+import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConceptNull;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
 import org.springframework.util.StringUtils;
@@ -26,11 +27,13 @@ public class LoincTemplatedConceptWithRelative extends LoincTemplatedConcept {
 
 	public static LoincTemplatedConcept create(ExternalConcept externalConcept) throws TermServerScriptException {
 		LoincTemplatedConceptWithRelative templatedConcept = new LoincTemplatedConceptWithRelative(externalConcept);
-		templatedConcept.populateTypeMapCommonItems();
-		templatedConcept.typeMap.put("DIVISORS", gl.getConcept("704325000 |Relative to (attribute)|"));
-		templatedConcept.typeMap.put("UNITS", gl.getConcept("415067009 |Percentage unit (qualifier value)|"));
-		String termTemplate = "[PROPERTY] of [COMPONENT] to [DIVISORS] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]";
-		templatedConcept.setTermTemplate(templatedConcept.addAdjustmentToTermTemplate(termTemplate));
+		if (!(externalConcept instanceof ExternalConceptNull)) {
+			templatedConcept.populateTypeMapCommonItems();
+			templatedConcept.typeMap.put("DIVISORS", gl.getConcept("704325000 |Relative to (attribute)|"));
+			templatedConcept.typeMap.put("UNITS", gl.getConcept("415067009 |Percentage unit (qualifier value)|"));
+			String termTemplate = "[PROPERTY] of [COMPONENT] to [DIVISORS] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]";
+			templatedConcept.setTermTemplate(templatedConcept.addAdjustmentToTermTemplate(termTemplate));
+		}
 		return templatedConcept;
 	}
 
@@ -39,8 +42,9 @@ public class LoincTemplatedConceptWithRelative extends LoincTemplatedConcept {
 		LoincDetail denom = getLoincDetailForColNameIfPresent(COMPDENOM_PN);
 		if (denom == null) {
 			addAttributeFromDetailWithType(attributes, getLoincDetailOrThrow(COMPNUM_PN), componentAttribType);
-			String termTemplate = "[PROPERTY] of [COMPONENT] in [SYSTEM] at [TIME] by [METHOD] using [DEVICE] [CHALLENGE]";
+			String termTemplate = getTermTemplate().replace(" to [DIVISORS]", "");
 			setTermTemplate(addAdjustmentToTermTemplate(termTemplate));
+			addProcessingFlag(ProcessingFlag.SUPPRESS_DIVISOR_TERM);
 		}
 		super.determineComponentAttributesWithSubParts(attributes, componentAttribType);
 	}
@@ -51,9 +55,8 @@ public class LoincTemplatedConceptWithRelative extends LoincTemplatedConcept {
 		slotTermMap.put(COMP_ADJUSTMENT, "");
 		if (hasDetailForColName(COMPSUBPART3_PN)) {
 			return termTemplate + " [COMP_ADJUSTMENT]";
-		} else {
-			return termTemplate.replace("[COMPONENT]", "[COMPONENT] [COMP_ADJUSTMENT");
 		}
+		return termTemplate;
 	}
 
 	@Override

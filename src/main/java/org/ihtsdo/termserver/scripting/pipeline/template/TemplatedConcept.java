@@ -523,6 +523,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		term = removeUnpopulatedTermSlot(term, " in [SYSTEM]");
 		term = removeUnpopulatedTermSlot(term, " using [DEVICE]");
 		term = removeUnpopulatedTermSlot(term, " [CHALLENGE]");
+		term = term.replaceAll(" {4}", " ");
 		term = term.replaceAll(" {3}", " ");
 		term = term.replaceAll(" {2}", " ");
 		term = term.trim();

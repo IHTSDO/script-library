@@ -212,8 +212,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check White");
 		}
 
-		if (externalIdentifier.equals("50988-5")) {
-			LOGGER.debug("Check Horowitcz");
+		if (externalIdentifier.equals("101115-4")) {
+			LOGGER.debug("Check spaces in terms");
 		}
 
 

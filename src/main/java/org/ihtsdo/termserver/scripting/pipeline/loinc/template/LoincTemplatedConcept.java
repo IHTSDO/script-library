@@ -247,6 +247,9 @@ public abstract class LoincTemplatedConcept extends TemplatedConcept implements 
 			Description additionalAcceptableDesc = Description.withDefaults(useAsAdditionalAcceptableTerm, DescriptionType.SYNONYM, defaultAccAcceptabilityMap);
 			getConcept().addDescription(additionalAcceptableDesc);
 		}
+		//We might have picked up an extra space if an adjustment is missing, and we added a " to " separator
+		d.setTerm(d.getTerm().replaceAll(" {3}", " "));
+		d.setTerm(d.getTerm().replaceAll(" {2}", " "));
 	}
 
 	protected static LoincTerm getLoincTerm(String loincNum) {
