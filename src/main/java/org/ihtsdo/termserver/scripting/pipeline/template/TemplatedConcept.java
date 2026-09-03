@@ -346,13 +346,11 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		String regex = "\\[" + templateItem + "\\]";
 		if (slotTermMap.containsKey(templateItem)) {
 			String itemStr = slotTermMap.get(templateItem);
-
 			if (StringUtils.isEmpty(itemStr)){
 				regex = includePrepositionInDeletion(regex, ptTemplateStr);
 			} else if (safeToDecapitalizeFirstLetter(itemStr)){
 				itemStr = StringUtils.decapitalizeFirstLetter(itemStr);
 			}
-
 			ptTemplateStr = ptTemplateStr.replaceAll(regex, itemStr);
 		} else {
 			ptTemplateStr = populateTermTemplateFromAttribute(regex, templateItem, ptTemplateStr);
@@ -363,7 +361,7 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 
 	private String includePrepositionInDeletion(String regex, String ptTemplateStr) {
 		// Find the position of the regex (slot) in the template string
-		int slotIndex = ptTemplateStr.indexOf(regex.replace("\\\\", ""));
+		int slotIndex = ptTemplateStr.indexOf(regex.replace("\\", ""));
 		if (slotIndex == -1) {
 			return regex; // fallback, not found
 		}

@@ -208,12 +208,12 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check Blood");
 		}
 
-		if (externalIdentifier.equals("35048-8")) {
-			LOGGER.debug("Check White");
+		if (externalIdentifier.equals("38193-9")) {
+			LOGGER.debug("LE-181 Consecutive prepositions - at by");
 		}
 
-		if (externalIdentifier.equals("101115-4")) {
-			LOGGER.debug("Check spaces in terms");
+		if (externalIdentifier.equals("68903-4")) {
+			LOGGER.debug("LE-181 Consecutive prepositions - in in");
 		}
 
 
