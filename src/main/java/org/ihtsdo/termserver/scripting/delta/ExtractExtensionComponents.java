@@ -156,19 +156,17 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 		if (project.getKey().endsWith(".zip")) {
 			config.setSource(this.project.getKey());
+			File archive = new File("releases/" + config.getSource());
+			if (!archive.canRead()) {
+				throw new TermServerScriptException("Unable to read " + archive);
+			}
+			ArchiveImporter archiveImporter = new ArchiveImporter(gl, config);
+			archiveImporter.loadArchive(archive, FileType.SNAPSHOT, true);
+
+			this.setReportName((String)null);
 		} else {
-			config.setSource(this.project.getBranchPath());
-			config.setKey(this.project.getKey());
+			super.loadProjectSnapshot(); //Default behaviour if we're working with projects
 		}
-
-		File archive = new File("releases/" + config.getSource());
-		if (!archive.canRead()) {
-			throw new TermServerScriptException("Unable to read " + archive);
-		}
-		ArchiveImporter archiveImporter = new ArchiveImporter(gl, config);
-		archiveImporter.loadArchive(archive, FileType.SNAPSHOT, true);
-
-		this.setReportName((String)null);
 	}
 
 	@Override
@@ -1240,7 +1238,8 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			gbEntry.setModuleId(targetModuleId);
 			gbEntry.setDirty(); //Just in case we're missing this component rather than shifting module
 			//Do we need to copy the GB Langref as the US one?  Not if we detected us/gb variance originally
-			if (!usGbVariance && !hasUSLangRefset) {
+			//But we only need to worry about that if d is active
+			if (!usGbVariance && !hasUSLangRefset && d.isActiveSafely()) {
 				// This ensures existing langrefset entries are re-used if present, or a new one is created.
 				d.setAcceptability(US_ENG_LANG_REFSET, SnomedUtils.translateAcceptability(gbEntry.getAcceptabilityId()));
 			}
@@ -1250,7 +1249,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	private void moveExistingUSLangRefsetEntry(Description d, LangRefsetEntry usEntry, boolean usGbVariance) throws TermServerScriptException {
 		usEntry.setModuleId(targetModuleId);
 		usEntry.setDirty();
-		if (!usGbVariance && d.getLangRefsetEntries(ActiveState.ACTIVE, GB_ENG_LANG_REFSET).isEmpty()) {
+		if (d.isActiveSafely() && !usGbVariance && d.getLangRefsetEntries(ActiveState.ACTIVE, GB_ENG_LANG_REFSET).isEmpty()) {
 			//Might be an inactive GB refset entry that we can reuse
 			//In which case, bring it into line with the US value
 			List<LangRefsetEntry> gbInactiveLangRefs = d.getLangRefsetEntries(ActiveState.INACTIVE, GB_ENG_LANG_REFSET);

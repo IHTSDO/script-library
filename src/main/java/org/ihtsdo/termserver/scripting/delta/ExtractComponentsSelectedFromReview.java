@@ -36,6 +36,13 @@ public class ExtractComponentsSelectedFromReview extends ExtractExtensionCompone
 			"HQ-55"
 	);
 
+	private static final List<String> ADD_CONCEPTS = List.of("1380193004 |Mesenchymal neoplasm (morphologic abnormality)|",
+			"381781000210103 |Malignant cauda equina neuroendocrine tumor (morphologic abnormality)|");
+
+	private static final List<String> REMOVE_CONCEPTS = List.of("1287148009 |Histologic grade of retinoblastoma of eye (observable entity)|",
+			"1351752003 |Mesenchymal neoplasm (morphologic abnormality)|",
+			"1344936003 |Malignant cauda equina neuroendocrine tumor (morphologic abnormality)|");
+
 	public ExtractComponentsSelectedFromReview() {
 		this.selectViaReview = true;
 	}
@@ -58,6 +65,19 @@ public class ExtractComponentsSelectedFromReview extends ExtractExtensionCompone
 				inclusions.add(c);
 			}
 		}
+
+		for (String conceptStr : ADD_CONCEPTS) {
+			Concept c = gl.getConceptSafely(conceptStr);
+			inclusions.add(c);
+			report(c, Severity.LOW, ReportActionType.INFO, "Concept manually added", "Manually specified");
+		}
+
+		for (String conceptStr : REMOVE_CONCEPTS) {
+			Concept c = gl.getConceptSafely(conceptStr);
+			inclusions.remove(c);
+			report(c, Severity.LOW, ReportActionType.INFO, "Concept manually removed", "Manually specified");
+		}
+
 		return inclusions;
 	}
 
