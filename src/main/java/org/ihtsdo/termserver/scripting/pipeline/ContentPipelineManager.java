@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component.ComponentType;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.ComponentAnnotationEntry;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.termserver.scripting.AxiomUtils;
 import org.ihtsdo.termserver.scripting.TermServerScript;
@@ -208,14 +209,9 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			LOGGER.debug("Check Blood");
 		}
 
-		if (externalIdentifier.equals("38193-9")) {
-			LOGGER.debug("LE-181 Consecutive prepositions - at by");
+		if (externalIdentifier.equals("788-0")) {
+			LOGGER.debug("Component Unknown?");
 		}
-
-		if (externalIdentifier.equals("68903-4")) {
-			LOGGER.debug("LE-181 Consecutive prepositions - in in");
-		}
-
 
 		ExternalConcept externalConcept = externalConceptMap.get(externalIdentifier);
 		if (!confirmExternalIdentifierExists(externalIdentifier) ||
@@ -572,15 +568,19 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 						break;
 				}
 			} else {
-				//If we have an existing component, and it has no newly Modelled counterpart, then inactivate it
-				existingComponent.setActive(false);
-				existingComponent.setDirty();
-				tc.setExistingConceptHasInactivations(true);
-				recordRefsetMemberSummaryCount(existingComponent, TemplatedConcept.IterationIndicator.REMOVED);
-				if (existingComponent.getComponentType().equals(ComponentType.DESCRIPTION)) {
-					((Description)existingComponent).getLangRefsetEntries().forEach(lre -> {
-						lre.setActive(false);  //Will set dirty if not already
-					});
+				//If it's a component annotation then it's come from International so that stays active in all cases
+				if (!(existingComponent instanceof ComponentAnnotationEntry)) {
+					//If we have an existing component, and it has no newly Modelled counterpart, then inactivate it
+					existingComponent.setActive(false);
+					existingComponent.setDirty();
+					tc.setExistingConceptHasInactivations(true);
+					recordRefsetMemberSummaryCount(existingComponent, TemplatedConcept.IterationIndicator.REMOVED);
+					if (existingComponent.getComponentType().equals(ComponentType.DESCRIPTION)) {
+						((Description) existingComponent).getLangRefsetEntries().forEach(lre -> {
+							lre.setModuleId(conceptCreator.getTargetModuleId());
+							lre.setActive(false);  //Will set dirty if not already
+						});
+					}
 				}
 			}
 			//If we don't have an ID at this point, we've gone wrong somewhere
@@ -774,9 +774,9 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		return partMap.getOrDefault(partId, null);
 	}
 
-	public static final List<String> HARDCODED_DROP_OUT = new ArrayList<>();
+	protected static final List<String> HARDCODED_DROP_OUT = new ArrayList<>();
 
-	public static final Map<String, String> MANUALLY_MAINTAINED_ITEMS = new HashMap<>();
+	protected static final Map<String, String> MANUALLY_MAINTAINED_ITEMS = new HashMap<>();
 
 	public abstract List<String> getMappingsAllowedAbsent();
 	
