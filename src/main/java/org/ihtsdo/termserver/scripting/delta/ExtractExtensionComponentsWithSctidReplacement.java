@@ -49,7 +49,7 @@ public class ExtractExtensionComponentsWithSctidReplacement extends ExtractExten
 	}
 
 	@Override
-	protected boolean outputRF2(Concept c, boolean checkAllComponents) throws TermServerScriptException {
+	public boolean outputRF2(Concept c, boolean checkAllComponents) throws TermServerScriptException {
 		replaceSCTIDs(c);
 		return super.outputRF2(c, checkAllComponents);
 	}

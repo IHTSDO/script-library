@@ -544,7 +544,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 		return componentOutput;
 	}
 	
-	protected boolean outputRF2(Concept c, boolean checkAllComponents) throws TermServerScriptException {
+	public boolean outputRF2(Concept c, boolean checkAllComponents) throws TermServerScriptException {
 		boolean conceptComponentOutput = false;
 		if (c.isDirty()) {
 			writeToRF2File(conDeltaFilename, c.toRF2());

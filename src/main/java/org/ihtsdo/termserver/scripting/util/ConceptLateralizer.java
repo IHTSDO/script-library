@@ -57,6 +57,7 @@ public class ConceptLateralizer implements ScriptConstants {
 		if (existingLateralizedConcept == null) {
 			Concept newLateralizedConcept = createLateralizedConcept(c, laterality);
 			gl.registerConcept(newLateralizedConcept);
+			parent.outputRF2(newLateralizedConcept, true);
 			LOGGER.info("Lateralized concept created: {}", newLateralizedConcept);
 			newConceptCreatedOrScheduled = true;
 		} else {

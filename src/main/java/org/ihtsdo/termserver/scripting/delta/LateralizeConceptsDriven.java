@@ -4,6 +4,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.*;
+import org.ihtsdo.termserver.scripting.template.NormaliseConcepts;
 import org.ihtsdo.termserver.scripting.util.ConceptLateralizer;
 import org.ihtsdo.termserver.scripting.util.TermGenerationStrategy;
 import org.slf4j.Logger;
@@ -13,11 +14,12 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 
-public class LateralizeConceptsDriven extends DeltaGenerator implements ScriptConstants, TermGenerationStrategy {
+public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport implements ScriptConstants, TermGenerationStrategy {
 
 	Set<String> whitelist = new HashSet<>();
 	private static final Logger LOGGER = LoggerFactory.getLogger(LateralizeConceptsDriven.class);
  	private ConceptLateralizer conceptLateralizer;
+	private NormaliseConcepts conceptNormalizer = null;
 	private Map<Concept, LateralizeInstruction> lateralizedInstructionMap = new HashMap<>();
 	
 	public static void main(String[] args) throws TermServerScriptException {
@@ -26,8 +28,10 @@ public class LateralizeConceptsDriven extends DeltaGenerator implements ScriptCo
 
 	@Override
 	public void postInit(String googleFolder) throws TermServerScriptException {
-		conceptLateralizer = ConceptLateralizer.get(this, true, this);
+		additionalReportColumns =", , , , ";
 		super.postInit(googleFolder);
+		conceptLateralizer = ConceptLateralizer.get(this, true, this);
+		conceptNormalizer = new NormaliseConcepts(this);
 	}
 
 	@Override
@@ -36,6 +40,7 @@ public class LateralizeConceptsDriven extends DeltaGenerator implements ScriptCo
 		populateLateralizedInstructionMap();
 		List<Component> conceptsToLateralize = new ArrayList<>(lateralizedInstructionMap.keySet());
 		for (LateralizeInstruction li : lateralizedInstructionMap.values()) {
+			conceptNormalizer.normaliseConcept(null, li.concept, null);
 			report(li.concept, Severity.NONE, ReportActionType.INFO, li.concept, li.concept.toExpression(CharacteristicType.STATED_RELATIONSHIP));
 			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, LEFT, conceptsToLateralize);
 			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, RIGHT, conceptsToLateralize);

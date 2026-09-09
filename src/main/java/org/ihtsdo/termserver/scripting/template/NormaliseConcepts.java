@@ -5,6 +5,7 @@ import java.util.*;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.exception.TermServerScriptException;
+import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.ValidationFailure;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
@@ -27,7 +28,7 @@ public class NormaliseConcepts extends BatchFix {
 	protected static final String ECL = "< 239762007 |Flail joint (disorder)|";
 	protected static Concept ppp = null;  //This can be left as null, and calculated from the top level hierarchy
 
-	public NormaliseConcepts(BatchFix clone) {
+	public NormaliseConcepts(TermServerScript clone) {
 		super(clone);
 	}
 	
@@ -78,7 +79,7 @@ public class NormaliseConcepts extends BatchFix {
 		return changesMade;
 	}
 
-	protected int normaliseConcept(Task t, Concept c, Concept newPPP) throws TermServerScriptException {
+	public int normaliseConcept(Task t, Concept c, Concept newPPP) throws TermServerScriptException {
 		int changesMade = 0;
 
 		changesMade += checkAndSetProximalPrimitiveParent(t, c, newPPP, false, true);

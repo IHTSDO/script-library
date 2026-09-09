@@ -3,6 +3,7 @@ package org.ihtsdo.termserver.scripting.delta;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.termserver.scripting.domain.*;
+import org.ihtsdo.termserver.scripting.template.NormaliseConcepts;
 import org.ihtsdo.termserver.scripting.util.ConceptLateralizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +16,18 @@ public class ExtractExtensionComponentsAndLateralize extends ExtractExtensionCom
 
 	private ConceptLateralizer conceptLateralizer = null;
 
+	private NormaliseConcepts conceptNormalizer = null;
+
+	public static void main(String[] args) throws TermServerScriptException {
+		new ExtractExtensionComponentsAndLateralize().doComponentExtraction(args);
+	}
+
 	@Override
 	public void postInit(String googleFolder) throws TermServerScriptException {
+		//Ensure the Report Manager is initialised before we create helper classes, so they receive the same object
+		super.postInit(googleFolder);
 		conceptLateralizer = ConceptLateralizer.get(this, copyInferredRelationshipsToStatedWhereMissing, null);
+		conceptNormalizer = new NormaliseConcepts(this);
 	}
 
 	@Override
@@ -25,6 +35,10 @@ public class ExtractExtensionComponentsAndLateralize extends ExtractExtensionCom
 		//Now it might be that the source extension already has this concept lateralized
 		//eg 847081000000101 |Balloon dilatation of bronchus using fluoroscopic guidance (procedure)|
 		LOGGER.info("Creating lateralized concepts for {}", c);
+		if (copyInferredRelationshipsToStatedWhereMissing)	{
+			conceptNormalizer.normaliseConcept(null, c, null);
+		}
+
 		try {
 			conceptLateralizer.createLateralizedConceptIfRequired(c, LEFT, componentsToProcess);
 			conceptLateralizer.createLateralizedConceptIfRequired(c, RIGHT, componentsToProcess);

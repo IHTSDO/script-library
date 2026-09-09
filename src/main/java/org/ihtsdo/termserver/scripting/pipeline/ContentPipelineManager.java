@@ -569,7 +569,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 				}
 			} else {
 				//If it's a component annotation then it's come from International so that stays active in all cases
-				if (!(existingComponent instanceof ComponentAnnotationEntry)) {
+				if (!(existingComponent instanceof ComponentAnnotationEntry || existingComponent.getComponentType().equals(ComponentType.SIMPLE_MAP))) {
 					//If we have an existing component, and it has no newly Modelled counterpart, then inactivate it
 					existingComponent.setActive(false);
 					existingComponent.setDirty();

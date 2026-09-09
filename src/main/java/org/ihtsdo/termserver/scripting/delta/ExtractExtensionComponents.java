@@ -74,7 +74,6 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 
 	public static void main(String[] args) throws TermServerScriptException {
 		new ExtractExtensionComponents().doComponentExtraction(args);
-		// ExtractExtensionComponents delta = new ExtractExtensionComponentsAndLateralize();
 	}
 
 	protected void doComponentExtraction(String[] args) throws TermServerScriptException {
