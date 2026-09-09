@@ -10,7 +10,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 
@@ -64,7 +64,7 @@ public class Delete_US_Issues extends NegativeDeltaGenerator implements ScriptCo
 	private void loadConcepts(String fileName) throws TermServerScriptException {
 		try {
 			File affectedConceptFile = new File(fileName);
-			List<String> lines = Files.readLines(affectedConceptFile, Charsets.UTF_8);
+			List<String> lines = Files.readLines(affectedConceptFile, StandardCharsets.UTF_8);
 			LOGGER.info("Loading selected Concepts from {}", fileName);
 			for (String line : lines) {
 				affectedConcepts.add(gl.getConcept(line));

@@ -3,7 +3,7 @@ package org.ihtsdo.termserver.scripting.elasticsearch;
 import java.util.Map;
 
 import org.ihtsdo.otf.rest.client.ExpressiveErrorHandler;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,7 +27,7 @@ public class ElasticSearchClient {
 	public ElasticSearchClient(String serverUrl) {
 		this.serverUrl = serverUrl;
 		restTemplate = new RestTemplateBuilder()
-				.rootUri(this.serverUrl)
+				.baseUri(this.serverUrl)
 				.errorHandler(new ExpressiveErrorHandler())
 				.build();
 		headers = new HttpHeaders();

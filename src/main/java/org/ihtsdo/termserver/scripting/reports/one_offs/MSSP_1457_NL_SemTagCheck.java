@@ -15,7 +15,7 @@ import org.snomed.otf.scheduler.domain.*;
 import org.snomed.otf.scheduler.domain.Job.ProductionStatus;
 import org.snomed.otf.script.dao.ReportSheetManager;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 public class MSSP_1457_NL_SemTagCheck extends TermServerReport implements ReportClass {
@@ -69,7 +69,7 @@ public class MSSP_1457_NL_SemTagCheck extends TermServerReport implements Report
 		}
 		List<String> lines;
 		try {
-			lines = Files.readLines(getInputFile(), Charsets.UTF_8);
+			lines = Files.readLines(getInputFile(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new TermServerScriptException("Failure while reading: " + getInputFile(), e);
 		}

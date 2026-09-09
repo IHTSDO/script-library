@@ -9,7 +9,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.fixes.BatchFix;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 import org.slf4j.Logger;
@@ -85,7 +85,7 @@ public class FixIncorrectModuleId extends BatchFix implements ScriptConstants{
 	}
 
 	private void loadEntriesToFix() throws IOException, TermServerScriptException {
-		List<String> lines = Files.readLines(getInputFile(), Charsets.UTF_8);
+		List<String> lines = Files.readLines(getInputFile(), StandardCharsets.UTF_8);
 		LOGGER.info("Loading affected description ids from {}", getInputFile());
 		for (String line : lines) {
 			String trimmedLine = line.trim();

@@ -10,7 +10,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.*;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 /*
@@ -52,7 +52,7 @@ public class ReplaceDescriptionIds extends BatchFix implements ScriptConstants{
 	
 	private void loadDescIds() throws TermServerScriptException {
 		try {
-			List<String> lines = Files.readLines(getInputFile(), Charsets.UTF_8);
+			List<String> lines = Files.readLines(getInputFile(), StandardCharsets.UTF_8);
 			LOGGER.info("Loading description ids from " + getInputFile());
 			for (String line : lines) {
 				descIds.add(line);

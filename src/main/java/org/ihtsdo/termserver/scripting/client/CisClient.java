@@ -11,7 +11,7 @@ import org.ihtsdo.termserver.scripting.cis.CisRecord;
 import org.ihtsdo.termserver.scripting.cis.CisResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -45,7 +45,7 @@ public class CisClient {
 		headers.add("Accept", CONTENT_TYPE);
 
 		restTemplate = new RestTemplateBuilder()
-				.rootUri(serverUrl)
+				.baseUri(serverUrl)
 				.additionalMessageConverters(new GsonHttpMessageConverter())
 				.errorHandler(new ExpressiveErrorHandler())
 				.build();

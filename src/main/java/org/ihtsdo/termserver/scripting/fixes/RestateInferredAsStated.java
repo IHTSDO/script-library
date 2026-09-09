@@ -10,7 +10,7 @@ import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 /*
@@ -57,7 +57,7 @@ public class RestateInferredAsStated extends BatchFix implements ScriptConstants
 		attributesOfInterest.add(gl.getConcept("411116001")); //Has manufactured dose form (attribute)
 		
 		try {
-			List<String> lines = Files.readLines(getInputFile(), Charsets.UTF_8);
+			List<String> lines = Files.readLines(getInputFile(), StandardCharsets.UTF_8);
 			LOGGER.info("Loading concepts agreed for change from " + getInputFile());
 			for (String line : lines) {
 				conceptsAgreedToChange.add(gl.getConcept(line.trim()));

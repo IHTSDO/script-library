@@ -9,7 +9,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 /**
@@ -52,7 +52,7 @@ public class ContainedInSubhierarchies extends TermServerReport {
 		df.setMaximumFractionDigits(2);
 		//Load the starter set
 		try {
-			for (String line : Files.readLines(getInputFile(), Charsets.UTF_8)) {
+			for (String line : Files.readLines(getInputFile(), StandardCharsets.UTF_8)) {
 				conceptsOfInterest.add(gl.getConcept(line));
 			}
 		} catch (IOException e) {
@@ -61,7 +61,7 @@ public class ContainedInSubhierarchies extends TermServerReport {
 		
 		//Load Yong's list of subhierarchies
 		try {
-			for (String line : Files.readLines(getInputFile(1), Charsets.UTF_8)) {
+			for (String line : Files.readLines(getInputFile(1), StandardCharsets.UTF_8)) {
 				subHierarchies.add(gl.getConcept(line));
 			}
 		} catch (IOException e) {

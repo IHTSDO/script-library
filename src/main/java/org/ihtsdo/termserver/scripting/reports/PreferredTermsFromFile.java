@@ -11,7 +11,7 @@ import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 /**
@@ -81,7 +81,7 @@ public class PreferredTermsFromFile extends TermServerScript{
 	private void loadConceptsSelected(String fileName) throws TermServerScriptException {
 		try {
 			File nationalTerms = new File(fileName);
-			List<String> lines = Files.readLines(nationalTerms, Charsets.UTF_8);
+			List<String> lines = Files.readLines(nationalTerms, StandardCharsets.UTF_8);
 			LOGGER.info("Loading selected Concepts from " + fileName);
 			conceptFilter = new ArrayList<Concept>();
 			for (String line : lines) {

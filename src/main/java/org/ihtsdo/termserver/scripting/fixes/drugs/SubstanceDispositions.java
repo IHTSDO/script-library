@@ -141,11 +141,7 @@ public class SubstanceDispositions extends DrugBatchFix implements ScriptConstan
 				descendant.addIssue(disposition.toString());
 			} 
 			//we might have multiple dispositions for a concept
-			List<Concept> dispositions = conceptDispositionMap.get(descendant);
-			if (dispositions == null) {
-				dispositions = new ArrayList<Concept>();
-				conceptDispositionMap.put(descendant, dispositions);
-			}
+			List<Concept> dispositions = conceptDispositionMap.computeIfAbsent(descendant, d -> new ArrayList<>());
 			dispositions.add(disposition);
 			if (dispositions.size() > 1) {
 				String dispositionStr = dispositions.stream().map(Concept::getFsn)

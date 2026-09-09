@@ -10,7 +10,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.snomed.otf.script.dao.ReportSheetManager;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.io.Files;
 
 /*
@@ -55,7 +55,7 @@ public class MoveConceptsDriven extends BatchFix implements ScriptConstants {
 	protected void init(String[] args) throws TermServerScriptException {
 		try {
 			File moveListFile = new File(moveListFileStr);
-			for (String line : Files.readLines(moveListFile, Charsets.UTF_8)) {
+			for (String line : Files.readLines(moveListFile, StandardCharsets.UTF_8)) {
 				moveList.add(line.split(TAB)[0]);
 			}
 		} catch (IOException e) {

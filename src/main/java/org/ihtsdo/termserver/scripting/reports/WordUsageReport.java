@@ -11,7 +11,7 @@ import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.io.Files;
@@ -46,7 +46,7 @@ public class WordUsageReport extends TermServerScript{
 	}
 
 	private void loadWords() throws IOException {
-		List<String> lines = Files.readLines(getInputFile(), Charsets.UTF_8);
+		List<String> lines = Files.readLines(getInputFile(), StandardCharsets.UTF_8);
 		LOGGER.info("Loading words of interest from {}", getInputFile());
 		for (String line : lines) {
 			wordUsage.put(line, new Usage());
