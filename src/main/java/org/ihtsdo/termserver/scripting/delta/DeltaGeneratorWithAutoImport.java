@@ -11,10 +11,17 @@ import java.util.List;
 public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 
 	protected String taskPrefix;
-	private MultiArchiveImporter importer;
+	protected MultiArchiveImporter importer;
 	private File archive;
-	private List<File> archivesCreatedDuringThisRun = new ArrayList<>();
+	private final List<File> archivesCreatedDuringThisRun = new ArrayList<>();
 
+	protected void addArchiveCreated(File archive) {
+		archivesCreatedDuringThisRun.add(archive);
+	}
+
+	protected List<File> getArchivesCreatedDuringThisRun() {
+		return archivesCreatedDuringThisRun;
+	}
 
 	protected void importArchiveToTask(File archive) throws TermServerScriptException {
 		this.archive = archive;
@@ -28,25 +35,42 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 	}
 
 	private boolean reviewSettingsWithUser() throws TermServerScriptException {
+		if (!checkProceed()) {
+			return false;
+		}
 
+		promptForTaskPrefixIfNeeded();
+		reviewArchiveNaming();
+		reviewEnvironmentAndProject();
+		reviewExistingTaskOption();
+		reviewAuthor();
+
+		print("Ready to import into a task in " + projectName + "? Y/N [Y]: ");
+		String response = STDIN.nextLine().trim();
+		return !response.equalsIgnoreCase("N");
+	}
+
+	protected boolean checkProceed() {
 		//Let's output the processing report so the user can review it before making decisions
 		println("Processing Report: " + getReportManager().getUrl());
 
 		print("Do you want to proceed with auto-import? Y/N [Y]: ");
 		String response = STDIN.nextLine().trim();
-		if (response.equalsIgnoreCase("N")) {
-			return false;
-		}
+		return !response.equalsIgnoreCase("N");
+	}
 
+	protected void promptForTaskPrefixIfNeeded() {
 		//Quite often forget to set a task prefix, so let's prompt for it
 		if (StringUtils.isEmpty(taskPrefix)) {
 			print("What INFRA/MSSP/XDS ticket are you working here: ");
 			taskPrefix = STDIN.nextLine().trim();
 		}
+	}
 
+	private void reviewArchiveNaming() throws TermServerScriptException {
 		//Check if we're going to rename the file to be the task prefix
 		print("Rename " + archive.getName() + " to " + taskPrefix + ".zip ? Y/N [Y]: ");
-		response = STDIN.nextLine().trim();
+		String response = STDIN.nextLine().trim();
 		if (!response.equalsIgnoreCase("N")) {
 			File oldFile = archive;
 			archive = new File(archive.getParentFile(), taskPrefix + ".zip");
@@ -54,9 +78,11 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 				throw new TermServerScriptException("Failed to rename " + oldFile + " to " + archive);
 			}
 		}
+	}
 
+	protected void reviewEnvironmentAndProject() throws TermServerScriptException {
 		print("Import into same environment? Y/N [Y]: ");
-		response = STDIN.nextLine().trim();
+		String response = STDIN.nextLine().trim();
 		if (response.equalsIgnoreCase("N")) {
 			determineEnvironment(true);
 			initialiseSnomedServiceClients();
@@ -67,25 +93,25 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 		//We might have changed the environment, so recopy state into importer
 		importer.copyScriptState(this);
 		importer.recoverProjectFromProjectName(projectName);
+	}
 
+	protected void reviewExistingTaskOption() {
 		//Do we want to import onto an existing task?
 		print("Import onto an existing task? Y/N [N]: ");
-		response = STDIN.nextLine().trim();
+		String response = STDIN.nextLine().trim();
 		if (response.equalsIgnoreCase("Y")) {
-			print ("Please enter the task ID to import onto: ");
+			print("Please enter the task ID to import onto: ");
 			response = STDIN.nextLine().trim();
 			if (!StringUtils.isEmpty(response)) {
 				importer.setLastTaskCreated(response);
 				importer.setMode(MultiArchiveImporter.MODE.ALL_ARCHIVES_IN_ONE_TASK);
 			}
 		}
+	}
 
+	protected void reviewAuthor() {
 		String authorDisplay = importer.getAuthors() == null ? "" : importer.getAuthors().get(0);
 		print("Assign to author [" + authorDisplay + "]: ");
 		importer.setAuthors(STDIN.nextLine().trim());
-
-		print("Ready to import into a task in " + projectName + "? Y/N [Y]: ");
-		response = STDIN.nextLine().trim();
-		return !response.equalsIgnoreCase("N");
 	}
 }

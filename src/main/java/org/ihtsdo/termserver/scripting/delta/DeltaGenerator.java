@@ -700,6 +700,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 			String msg = "Created " + lastArchiveCreated.getName() + " containing " + conceptsOutput + " concepts";
 			LOGGER.info(msg);
 			report((Concept) null, Severity.NONE, ReportActionType.INFO, msg);
+			if (this instanceof DeltaGeneratorWithAutoImport thisAutoImport) {
+				thisAutoImport.addArchiveCreated(lastArchiveCreated);
+			}
 			return conceptsOutput;
 		}
 		return 0;

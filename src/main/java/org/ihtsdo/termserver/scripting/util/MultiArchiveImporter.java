@@ -52,13 +52,17 @@ public class MultiArchiveImporter extends BatchFix {
 	}
 
 	private void importArchives() throws TermServerScriptException {
+		importArchives(getInputFile());
+	}
+
+	public void importArchives(File directory) throws TermServerScriptException {
 		String limitStr = processingLimit == NOT_SET ? "all" : processingLimit + "";
-		LOGGER.info("Processing {} archives in {}", limitStr, getInputFile());
-		String[] dirListing = getInputFile().list();
+		LOGGER.info("Processing {} archives in {}", limitStr, directory);
+		String[] dirListing = directory.list();
 		Arrays.sort(dirListing, NumberAwareStringComparator.INSTANCE);
 		int archivesProcessed = 0;
 		for (String archiveStr : dirListing) {
-			File thisArchive = new File(getInputFile() + File.separator + archiveStr);
+			File thisArchive = new File(directory + File.separator + archiveStr);
 
 			if (thisArchive.getPath().endsWith(".zip")) {
 				archivesProcessed++;
