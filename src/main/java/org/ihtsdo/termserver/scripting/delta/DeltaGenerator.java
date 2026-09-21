@@ -2,6 +2,7 @@ package org.ihtsdo.termserver.scripting.delta;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipInputStream;
@@ -11,6 +12,7 @@ import org.ihtsdo.otf.rest.client.authoringservices.AuthoringServicesClient;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component.ComponentType;
 import org.ihtsdo.otf.exception.TermServerScriptException;
+import org.ihtsdo.otf.utils.FileUtils;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.ComponentAnnotationEntry;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.RefsetMember;
 import org.ihtsdo.termserver.scripting.AxiomUtils;
@@ -183,13 +185,12 @@ public abstract class DeltaGenerator extends TermServerScript {
 		if (baseOutputDirName == null) {
 			baseOutputDirName = outputDirName;
 		}
-		File outputDir = new File(baseOutputDirName);
-		int increment = 0;
-		while (outputDir.exists()) {
-			String proposedOutputDirName = baseOutputDirName + "_" + (++increment);
-			outputDir = new File(proposedOutputDirName);
+		try {
+			File outputDir = FileUtils.createDirectoryOrIncrement(new File(baseOutputDirName));
+			outputDirName = outputDir.getName();
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to create output directory based on " + baseOutputDirName, e);
 		}
-		outputDirName = outputDir.getName();
 		packageRoot = outputDirName + File.separator + "SnomedCT_RF2Release_" + edition +"_";
 		packageDir = packageRoot + today + File.separator;
 		LOGGER.info("Outputting data to {}", packageDir);

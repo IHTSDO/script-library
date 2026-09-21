@@ -1,10 +1,12 @@
 package org.ihtsdo.termserver.scripting.delta;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
+import org.ihtsdo.otf.utils.FileUtils;
 import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.util.MultiArchiveImporter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -71,9 +73,12 @@ public class DeltaGeneratorWithMultiAutoImport extends DeltaGeneratorWithAutoImp
 			outputStoragePathBase = STDIN.nextLine().trim();
 		}
 
-		File importDir = new File(new File(outputStoragePathBase, taskPrefix), "import");
-		if (!importDir.exists() && !importDir.mkdirs()) {
-			throw new TermServerScriptException("Failed to create directory " + importDir);
+		File proposedImportDir = new File(new File(outputStoragePathBase, taskPrefix), "import");
+		File importDir;
+		try {
+			importDir = FileUtils.createDirectoryOrIncrement(proposedImportDir);
+		} catch (IOException e) {
+			throw new TermServerScriptException("Failed to create directory " + proposedImportDir, e);
 		}
 
 		for (File thisArchive : archivesCreated) {
