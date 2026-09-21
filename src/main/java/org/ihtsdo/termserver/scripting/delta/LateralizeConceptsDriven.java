@@ -28,8 +28,17 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport imple
 
 	@Override
 	public void postInit(String googleFolder) throws TermServerScriptException {
-		additionalReportColumns =", , , , ";
-		super.postInit(googleFolder);
+		additionalReportColumns += ", , ";
+		String[] columnHeadings = new String[]{
+				"SCTID, FSN, SemTag, Severity, Action, Details," + additionalReportColumns,
+				"SCTID, FSN, SemTag, Example Usage ,"
+		};
+
+		String[] tabNames = new String[]{
+				"Processing Report",
+				"Unlateralized Concepts"
+		};
+		super.postInit(googleFolder, tabNames, columnHeadings);
 		conceptLateralizer = ConceptLateralizer.get(this, true, this);
 		conceptNormalizer = new NormaliseConcepts(this);
 	}
@@ -40,11 +49,15 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport imple
 		populateLateralizedInstructionMap();
 		List<Component> conceptsToLateralize = new ArrayList<>(lateralizedInstructionMap.keySet());
 		for (LateralizeInstruction li : lateralizedInstructionMap.values()) {
-			conceptNormalizer.normaliseConcept(null, li.concept, null);
-			report(li.concept, Severity.NONE, ReportActionType.INFO, li.concept, li.concept.toExpression(CharacteristicType.STATED_RELATIONSHIP));
-			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, LEFT, conceptsToLateralize);
-			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, RIGHT, conceptsToLateralize);
-			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, BILATERAL, conceptsToLateralize);
+			if (li.concept.isActiveSafely()) {
+				conceptNormalizer.normaliseConcept(null, li.concept, null);
+				report(li.concept, Severity.NONE, ReportActionType.INFO, li.concept, li.concept.toExpression(CharacteristicType.STATED_RELATIONSHIP));
+				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, LEFT, conceptsToLateralize);
+				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, RIGHT, conceptsToLateralize);
+				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, BILATERAL, conceptsToLateralize);
+			} else {
+				report(li.concept, Severity.LOW, ReportActionType.INFO, "Concept is inactive, skipping");
+			}
 		}
 	}
 

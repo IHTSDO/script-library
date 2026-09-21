@@ -6,7 +6,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.utils.SnomedUtilsBase;
 import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.GraphLoader;
-import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.delta.DeltaGenerator;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.slf4j.Logger;
@@ -28,6 +27,7 @@ public class ConceptLateralizer implements ScriptConstants {
 
 	private Set<Concept> bodyStructures = null;
 	private Set<Concept> morphologicAbnormalities = null;
+	private final Set<Concept> lateralizableBodyStructuresReportedMissingChildren = new HashSet<>();
 	private GraphLoader gl;
 	private TermGenerationStrategy termStrategy;
 	private DeltaGenerator parent;
@@ -136,7 +136,7 @@ public class ConceptLateralizer implements ScriptConstants {
 		String lateralityStr = getLateralityStr(laterality);
 		if (!termStrategy.applyTermViaOverride(original, clone, lateralityStr)
 				&& !lateralizeFsnUsingBodyStructureCutPoint(original, clone, lateralityStr)
-				&& !lateralizeFsnUsingAlternativeApproach(clone, lateralityStr, laterality)) {
+				&& !lateralizeFsnUsingAlternativeApproach(original, clone, lateralityStr, laterality)) {
 			String proposedPT = termStrategy.suggestTerm(clone, lateralityStr);
 			applyTermAsPtAndFsn(original, clone, proposedPT);
 		}
@@ -162,11 +162,12 @@ public class ConceptLateralizer implements ScriptConstants {
 	 * @return true if FSN was successfully lateralized
 	 * @throws TermServerScriptException
 	 */
-	private boolean lateralizeFsnUsingAlternativeApproach(Concept clone, String lateralityStr, Concept laterality) throws TermServerScriptException {
+	private boolean lateralizeFsnUsingAlternativeApproach(Concept original, Concept clone, String lateralityStr, Concept laterality) throws TermServerScriptException {
 		//We'll add the lateralized body structure to the end of the FSN
 		//Or, if it's "using", before "using"
 		String[] fsnParts = SnomedUtilsBase.deconstructFSN(clone.getFsn());
-		String lateralizedBodyStructurePT = getBodyStructurePT(clone);
+		Concept lateralizableBodyStructure = getBodyStructure(clone);
+		String lateralizedBodyStructurePT = lateralizableBodyStructure.getPreferredSynonym().toLowerCase();
 
 		if (lateralizedBodyStructurePT == null) {
 			return false;
@@ -182,7 +183,9 @@ public class ConceptLateralizer implements ScriptConstants {
 		//If the body structure was not able to be lateralized, we'll need to force the laterality for the FSN
 		if (!lateralizedBodyStructurePT.contains(lateralityStr)) {
 			lateralizedBodyStructurePT += " (" + lateralityStr + ")";
+			reportMissingLateralizedBodyStructure(lateralizableBodyStructure, original);
 		}
+
 		String laterlizedFsn = fsnParts[0] + " of " + lateralizedBodyStructurePT + " " + fsnParts[1];
 		if (fsnParts[0].contains(USING)) {
 			int cutPoint = fsnParts[0].indexOf(USING_SP);
@@ -191,6 +194,13 @@ public class ConceptLateralizer implements ScriptConstants {
 		clone.getFSNDescription().setTerm(laterlizedFsn);
 		clone.setFsn(laterlizedFsn);
 		return true;
+	}
+
+	private void reportMissingLateralizedBodyStructure(Concept lateralizableBodyStructure, Concept usage) throws TermServerScriptException {
+		//Set.add() returns false if the body structure was already present, ie already reported
+		if (lateralizableBodyStructuresReportedMissingChildren.add(lateralizableBodyStructure)) {
+			parent.report(SECONDARY_REPORT, lateralizableBodyStructure, usage);
+		}
 	}
 
 	private boolean lateralizeFsnUsingBodyStructureCutPoint(Concept original, Concept clone, String lateralityStr) throws TermServerScriptException {
@@ -311,17 +321,17 @@ public class ConceptLateralizer implements ScriptConstants {
 		}
 	}
 
-	private String getBodyStructurePT(Concept c) throws TermServerScriptException {
+	private Concept getBodyStructure(Concept c) throws TermServerScriptException {
 		for (RelationshipGroup g : c.getRelationshipGroups(RF2Constants.CharacteristicType.STATED_RELATIONSHIP)) {
 			for (Relationship r : g.getRelationships()) {
-				if (isBodyStructure(r.getTarget())) {
-					return r.getTarget().getPreferredSynonym().toLowerCase();
+				Concept candidateBodyStructure = r.getTarget();
+				if (isBodyStructure(candidateBodyStructure)) {
+					return r.getTarget();
 				}
 			}
 		}
 		return null;
 	}
-
 
 	private Concept findLateralizedCounterpart(Concept unlaterlizedConcept, Concept laterality, boolean overrideCurrentLaterality) throws TermServerScriptException {
 		//Ideally our concept would be "Structure of X" and we'd look for "Structure of left X"
@@ -433,6 +443,10 @@ public class ConceptLateralizer implements ScriptConstants {
 	private boolean isBodyStructure(Concept checkMe) throws TermServerScriptException {
 		if (bodyStructures == null) {
 			bodyStructures = BODY_STRUCTURE.getDescendants(NOT_SET, RF2Constants.CharacteristicType.INFERRED_RELATIONSHIP);
+			//Now, something like 'inflammation' is part of the body structure hierarchy, but it's not an actual body part
+			//so remove them.
+			Set<Concept> morphologies = MORPHOLOGIC_ABNORMALITY.getDescendants(NOT_SET, RF2Constants.CharacteristicType.INFERRED_RELATIONSHIP);
+			bodyStructures.removeAll(morphologies);
 		}
 		return bodyStructures.contains(checkMe);
 	}
