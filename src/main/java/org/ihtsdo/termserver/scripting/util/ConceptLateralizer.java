@@ -25,6 +25,10 @@ public class ConceptLateralizer implements ScriptConstants {
 	private static final String USING_SP = " using ";
 	private static final String WITH_LATERALITY_SP = " with laterality ";
 
+	private static final String LEFT_STR = "left";
+	private static final String RIGHT_STR = "right";
+	private static final String BILATERAL_STR = "bilateral";
+
 	private Set<Concept> bodyStructures = null;
 	private Set<Concept> morphologicAbnormalities = null;
 	private final Set<Concept> lateralizableBodyStructuresReportedMissingChildren = new HashSet<>();
@@ -32,6 +36,11 @@ public class ConceptLateralizer implements ScriptConstants {
 	private TermGenerationStrategy termStrategy;
 	private DeltaGenerator parent;
 	private boolean copyInferredRelationshipsToStatedWhereMissing = false;
+
+	private static final Set<String> PLURALITY_EXCEPTIONS = new HashSet<>();
+
+	private static final Map<String, String> pluralisationMappings = Map.of(
+			"cavity", "cavities");
 
 	private ConceptLateralizer() {}
 
@@ -42,6 +51,7 @@ public class ConceptLateralizer implements ScriptConstants {
 			singleton.termStrategy = termStrategy;
 			singleton.gl = parent.getGraphLoader();
 			singleton.copyInferredRelationshipsToStatedWhereMissing = copyInferredRelationshipsToStatedWhereMissing;
+
 		}
 		return singleton;
 	}
@@ -53,6 +63,22 @@ public class ConceptLateralizer implements ScriptConstants {
 	public boolean createLateralizedConceptIfRequired(Concept c, Concept laterality, List<Component> componentsToProcess) throws TermServerScriptException {
 		boolean newConceptCreatedOrScheduled = false;
 		Concept existingLateralizedConcept = findExistingLateralizedConcept(c, laterality);
+
+		if (c.getId().equals("246615006")) {
+			LOGGER.debug("fails to lateralize descriptions");
+		}
+
+		if (c.getId().equals("1393678003")) {
+			LOGGER.debug("Different strategy?");
+		}
+
+		if (c.getId().equals("1393699000")) {
+			LOGGER.debug("anterior chamber doubled up");
+		}
+
+		if (c.getId().equals("1393782009")) {
+			LOGGER.debug("Prevent eyeslid");
+		}
 
 		if (existingLateralizedConcept == null) {
 			Concept newLateralizedConcept = createLateralizedConcept(c, laterality);
@@ -145,9 +171,9 @@ public class ConceptLateralizer implements ScriptConstants {
 
 	private String getLateralityStr(Concept laterality) {
 		return switch (laterality.getId()) {
-			case SCTID_LEFT -> "left";
-			case SCTID_RIGHT -> "right";
-			case SCTID_BILATERAL -> "bilateral";
+			case SCTID_LEFT -> LEFT_STR;
+			case SCTID_RIGHT -> RIGHT_STR;
+			case SCTID_BILATERAL -> BILATERAL_STR;
 			default -> throw new IllegalArgumentException("Unexpected laterality: " + laterality);
 		};
 	}
@@ -173,9 +199,12 @@ public class ConceptLateralizer implements ScriptConstants {
 		}
 
 		String lateralizedBodyStructurePT = lateralizableBodyStructure.getPreferredSynonym().toLowerCase();
-		if (laterality.equals(BILATERAL) && !lateralizedBodyStructurePT.contains("right")) {
-			lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace("left", "bilateral");
-			if (lateralizedBodyStructurePT.contains("eye") && !lateralizedBodyStructurePT.contains("eyes")) {
+	if (laterality.equals(BILATERAL) && !lateralizedBodyStructurePT.contains(RIGHT_STR)) {
+			lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace(LEFT_STR, BILATERAL_STR);
+
+			if (lateralizedBodyStructurePT.contains("eyelid")) {
+				lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace("eyelid", "eyelids");
+			} else if (lateralizedBodyStructurePT.contains("eye") && !lateralizedBodyStructurePT.contains("eyes")) {
 				lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace("eye", "eyes");
 			}
 		}
@@ -233,23 +262,14 @@ public class ConceptLateralizer implements ScriptConstants {
 				.forEach(clone::removeDescription);
 		String pt = SnomedUtilsBase.deconstructFSN(clone.getFSNDescription().getTerm())[0];
 		if (laterality.equals(BILATERAL)) {
-			pt = pt.replace("right and left", "bilateral");
+			pt = pt.replace("right and left", BILATERAL_STR);
 		}
 		Description ptDesc = Description.withDefaults(pt, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.PREFERRED);
 		clone.addDescription(ptDesc);
 
 		//Bilateral concepts will have an acceptable "both" synonym
 		if (laterality.equals(BILATERAL)) {
-			String bothTerm = pt.replace("bilateral", "both");
-			if (!bothTerm.endsWith(")")) {
-				if (bothTerm.contains(" with ")) {
-					bothTerm = bothTerm.replace(" with ", "s with ");
-				} else if (bothTerm.contains(USING_SP)) {
-					bothTerm = bothTerm.replace(USING_SP, "s using ");
-				} else if (!bothTerm.endsWith("s")) {
-					bothTerm += "s";
-				}
-			}
+			String bothTerm = pluralize(pt.replace(BILATERAL_STR, "both"));
 			Description bothDesc = Description.withDefaults(bothTerm, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
 			clone.addDescription(bothDesc);
 		}
@@ -265,6 +285,35 @@ public class ConceptLateralizer implements ScriptConstants {
 						throw new IllegalStateException(e);
 					}
 				});
+	}
+
+	private String pluralize(String term) {
+		if (term.endsWith(")")) {
+			return term;
+		}
+		if (!term.isEmpty() && Character.isDigit(term.charAt(term.length() - 1))) {
+			return term;
+		}
+		for (String exception : PLURALITY_EXCEPTIONS) {
+			if (term.endsWith(exception)) {
+				return term;
+			}
+		}
+		if (term.contains(" with ")) {
+			return term.replace(" with ", "s with ");
+		}
+		if (term.contains(USING_SP)) {
+			return term.replace(USING_SP, "s using ");
+		}
+		for (Map.Entry<String, String> mapping : pluralisationMappings.entrySet()) {
+			if (term.endsWith(mapping.getKey())) {
+				return term.substring(0, term.length() - mapping.getKey().length()) + mapping.getValue();
+			}
+		}
+		if (!term.endsWith("s")) {
+			return term + "s";
+		}
+		return term;
 	}
 
 	private Set<String> getBodyStructureStrs(Concept original) throws TermServerScriptException {
@@ -342,9 +391,9 @@ public class ConceptLateralizer implements ScriptConstants {
 		String unlateralizedFsn = unlaterlizedConcept.getFsn();
 
 		if (overrideCurrentLaterality) {
-			String lateralizedFsn = unlateralizedFsn.replace("left", lateralityStr)
+			String lateralizedFsn = unlateralizedFsn.replace(LEFT_STR, lateralityStr)
 					.replace("Left", lateralityStrCapitalized)
-					.replace("right", lateralityStr)
+					.replace(RIGHT_STR, lateralityStr)
 					.replace("Right", lateralityStrCapitalized);
 			lateralizedCounterpart = findBodyStructureWithFsn(lateralizedFsn);
 		}
@@ -456,6 +505,10 @@ public class ConceptLateralizer implements ScriptConstants {
 			morphologicAbnormalities = MORPHOLOGIC_ABNORMALITY.getDescendants(NOT_SET, RF2Constants.CharacteristicType.INFERRED_RELATIONSHIP);
 		}
 		return morphologicAbnormalities.contains(checkMe);
+	}
+
+	public void addPluralityException(String pluralityException) {
+		PLURALITY_EXCEPTIONS.add(pluralityException);
 	}
 
 }

@@ -14,7 +14,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 
-public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport implements ScriptConstants, TermGenerationStrategy {
+public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport implements ScriptConstants, TermGenerationStrategy {
 
 	Set<String> whitelist = new HashSet<>();
 	private static final Logger LOGGER = LoggerFactory.getLogger(LateralizeConceptsDriven.class);
@@ -42,6 +42,11 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport imple
 		};
 		super.postInit(googleFolder, tabNames, columnHeadings);
 		conceptLateralizer = ConceptLateralizer.get(this, true, this);
+		conceptLateralizer.addPluralityException("proper");
+		conceptLateralizer.addPluralityException("type II");
+		conceptLateralizer.addPluralityException("region");
+		conceptLateralizer.addPluralityException("thinning");
+
 		conceptNormalizer = new NormaliseConcepts(this);
 	}
 
