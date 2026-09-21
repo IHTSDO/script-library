@@ -21,6 +21,12 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(TemplatedConcept.class);
 
+	//Multi-word joining phrases that must be removed in their entirety when the slot that follows them is empty.
+	//Any preposition not listed here falls back to removing just the single word immediately before the slot.
+	private static final List<String> PREPOSITION_PHRASES = List.of(
+			"with unit"
+	);
+
 	public enum IterationIndicator { NEW, REMOVED, RESURRECTED, REACTIVATED, MODIFIED, UNCHANGED, MANUAL, REMAINS_INACTIVE }
 
 	protected static ContentPipelineManager cpm;
@@ -365,7 +371,16 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		if (slotIndex == -1) {
 			return regex; // fallback, not found
 		}
-		// Find the word (preposition) before the slot
+
+		// Does a known multi-word phrase sit immediately before the slot?
+		for (String phrase : PREPOSITION_PHRASES) {
+			int phraseStart = findPhraseStart(ptTemplateStr, slotIndex, phrase);
+			if (phraseStart != -1) {
+				return " " + ptTemplateStr.substring(phraseStart, slotIndex) + regex;
+			}
+		}
+
+		// Otherwise fall back to just the single word (preposition) before the slot
 		int preStart = slotIndex - 1;
 		while (preStart >= 0 && Character.isWhitespace(ptTemplateStr.charAt(preStart))) {
 			preStart--;
@@ -377,6 +392,24 @@ public abstract class TemplatedConcept implements ScriptConstants, ConceptWrappe
 		// Extract the preposition and build the new regex
 		String preposition = ptTemplateStr.substring(preStart, slotIndex);
 		return " " + preposition + regex;
+	}
+
+	//Returns the index at which phrase starts, immediately (ignoring trailing whitespace) before slotIndex,
+	//provided it's a whole-word match - or -1 if phrase isn't there.
+	private int findPhraseStart(String ptTemplateStr, int slotIndex, String phrase) {
+		int end = slotIndex;
+		while (end > 0 && Character.isWhitespace(ptTemplateStr.charAt(end - 1))) {
+			end--;
+		}
+		int start = end - phrase.length();
+		if (start < 0 || !ptTemplateStr.regionMatches(true, start, phrase, 0, phrase.length())) {
+			return -1;
+		}
+		//Confirm this is a whole-word match, not part of a longer word
+		if (start > 0 && Character.isLetter(ptTemplateStr.charAt(start - 1))) {
+			return -1;
+		}
+		return start;
 	}
 
 	private boolean safeToDecapitalizeFirstLetter(String phrase) throws TermServerScriptException {
