@@ -21,6 +21,8 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport imple
  	private ConceptLateralizer conceptLateralizer;
 	private NormaliseConcepts conceptNormalizer = null;
 	private Map<Concept, LateralizeInstruction> lateralizedInstructionMap = new HashMap<>();
+
+	private static final int SOURCE_CONCEPTS_PER_ARCHIVE = 20; //This will give us 60 concepts in the output
 	
 	public static void main(String[] args) throws TermServerScriptException {
 		new LateralizeConceptsDriven().standardExecutionWithIds(args);
@@ -48,6 +50,7 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport imple
 		populateWhitelist();
 		populateLateralizedInstructionMap();
 		List<Component> conceptsToLateralize = new ArrayList<>(lateralizedInstructionMap.keySet());
+		int conceptsProcessedInThisBatch = 0;
 		for (LateralizeInstruction li : lateralizedInstructionMap.values()) {
 			if (li.concept.isActiveSafely()) {
 				conceptNormalizer.normaliseConcept(null, li.concept, null);
@@ -55,8 +58,16 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithAutoImport imple
 				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, LEFT, conceptsToLateralize);
 				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, RIGHT, conceptsToLateralize);
 				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, BILATERAL, conceptsToLateralize);
+				conceptsProcessedInThisBatch++;
 			} else {
 				report(li.concept, Severity.LOW, ReportActionType.INFO, "Concept is inactive, skipping");
+			}
+
+			if (conceptsProcessedInThisBatch >= SOURCE_CONCEPTS_PER_ARCHIVE) {
+				createOutputArchive();
+				initialiseOutputDirectory();
+				initialiseFileHeaders();
+				conceptsProcessedInThisBatch = 0;
 			}
 		}
 	}

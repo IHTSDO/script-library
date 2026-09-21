@@ -5,12 +5,15 @@ import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.util.MultiArchiveImporter;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 
 	protected String taskPrefix;
 	private MultiArchiveImporter importer;
 	private File archive;
+	private List<File> archivesCreatedDuringThisRun = new ArrayList<>();
 
 
 	protected void importArchiveToTask(File archive) throws TermServerScriptException {

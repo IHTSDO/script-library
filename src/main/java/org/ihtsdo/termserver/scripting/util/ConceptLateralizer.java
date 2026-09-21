@@ -166,13 +166,13 @@ public class ConceptLateralizer implements ScriptConstants {
 		//We'll add the lateralized body structure to the end of the FSN
 		//Or, if it's "using", before "using"
 		String[] fsnParts = SnomedUtilsBase.deconstructFSN(clone.getFsn());
-		Concept lateralizableBodyStructure = getBodyStructure(clone);
-		String lateralizedBodyStructurePT = lateralizableBodyStructure.getPreferredSynonym().toLowerCase();
 
-		if (lateralizedBodyStructurePT == null) {
+		Concept lateralizableBodyStructure = getBodyStructure(clone);
+		if (lateralizableBodyStructure == null) {
 			return false;
 		}
 
+		String lateralizedBodyStructurePT = lateralizableBodyStructure.getPreferredSynonym().toLowerCase();
 		if (laterality.equals(BILATERAL) && !lateralizedBodyStructurePT.contains("right")) {
 			lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace("left", "bilateral");
 			if (lateralizedBodyStructurePT.contains("eye") && !lateralizedBodyStructurePT.contains("eyes")) {
