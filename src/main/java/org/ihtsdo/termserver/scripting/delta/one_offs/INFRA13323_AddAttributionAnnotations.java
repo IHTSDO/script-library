@@ -33,7 +33,6 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 	private Set<Concept> conceptsAnnotated = new HashSet<>();
 	private Map<Concept, String> conceptDefinitions = new HashMap<>();
 	private DialectChecker dialectChecker;
-	private int conceptsInThisBatch = 0;
 
 	public static void main(String[] args) throws TermServerScriptException {
 		INFRA13323_AddAttributionAnnotations delta = new INFRA13323_AddAttributionAnnotations();
@@ -47,7 +46,7 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 			delta.loadDefinitionsFile();
 			delta.annotationType = delta.gl.getConcept("1295448001"); // |Attribution (attribute)|
 			delta.process();
-			delta.createOutputArchive(false, delta.conceptsInThisBatch);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -98,16 +97,16 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 	@Override
 	protected void process() throws TermServerScriptException {
 		for (Component c : processFile()) {
-			conceptsInThisBatch += addAnnotation((Concept)c);
-			if (conceptsInThisBatch >= BATCH_SIZE) {
+			addAnnotation((Concept)c);
+			if (conceptsInLastBatch >= BATCH_SIZE) {
 				if (!dryRun) {
-					createOutputArchive(false, conceptsInThisBatch);
+					createOutputArchive(false, conceptsInLastBatch);
 					outputDirName = "output"; //Reset so we don't end up with _1_1_1
 					initialiseOutputDirectory();
 					initialiseFileHeaders();
 				}
 				gl.setAllComponentsClean();
-				conceptsInThisBatch = 0;
+				resetConceptsWrittenCount();
 			}
 		}
 	}
@@ -132,7 +131,9 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 				ComponentAnnotationEntry cae = ComponentAnnotationEntry.withDefaults(c, annotationType, annotationStr);
 				c.addComponentAnnotationEntry(cae);
 				rmStr = cae.toString();
-				outputRF2(c);
+				if (outputRF2(c)) {
+					recordConceptWritten();
+				}
 				action = ReportActionType.REFSET_MEMBER_ADDED;
 				changesMade++;
 				countIssue(c);

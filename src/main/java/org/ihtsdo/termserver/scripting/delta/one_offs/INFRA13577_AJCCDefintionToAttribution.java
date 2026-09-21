@@ -17,7 +17,6 @@ public class INFRA13577_AJCCDefintionToAttribution extends DeltaGenerator implem
 
 	private Concept annotationType = null;
 	private String annotationStr = "American College of Surgeons, Chicago, Illinois: https://www.facs.org/quality-programs/cancer/ajcc/cancer-staging";
-	private int conceptsInThisBatch = 0;
 
 	public static void main(String[] args) throws TermServerScriptException {
 		INFRA13577_AJCCDefintionToAttribution delta = new INFRA13577_AJCCDefintionToAttribution();
@@ -31,7 +30,7 @@ public class INFRA13577_AJCCDefintionToAttribution extends DeltaGenerator implem
 			delta.postInit();
 			delta.annotationType = delta.gl.getConcept("1295448001"); // |Attribution (attribute)|
 			delta.process();
-			delta.createOutputArchive(false, delta.conceptsInThisBatch);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -56,19 +55,18 @@ public class INFRA13577_AJCCDefintionToAttribution extends DeltaGenerator implem
 		for (Concept c : findConcepts(ecl)) {
 
 			//inactivateTextDefinition(c);
-			if (addAttribution(c)) {
-				outputRF2(c);
-				conceptsInThisBatch++;
+			if (addAttribution(c) && outputRF2(c)) {
+				recordConceptWritten();
 			}
-			if (conceptsInThisBatch >= BATCH_SIZE) {
+			if (conceptsInLastBatch >= BATCH_SIZE) {
 				if (!dryRun) {
-					createOutputArchive(false, conceptsInThisBatch);
+					createOutputArchive(false, conceptsInLastBatch);
 					outputDirName = "output"; //Reset so we don't end up with _1_1_1
 					initialiseOutputDirectory();
 					initialiseFileHeaders();
 				}
 				gl.setAllComponentsClean();
-				conceptsInThisBatch = 0;
+				resetConceptsWrittenCount();
 			}
 		}
 	}

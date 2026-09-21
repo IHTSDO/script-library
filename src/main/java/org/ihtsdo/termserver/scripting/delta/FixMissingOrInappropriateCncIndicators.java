@@ -26,7 +26,7 @@ public class FixMissingOrInappropriateCncIndicators extends DeltaGenerator imple
 			delta.additionalReportColumns = "Description ET, Details";
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
-			delta.createOutputArchive(false);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -42,7 +42,9 @@ public class FixMissingOrInappropriateCncIndicators extends DeltaGenerator imple
 					processDescription(c, d);
 				}
 			}
-			outputRF2(c);
+			if (outputRF2(c)) {
+				recordConceptWritten();
+			}
 		}
 	}
 

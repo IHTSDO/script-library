@@ -18,7 +18,7 @@ public class INFRA13580_UICCCopyAJCC_Groupers extends INFRA13580_UICCCopyAJCC im
 			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit();
 			delta.process();
-			delta.createOutputArchive(false, delta.sourceConcepts.size());
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}

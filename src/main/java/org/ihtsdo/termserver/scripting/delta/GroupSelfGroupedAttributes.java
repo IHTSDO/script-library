@@ -19,7 +19,6 @@ public class GroupSelfGroupedAttributes extends DeltaGenerator implements Script
 	private List<Concept> allowRepeatingTypes = new ArrayList<>();
 	private Concept COMPONENT;
 	private final int BatchSize = 99999;
-	private int conceptsInThisBatch = 0;
 
 	public static void main(String[] args) throws TermServerScriptException {
 		GroupSelfGroupedAttributes delta = new GroupSelfGroupedAttributes();
@@ -31,7 +30,7 @@ public class GroupSelfGroupedAttributes extends DeltaGenerator implements Script
 			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
-			delta.createOutputArchive(false, delta.conceptsInThisBatch);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -94,15 +93,16 @@ public class GroupSelfGroupedAttributes extends DeltaGenerator implements Script
 		c.recalculateGroups();
 		int reportToTabIdx = groupSelfGroupedAttributes(c, before);
 		if (reportToTabIdx == PRIMARY_REPORT) {
-			outputRF2(c, true);
-			conceptsInThisBatch++;
-			if (conceptsInThisBatch >= BatchSize) {
-				createOutputArchive(false, conceptsInThisBatch);
+			if (outputRF2(c, true)) {
+				recordConceptWritten();
+			}
+			if (conceptsInLastBatch >= BatchSize) {
+				createOutputArchive(false, conceptsInLastBatch);
 				gl.setAllComponentsClean();
 				outputDirName = "output"; //Reset so we don't end up with _1_1_1
 				initialiseOutputDirectory();
 				initialiseFileHeaders();
-				conceptsInThisBatch = 0;
+				resetConceptsWrittenCount();
 			}
 		} else {
 			LOGGER.debug("Concept reason for no change already recorded in tab {} for {}", reportToTabIdx, c);

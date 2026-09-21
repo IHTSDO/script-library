@@ -65,6 +65,7 @@ public class Rf2ConceptCreator extends DeltaGeneratorWithAutoImport {
 		//Populate expression now because rels turn to axioms when we output
 		String expression = concept.toExpression(CharacteristicType.STATED_RELATIONSHIP);
 		if (super.outputRF2(concept)) {
+			recordConceptWritten();
 			incrementSummaryInformation("Concepts output to RF2");
 			report(tabIdx, concept, Severity.LOW, ReportActionType.CONCEPT_ADDED, info, SnomedUtils.getDescriptions(concept), expression, "OK");
 		}

@@ -85,6 +85,18 @@ public abstract class DeltaGenerator extends TermServerScript {
 
 	private boolean dryRunOutputAttemptWarningGiven = false;
 
+	//Generic tally of concepts actually written to RF2, for callers (including utility classes that hold
+	//a reference to us as "parent") that write a concept themselves rather than relying on
+	//outputModifiedComponents' isModified() scan.  Call recordConceptWritten() at the point of writing,
+	//whatever that point turns out to be, and resetConceptsWrittenCount() once the count has been reported.
+	public void recordConceptWritten() {
+		conceptsInLastBatch++;
+	}
+
+	public void resetConceptsWrittenCount() {
+		conceptsInLastBatch = 0;
+	}
+
 	@Override
 	protected void init (String[] args) throws TermServerScriptException {
 		//We definitely need to finish saving a snapshot to disk before we start making changes

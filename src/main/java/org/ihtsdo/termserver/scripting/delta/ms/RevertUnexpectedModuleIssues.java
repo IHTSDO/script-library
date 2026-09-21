@@ -50,7 +50,7 @@ public class RevertUnexpectedModuleIssues extends DeltaGenerator {
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
 			delta.getRF2Manager().flushFiles(true);
-			delta.createOutputArchive(false);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -98,8 +98,8 @@ public class RevertUnexpectedModuleIssues extends DeltaGenerator {
 				revertDescriptionsIfRequired(c, published);
 			}
 			
-			if (published != null || doOutputRF2) {
-				outputRF2(c, true);  //Will only output dirty fields.
+			if ((published != null || doOutputRF2) && outputRF2(c, true)) {  //Will only output dirty fields.
+				recordConceptWritten();
 			}
 		}
 	}

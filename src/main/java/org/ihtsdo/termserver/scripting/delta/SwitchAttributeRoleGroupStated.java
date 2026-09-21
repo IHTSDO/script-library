@@ -15,8 +15,6 @@ public class SwitchAttributeRoleGroupStated extends DeltaGenerator {
 
 	private final int BatchSize = 99999;
 
-	private int lastBatchSize = 0;
-	
 	public static void main(String[] args) throws TermServerScriptException {
 		SwitchAttributeRoleGroupStated delta = new SwitchAttributeRoleGroupStated();
 		try {
@@ -27,7 +25,7 @@ public class SwitchAttributeRoleGroupStated extends DeltaGenerator {
 			delta.loadProjectSnapshot();
 			delta.postLoadInit();
 			delta.process();
-			delta.createOutputArchive(false, delta.lastBatchSize);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -44,24 +42,21 @@ public class SwitchAttributeRoleGroupStated extends DeltaGenerator {
 
 	@Override
 	public void process() throws TermServerScriptException {
-		int conceptsInThisBatch = 0;
 		for (Concept c : determineConceptsToProcess()) {
 				int changesMade = moveAttributeGroup(c);
-				if (changesMade > 0) {
-					outputRF2(c);
-					conceptsInThisBatch++;
-					if (conceptsInThisBatch >= BatchSize) {
-						createOutputArchive(false, conceptsInThisBatch);
+				if (changesMade > 0 && outputRF2(c)) {
+					recordConceptWritten();
+					if (conceptsInLastBatch >= BatchSize) {
+						createOutputArchive(false, conceptsInLastBatch);
 						gl.setAllComponentsClean();
 						outputDirName = "output"; //Reset so we don't end up with _1_1_1
 						initialiseOutputDirectory();
 						initialiseFileHeaders();
-						conceptsInThisBatch = 0;
+						resetConceptsWrittenCount();
 					}
 				}
 
 		}
-		lastBatchSize = conceptsInThisBatch;
 	}
 
 	private List<Concept> determineConceptsToProcess() throws TermServerScriptException {

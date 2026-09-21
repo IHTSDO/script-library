@@ -16,7 +16,6 @@ public class AddAttributeIfRequiredDelta extends DeltaGenerator {
 	private RelationshipTemplate relTemplate;
 
 	private static final int BATCH_SIZE = 271;
-	private int lastBatchSize = 0;
 
 	public static void main(String[] args) throws TermServerScriptException {
 		AddAttributeIfRequiredDelta delta = new AddAttributeIfRequiredDelta();
@@ -28,7 +27,7 @@ public class AddAttributeIfRequiredDelta extends DeltaGenerator {
 			delta.loadProjectSnapshot();
 			delta.postLoadInit();
 			delta.process();
-			delta.createOutputArchive(false, delta.lastBatchSize);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -45,24 +44,21 @@ public class AddAttributeIfRequiredDelta extends DeltaGenerator {
 
 	@Override
 	protected void process() throws TermServerScriptException {
-		int conceptsInThisBatch = 0;
 		for (Concept c : SnomedUtils.sort(findConcepts(subsetECL))) {
 				int changesMade = addAttribute(c);
-				if (changesMade > 0) {
-					outputRF2(c);
-					conceptsInThisBatch++;
-					if (conceptsInThisBatch >= BATCH_SIZE) {
-						createOutputArchive(false, conceptsInThisBatch);
+				if (changesMade > 0 && outputRF2(c)) {
+					recordConceptWritten();
+					if (conceptsInLastBatch >= BATCH_SIZE) {
+						createOutputArchive(false, conceptsInLastBatch);
 						gl.setAllComponentsClean();
 						outputDirName = "output"; //Reset so we don't end up with _1_1_1
 						initialiseOutputDirectory();
 						initialiseFileHeaders();
-						conceptsInThisBatch = 0;
+						resetConceptsWrittenCount();
 					}
 				}
 
 		}
-		lastBatchSize = conceptsInThisBatch;
 	}
 
 	private int addAttribute(Concept c) throws TermServerScriptException {

@@ -41,18 +41,21 @@ public class CreateConceptsDeltaImmunoglobulin extends CreateConceptsDelta {
 
 	@Override
 	public void process() throws TermServerScriptException {
+		int conceptsProcessedInThisBatch = 0;
 		for (ConceptRow row : conceptsToCreate) {
 			createConcept(row);
 
-			if (++conceptsInLastBatch >= BATCH_SIZE) {
+			if (++conceptsProcessedInThisBatch >= BATCH_SIZE) {
 				if (!dryRun) {
-					createOutputArchive(true, conceptsInLastBatch);
+					//Concepts are only actually written to RF2 by the isModified() scan inside
+					//createOutputArchive, which populates conceptsInLastBatch itself - no seed needed
+					createOutputArchive(true);
 					outputDirName = "output"; //Reset so we don't end up with _1_1_1
 					initialiseOutputDirectory();
 					initialiseFileHeaders();
 				}
 				gl.setAllComponentsClean();
-				conceptsInLastBatch = 0;
+				conceptsProcessedInThisBatch = 0;
 			}
 		}
 	}

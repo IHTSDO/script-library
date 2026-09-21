@@ -20,7 +20,6 @@ public class AddAttributionAnnotations extends DeltaGenerator implements ScriptC
 
 	Set<Concept> confirmedConcepts;
 	Set<Concept> conceptsAnnotated = new HashSet<>();
-	private int lastBatchSize = 0;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AddAttributionAnnotations.class);
 
@@ -35,7 +34,7 @@ public class AddAttributionAnnotations extends DeltaGenerator implements ScriptC
 			delta.loadConfirmationFile();
 			delta.annotationType = delta.gl.getConcept("1295448001"); // |Attribution (attribute)|
 			delta.process();
-			delta.createOutputArchive(false, delta.lastBatchSize);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -56,18 +55,17 @@ public class AddAttributionAnnotations extends DeltaGenerator implements ScriptC
 	protected void process() throws TermServerScriptException {
 			//Work through all inactive concepts and check the inactivation indicator on all
 			//active descriptions
-			int conceptsInThisBatch = 0;
 			for (Concept c : getCandidateConcepts()) {
-				conceptsInThisBatch += addAnnotation(c);
-				if (conceptsInThisBatch >= BATCH_SIZE) {
+				addAnnotation(c);
+				if (conceptsInLastBatch >= BATCH_SIZE) {
 					if (!dryRun) {
-						createOutputArchive(false, conceptsInThisBatch);
+						createOutputArchive(false, conceptsInLastBatch);
 						outputDirName = "output"; //Reset so we don't end up with _1_1_1
 						initialiseOutputDirectory();
 						initialiseFileHeaders();
 					}
 					gl.setAllComponentsClean();
-					conceptsInThisBatch = 0;
+					resetConceptsWrittenCount();
 				}
 			}
 			//Were any concepts confirmed for annotations that we didn't annotate?
@@ -78,8 +76,6 @@ public class AddAttributionAnnotations extends DeltaGenerator implements ScriptC
 					report(c, Severity.HIGH, ReportActionType.VALIDATION_CHECK, "Concept confirmed for annotation, but was marked invalid or missing", "");
 				}
 			}
-
-		lastBatchSize = conceptsInThisBatch;
 	}
 
 	private int addAnnotation(Concept c) throws TermServerScriptException {
@@ -107,7 +103,9 @@ public class AddAttributionAnnotations extends DeltaGenerator implements ScriptC
 			ComponentAnnotationEntry cae = ComponentAnnotationEntry.withDefaults(c, annotationType, annotationStr);
 			c.addComponentAnnotationEntry(cae);
 			rmStr = cae.toString();
-			outputRF2(c);
+			if (outputRF2(c)) {
+				recordConceptWritten();
+			}
 			action = ReportActionType.REFSET_MEMBER_ADDED;
 			changesMade++;
 			countIssue(c);

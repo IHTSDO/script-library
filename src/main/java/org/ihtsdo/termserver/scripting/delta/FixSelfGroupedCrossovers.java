@@ -21,10 +21,6 @@ public class FixSelfGroupedCrossovers extends DeltaGenerator implements ScriptCo
 
 	private static final int BATCH_SIZE = 99999;
 
-	private int lastBatchSize = 0;
-
-	private int conceptsInThisBatch = 0;
-
 	public static void main(String[] args) throws TermServerScriptException {
 		FixSelfGroupedCrossovers delta = new FixSelfGroupedCrossovers();
 		try {
@@ -34,7 +30,7 @@ public class FixSelfGroupedCrossovers extends DeltaGenerator implements ScriptCo
 			delta.loadProjectSnapshot();
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
-			delta.createOutputArchive(false, delta.lastBatchSize);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -80,7 +76,6 @@ public class FixSelfGroupedCrossovers extends DeltaGenerator implements ScriptCo
 				processConcept(c);
 			}
 		}
-		lastBatchSize = conceptsInThisBatch;
 	}
 
 	private void processConcept(Concept c) throws TermServerScriptException {
@@ -92,17 +87,18 @@ public class FixSelfGroupedCrossovers extends DeltaGenerator implements ScriptCo
 			c.recalculateGroups();
 			int reportToTabIdx = fixSelfGroupedCrossover(c, beforeStated, beforeInferred);
 			if (reportToTabIdx == PRIMARY_REPORT) {
-				outputRF2(c, true);
-				conceptsInThisBatch++;
-				if (conceptsInThisBatch >= BATCH_SIZE) {
+				if (outputRF2(c, true)) {
+					recordConceptWritten();
+				}
+				if (conceptsInLastBatch >= BATCH_SIZE) {
 					if (!dryRun) {
-						createOutputArchive(false, conceptsInThisBatch);
+						createOutputArchive(false, conceptsInLastBatch);
 						outputDirName = "output"; //Reset so we don't end up with _1_1_1
 						initialiseOutputDirectory();
 						initialiseFileHeaders();
 					}
 					gl.setAllComponentsClean();
-					conceptsInThisBatch = 0;
+					resetConceptsWrittenCount();
 				}
 			} else {
 				LOGGER.debug("Concept reason for no change already recorded in tab {} for {}", reportToTabIdx, c);

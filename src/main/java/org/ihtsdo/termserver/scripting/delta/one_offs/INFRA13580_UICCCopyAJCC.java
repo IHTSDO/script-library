@@ -146,12 +146,13 @@ public class INFRA13580_UICCCopyAJCC extends DeltaGenerator implements ScriptCon
 				}
 			}
 			if (!dryRun) {
-				createOutputArchive(false, t.size());
+				createOutputArchive(false, conceptsInLastBatch);
 				outputDirName = "output"; //Reset so we don't end up with _1_1_1
 				initialiseOutputDirectory();
 				initialiseFileHeaders();
 			}
 			gl.setAllComponentsClean();
+			resetConceptsWrittenCount();
 		}
 	}
 
@@ -174,7 +175,9 @@ public class INFRA13580_UICCCopyAJCC extends DeltaGenerator implements ScriptCon
 			r.setClean();
 		}
 		addAnnotation(uicc);
-		outputRF2(uicc);
+		if (outputRF2(uicc)) {
+			recordConceptWritten();
+		}
 		report(c, Severity.LOW, ReportActionType.CONCEPT_ADDED, uicc);
 		return uicc;
 	}

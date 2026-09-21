@@ -11,7 +11,6 @@ public class AddDescriptionSuffix extends DeltaGenerator implements ScriptConsta
 	private static final int BATCH_SIZE = 100;
 
 	private Concept startingPoint;
-	private int lastBatchSize;
 
 	public static void main(String[] args) throws TermServerScriptException {
 		AddDescriptionSuffix delta = new AddDescriptionSuffix();
@@ -20,7 +19,7 @@ public class AddDescriptionSuffix extends DeltaGenerator implements ScriptConsta
 			delta.loadProjectSnapshot(); //Need all descriptions loaded.
 			delta.postInit(GFOLDER_ADHOC_UPDATES);
 			delta.process();
-			delta.createOutputArchive(false, delta.lastBatchSize);
+			delta.createOutputArchive(false, delta.conceptsInLastBatch);
 		} finally {
 			delta.finish();
 		}
@@ -43,30 +42,27 @@ public class AddDescriptionSuffix extends DeltaGenerator implements ScriptConsta
 
 	@Override
 	protected void process() throws TermServerScriptException {
-		int conceptsInThisBatch = 0;
 		for (Concept c : startingPoint.getDescendants(NOT_SET)) {
 			boolean changesMade = false;
 			for (Description d : c.getDescriptions(ActiveState.ACTIVE)) {
 				changesMade |= replaceDescriptionIfRequired(c, d);
 			}
 
-			if (changesMade) {
-				outputRF2(c);
-				conceptsInThisBatch++;
+			if (changesMade && outputRF2(c)) {
+				recordConceptWritten();
 			}
 
-			if (conceptsInThisBatch >= BATCH_SIZE) {
+			if (conceptsInLastBatch >= BATCH_SIZE) {
 				if (!dryRun) {
-					createOutputArchive(false, conceptsInThisBatch);
+					createOutputArchive(false, conceptsInLastBatch);
 					outputDirName = "output"; //Reset so we don't end up with _1_1_1
 					initialiseOutputDirectory();
 					initialiseFileHeaders();
 				}
 				gl.setAllComponentsClean();
-				conceptsInThisBatch = 0;
+				resetConceptsWrittenCount();
 			}
 		}
-		lastBatchSize = conceptsInThisBatch;
 	}
 
 	private boolean replaceDescriptionIfRequired(Concept c, Description d) throws TermServerScriptException {

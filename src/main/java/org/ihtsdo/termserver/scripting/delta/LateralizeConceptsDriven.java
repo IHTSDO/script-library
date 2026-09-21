@@ -69,10 +69,14 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 			}
 
 			if (conceptsProcessedInThisBatch >= SOURCE_CONCEPTS_PER_ARCHIVE) {
-				createOutputArchive();
+				//ConceptLateralizer records each concept it writes via recordConceptWritten(), so
+				//conceptsInLastBatch is already the true count - createOutputArchive's own isModified()
+				//scan will find nothing further, since ConceptLateralizer cleans concepts as it goes.
+				createOutputArchive(true, conceptsInLastBatch);
 				initialiseOutputDirectory();
 				initialiseFileHeaders();
 				conceptsProcessedInThisBatch = 0;
+				resetConceptsWrittenCount();
 			}
 		}
 	}

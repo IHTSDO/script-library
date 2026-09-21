@@ -26,19 +26,17 @@ public class SwitchAttributeRoleGroupInferred extends DeltaGenerator {
 
 	@Override
 	protected void process() throws TermServerScriptException {
-		int conceptsInThisBatch = 0;
 		for (Concept c : determineConceptsToProcess()) {
 				int changesMade = moveAttributeGroup(c);
-				if (changesMade > 0) {
-					outputRF2(c);
-					conceptsInThisBatch++;
-					if (conceptsInThisBatch >= BATCH_SIZE) {
-						createOutputArchive(false, conceptsInThisBatch);
+				if (changesMade > 0 && outputRF2(c)) {
+					recordConceptWritten();
+					if (conceptsInLastBatch >= BATCH_SIZE) {
+						createOutputArchive(false, conceptsInLastBatch);
 						gl.setAllComponentsClean();
 						outputDirName = "output"; //Reset so we don't end up with _1_1_1
 						initialiseOutputDirectory();
 						initialiseFileHeaders();
-						conceptsInThisBatch = 0;
+						resetConceptsWrittenCount();
 					}
 				}
 
