@@ -230,16 +230,11 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 
 		if (rt == null) {
 			LOGGER.warn("Check - no Relationship found for blood part {}", part);
-		} else {
+		} else if (partParts.length == 2 && partParts[1].equals("MSHD001769")) {
 			rt.setType(ScriptConstants.INHERES_IN);
 			//The particular cell eg (Leukocyte) will already be present
 			slotTermMap.put(NPU_PART_COMPONENT, rt.getTarget().getPreferredSynonym());
-
-			if (partParts.length != 2 || !partParts[1].equals("MSHD001769")) {
-				addReasonForInterest("NPU-17 Type 2");
-			} else {
-				addReasonForInterest("NPU-17 Type 1");
-			}
+			addReasonForInterest("NPU-17 Type 1");
 
 			//Recover the specification and add that as the inherent location
 			//Not sure that I need to.  The fact that we've found a type of blood cell tells us we're in blood
@@ -248,6 +243,8 @@ public abstract class NpuTemplatedConcept extends TemplatedConcept implements Np
 					gl.getConcept("87612001 |Blood (substance)|")
 			);
 			attributes.add(locationAttribute);
+		} else {
+			addReasonForInterest("NPU-17 Type 2");
 		}
 	}
 

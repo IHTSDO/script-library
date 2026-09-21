@@ -205,7 +205,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 
 	protected TemplatedConcept modelExternalConcept(String externalIdentifier) throws TermServerScriptException {
 
-		if (externalIdentifier.equals("NPU26879")) {
+		if (externalIdentifier.equals("NPU01349")) {
 			LOGGER.debug("Check Blood");
 		}
 
