@@ -57,45 +57,31 @@ public class ConceptLateralizer implements ScriptConstants {
 	}
 
 	/**
-	 * @return true if the concept was created or is already schedule to be created, false if it already exists
+	 * @return true if a new lateralized concept was created and actually written to the RF2 output,
+	 * false if nothing new was written (a lateralized counterpart already existed)
 	 * @throws TermServerScriptException
 	 */
 	public boolean createLateralizedConceptIfRequired(Concept c, Concept laterality, List<Component> componentsToProcess) throws TermServerScriptException {
-		boolean newConceptCreatedOrScheduled = false;
+		boolean conceptWritten = false;
 		Concept existingLateralizedConcept = findExistingLateralizedConcept(c, laterality);
-
-		if (c.getId().equals("246615006")) {
-			LOGGER.debug("fails to lateralize descriptions");
-		}
-
-		if (c.getId().equals("1393678003")) {
-			LOGGER.debug("Different strategy?");
-		}
-
-		if (c.getId().equals("1393699000")) {
-			LOGGER.debug("anterior chamber doubled up");
-		}
-
-		if (c.getId().equals("1393782009")) {
-			LOGGER.debug("Prevent eyeslid");
-		}
 
 		if (existingLateralizedConcept == null) {
 			Concept newLateralizedConcept = createLateralizedConcept(c, laterality);
 			gl.registerConcept(newLateralizedConcept);
-			parent.outputRF2(newLateralizedConcept, true);
+			conceptWritten = parent.outputRF2(newLateralizedConcept, true);
+			if (conceptWritten) {
+				parent.recordConceptWritten();
+			}
 			LOGGER.info("Lateralized concept created: {}", newLateralizedConcept);
-			newConceptCreatedOrScheduled = true;
 		} else {
 			//If this concept is already on our list to process, we don't need to take any action.
 			if (componentsToProcess.contains(existingLateralizedConcept)) {
 				parent.report(c, RF2Constants.Severity.LOW, RF2Constants.ReportActionType.INFO, "Lateralized concept already scheduled for processed " + existingLateralizedConcept);
-				newConceptCreatedOrScheduled = true;
 			} else {
 				parent.report(c, RF2Constants.Severity.MEDIUM, RF2Constants.ReportActionType.INFO, "Lateralized concept already exists for " + c + WITH_LATERALITY_SP + laterality + " as " + existingLateralizedConcept + ", adding to list to process");
 			}
 		}
-		return newConceptCreatedOrScheduled;
+		return conceptWritten;
 	}
 
 	private Concept findExistingLateralizedConcept(Concept c, Concept laterality) throws TermServerScriptException {
@@ -126,6 +112,9 @@ public class ConceptLateralizer implements ScriptConstants {
 	}
 
 	private void lateralizeGroup(Concept c, Concept clone, RelationshipGroup g, Concept laterality) throws TermServerScriptException {
+		if (!containsLateralizableBodyStructure(g)) {
+			return;
+		}
 		try {
 			if (laterality.equals(LEFT) || laterality.equals(BILATERAL)) {
 				lateralizeGroup(g, LEFT, false);
@@ -141,6 +130,15 @@ public class ConceptLateralizer implements ScriptConstants {
 		} catch (IllegalArgumentException e) {
 			throw new TermServerScriptException("Failed to lateralize group " + g + " for concept " + c + WITH_LATERALITY_SP + laterality, e);
 		}
+	}
+
+	private boolean containsLateralizableBodyStructure(RelationshipGroup g) throws TermServerScriptException {
+		for (Relationship r : g.getRelationships()) {
+			if (isBodyStructure(r.getTarget()) && !isMorphologicAbnormality(r.getTarget())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void lateralizeGroup(RelationshipGroup g, Concept laterality, boolean overrideCurrentLaterality) throws TermServerScriptException {
@@ -181,7 +179,9 @@ public class ConceptLateralizer implements ScriptConstants {
 	public void applyTermAsPtAndFsn(Concept original, Concept clone, String proposedPT) throws TermServerScriptException {
 		clone.getPreferredSynonym(US_ENG_LANG_REFSET).setTerm(proposedPT);
 		String semTag = SnomedUtilsBase.deconstructFSN(original.getFsn())[1];
-		clone.getFSNDescription().setTerm(proposedPT + " " + semTag);
+		String fsn = proposedPT + " " + semTag;
+		clone.getFSNDescription().setTerm(fsn);
+		clone.setFsn(fsn);
 	}
 
 	/**
