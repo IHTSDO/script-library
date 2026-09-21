@@ -30,6 +30,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(DeltaGenerator.class);
 
 	protected String outputDirName = "output";
+	private String baseOutputDirName;
 	protected String packageRoot;
 	protected String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
 	protected String packageDir;
@@ -81,6 +82,8 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected int archivesCreated = 0;
 	private File lastArchiveCreated = null;
 	protected int conceptsInLastBatch = 0;
+
+	private boolean dryRunOutputAttemptWarningGiven = false;
 
 	@Override
 	protected void init (String[] args) throws TermServerScriptException {
@@ -158,11 +161,20 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 
 	protected void initialiseOutputDirectory() {
-		//Don't add to previously exported data
-		File outputDir = new File (outputDirName);
+		if (isDryRun()) {
+			LOGGER.debug("Skipping initialisation of output directory due to running in dry run mode");
+			return;
+		}
+		//Don't add to previously exported data.  Always increment from the original base name,
+		//rather than the (possibly already incremented) outputDirName from a prior call, otherwise
+		//repeated calls within the same run compound suffixes eg output_1_1_1
+		if (baseOutputDirName == null) {
+			baseOutputDirName = outputDirName;
+		}
+		File outputDir = new File(baseOutputDirName);
 		int increment = 0;
 		while (outputDir.exists()) {
-			String proposedOutputDirName = outputDirName + "_" + (++increment) ;
+			String proposedOutputDirName = baseOutputDirName + "_" + (++increment);
 			outputDir = new File(proposedOutputDirName);
 		}
 		outputDirName = outputDir.getName();
@@ -302,6 +314,8 @@ public abstract class DeltaGenerator extends TermServerScript {
 		super.postInit(googleFolder, tabNames, columnHeadings, false);
 		if (!dryRun) {
 			initialiseFileHeaders();
+		} else {
+			LOGGER.warn("Dry run enabled - do not attempt to write to files.");
 		}
 	}
 
@@ -348,6 +362,11 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 
 	protected void initialiseFileHeaders() throws TermServerScriptException {
+		if (isDryRun()) {
+			return;
+		}
+		LOGGER.info("Initializing file headers in {}", packageDir);
+
 		String termDir = packageDir +"Delta/Terminology/";
 		String refDir =  packageDir +"Delta/Refset/";
 		conDeltaFilename = termDir + "sct2_Concept_Delta_"+edition+"_" + today + ".txt";
@@ -545,6 +564,14 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 	
 	public boolean outputRF2(Concept c, boolean checkAllComponents) throws TermServerScriptException {
+		if (dryRun) {
+			if (!dryRunOutputAttemptWarningGiven) {
+				LOGGER.warn("Attempted to output RF2, but running in Dry Run mode.  Skipping. Won't alert again.");
+				dryRunOutputAttemptWarningGiven = true;
+			}
+			return false;
+		}
+
 		boolean conceptComponentOutput = false;
 		if (c.isDirty()) {
 			writeToRF2File(conDeltaFilename, c.toRF2());
