@@ -145,13 +145,7 @@ public class INFRA13580_UICCCopyAJCC extends DeltaGenerator implements ScriptCon
 					parent = clone;
 				}
 			}
-			if (!dryRun) {
-				createOutputArchive(false, conceptsInLastBatch);
-				outputDirName = "output"; //Reset so we don't end up with _1_1_1
-				initialiseOutputDirectory();
-				initialiseFileHeaders();
-			}
-			gl.setAllComponentsClean();
+			rotateOutputArchive(false, conceptsInLastBatch);
 			resetConceptsWrittenCount();
 		}
 	}

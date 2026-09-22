@@ -42,15 +42,9 @@ public class CreateConceptsDeltaDriven extends CreateConceptsDelta {
 		for (ConceptRow row : conceptsToCreate) {
 			createConcept(row);
 			if (++conceptsProcessedInThisBatch >= BATCH_SIZE) {
-				if (!dryRun) {
-					//Concepts are only actually written to RF2 by the isModified() scan inside
-					//createOutputArchive, which populates conceptsInLastBatch itself - no seed needed
-					createOutputArchive(true);
-					outputDirName = "output"; //Reset so we don't end up with _1_1_1
-					initialiseOutputDirectory();
-					initialiseFileHeaders();
-				}
-				gl.setAllComponentsClean();
+				//Concepts are only actually written to RF2 by the isModified() scan inside
+				//createOutputArchive, which populates conceptsInLastBatch itself - no seed needed
+				rotateOutputArchive(true, 0);
 				conceptsProcessedInThisBatch = 0;
 			}
 		}

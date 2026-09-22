@@ -59,13 +59,7 @@ public class INFRA13577_AJCCDefintionToAttribution extends DeltaGenerator implem
 				recordConceptWritten();
 			}
 			if (conceptsInLastBatch >= BATCH_SIZE) {
-				if (!dryRun) {
-					createOutputArchive(false, conceptsInLastBatch);
-					outputDirName = "output"; //Reset so we don't end up with _1_1_1
-					initialiseOutputDirectory();
-					initialiseFileHeaders();
-				}
-				gl.setAllComponentsClean();
+				rotateOutputArchive(false, conceptsInLastBatch);
 				resetConceptsWrittenCount();
 			}
 		}

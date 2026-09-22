@@ -97,11 +97,7 @@ public class GroupSelfGroupedAttributes extends DeltaGenerator implements Script
 				recordConceptWritten();
 			}
 			if (conceptsInLastBatch >= BatchSize) {
-				createOutputArchive(false, conceptsInLastBatch);
-				gl.setAllComponentsClean();
-				outputDirName = "output"; //Reset so we don't end up with _1_1_1
-				initialiseOutputDirectory();
-				initialiseFileHeaders();
+				rotateOutputArchive(false, conceptsInLastBatch);
 				resetConceptsWrittenCount();
 			}
 		} else {

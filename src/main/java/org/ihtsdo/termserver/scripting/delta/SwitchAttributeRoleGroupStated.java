@@ -47,11 +47,7 @@ public class SwitchAttributeRoleGroupStated extends DeltaGenerator {
 				if (changesMade > 0 && outputRF2(c)) {
 					recordConceptWritten();
 					if (conceptsInLastBatch >= BatchSize) {
-						createOutputArchive(false, conceptsInLastBatch);
-						gl.setAllComponentsClean();
-						outputDirName = "output"; //Reset so we don't end up with _1_1_1
-						initialiseOutputDirectory();
-						initialiseFileHeaders();
+						rotateOutputArchive(false, conceptsInLastBatch);
 						resetConceptsWrittenCount();
 					}
 				}

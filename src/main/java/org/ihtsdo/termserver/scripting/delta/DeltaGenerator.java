@@ -196,6 +196,19 @@ public abstract class DeltaGenerator extends TermServerScript {
 		LOGGER.info("Outputting data to {}", packageDir);
 	}
 
+	/**
+	 * Creates the current output archive (unless dry run), reinitialises the output directory
+	 * and file headers ready for the next batch, and marks all components clean.
+	 */
+	protected void rotateOutputArchive(boolean outputModifiedComponents, int conceptsOutput) throws TermServerScriptException {
+		if (!dryRun) {
+			createOutputArchive(outputModifiedComponents, conceptsOutput);
+			initialiseOutputDirectory();
+			initialiseFileHeaders();
+		}
+		gl.setAllComponentsClean();
+	}
+
 	@Override
 	protected void checkSettingsWithUser(JobRun jobRun) throws TermServerScriptException {
 		super.checkSettingsWithUser(jobRun);
@@ -436,7 +449,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	}
 	
 	protected int outputModifiedComponents(boolean alwaysCheckSubComponents) throws TermServerScriptException {
-		LOGGER.info("Outputting RF2 to directory /{}...", outputDirName);
+		LOGGER.info("Outputting RF2 of modified concepts to directory /{}...", outputDirName);
 		int conceptsOutput = 0;
 		for (Concept thisConcept : gl.getAllConcepts()) {
 			try {
@@ -447,7 +460,12 @@ public abstract class DeltaGenerator extends TermServerScript {
 				report(thisConcept, null, Severity.CRITICAL, ReportActionType.API_ERROR, "Exception while processing: " + e.getMessage() + " : " + SnomedUtils.getStackTrace(e));
 			}
 		}
-		LOGGER.info("{} concepts output to RF2", conceptsOutput);
+		//We don't always wait and detect modified components.   Some scripts output the full concept as they go along
+		//So it's OK for this number to be 0.   We have another count that tracks the concepts in each archive, so
+		//we don't need to output in this case
+		if (conceptsOutput > 0) {
+			LOGGER.info("{} modified concepts output to RF2", conceptsOutput);
+		}
 		return conceptsOutput;
 	}
 	

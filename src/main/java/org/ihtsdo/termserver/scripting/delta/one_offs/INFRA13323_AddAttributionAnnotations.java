@@ -99,13 +99,7 @@ public class INFRA13323_AddAttributionAnnotations extends DeltaGenerator impleme
 		for (Component c : processFile()) {
 			addAnnotation((Concept)c);
 			if (conceptsInLastBatch >= BATCH_SIZE) {
-				if (!dryRun) {
-					createOutputArchive(false, conceptsInLastBatch);
-					outputDirName = "output"; //Reset so we don't end up with _1_1_1
-					initialiseOutputDirectory();
-					initialiseFileHeaders();
-				}
-				gl.setAllComponentsClean();
+				rotateOutputArchive(false, conceptsInLastBatch);
 				resetConceptsWrittenCount();
 			}
 		}
