@@ -3,6 +3,7 @@ package org.ihtsdo.termserver.scripting.pipeline;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
 import org.ihtsdo.otf.utils.SnomedUtilsBase;
+import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.ReportClass;
 import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.*;
@@ -27,15 +28,15 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	private static final String DELTA_NEW_CHANGED = "Delta New/Changed";
 	private static final String DELTA_INACTIVATED = "Delta Inactivated";
 
-	private static final String ON_INTERNATIONAL_CONCEPT = " on International Concept";
+	private static final String TO_INTERNATIONAL_CONCEPT = " to International Concept";
 
 	private List<Concept> inScopeConcepts;
 
 	enum Mode { PUBLISHED, UNPUBLISHED }
-	Mode mode = Mode.PUBLISHED;
+	Mode mode = Mode.UNPUBLISHED;
 	private String packageEffectiveDate;
 	
-	boolean includeDetails = false;  //Note that born inactive components are always included
+	boolean includeDetails = true;  //Note that born inactive components are always included
 	String inScopeNamespace = null;
 
 	public static void main(String[] args) throws TermServerScriptException {
@@ -64,7 +65,8 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				DESCRIPTIONS,
 				"Text Definitions",
 				"Inactive Components",
-				"Born Inactive Components"
+				"Born Inactive Components",
+				"Promoted Concepts"
 		};
 		String[] columnHeadings = new String[] {
 				"Category, Item, Count",
@@ -74,7 +76,8 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				"SCTID, active, Term",
 				"Concept, FSN, SemTag, Definition",
 				"Component, EffectiveTime, Active, Module, Author",
-				"ID, Component Type, Component"
+				"ID, Component Type, Component",
+				"Concept, FSN, SemTag"
 		};
 		postInit(tabNames, columnHeadings);
 		inScopeConcepts = gl.getAllConcepts().stream()
@@ -137,7 +140,10 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				doDeltaCounts(c);
 			} else if (!inScope(concept) && SnomedUtilsBase.isSctid(c.getId()) && SnomedUtilsBase.getNamespace(c.getId()).equals(inScopeNamespace)) {
 				String category = c.isActiveSafely() ? "Snapshot Promoted Active" : "Snapshot Promoted Inactive";
-				incrementSummaryCount(category, c.getComponentType() + ON_INTERNATIONAL_CONCEPT);
+				incrementSummaryCount(category, c.getComponentType() + TO_INTERNATIONAL_CONCEPT);
+				if (c.getComponentType().equals(Component.ComponentType.CONCEPT)) {
+					report(NONARY_REPORT, concept);
+				}
 			}
 		}
 	}
@@ -174,7 +180,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		if (mode == Mode.PUBLISHED) {
 			return c.getEffectiveTime().equals(packageEffectiveDate);
 		} else {
-			return c.getEffectiveTime().isEmpty();
+			return StringUtils.isEmpty(c.getEffectiveTime());
 		}
 	}
 

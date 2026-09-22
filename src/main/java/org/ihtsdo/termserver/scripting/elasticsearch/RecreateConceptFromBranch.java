@@ -119,9 +119,9 @@ public class RecreateConceptFromBranch implements RF2Constants {
 	}
 
 	private void processRefsetMember(JsonElement jsonElement) throws TermServerScriptException {
-		LOGGER.info("Processing component {}", jsonElement);
+		LOGGER.info("Processing refset member {}", jsonElement);
 		RefsetMember rm = gson.fromJson(jsonElement, RefsetMember.class);
-		if (rm.getRefsetId().equals("900000000000456007")) {
+		if (rm.getRefsetId().equals(SCTID_REFSET_DESCRIPTOR_REFSETID)) {
 			LOGGER.info("Skipping RefsetDescriptor {}",rm.getId());
 			return;
 		}
