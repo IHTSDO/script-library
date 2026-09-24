@@ -127,11 +127,8 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 				pt = pt.replace("left", "right");
 			} else if (lateralityStr.contains("bilateral")) {
 				pt = pt.replace("left", "bilateral");
-				if (pt.contains("eye")) {
-					pt = pt.replace("eye", "eyes");
-				}
 			}
-			conceptLateralizer.applyTermAsPtAndFsn(original, clone, pt);
+			conceptLateralizer.applyTermAsPtAndFsn(clone, pt);
 			return true;
 		}
 		return false;

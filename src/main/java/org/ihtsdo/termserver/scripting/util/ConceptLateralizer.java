@@ -21,6 +21,7 @@ public class ConceptLateralizer implements ScriptConstants {
 
 	private static final String STRUCTURE = "structure";
 	private static final String STRUCTURE_OF = "Structure of";
+	private static final String STRUCTURE_OF_SP = "structure of ";
 	private static final String USING = "using";
 	private static final String USING_SP = " using ";
 	private static final String WITH_LATERALITY_SP = " with laterality ";
@@ -28,6 +29,7 @@ public class ConceptLateralizer implements ScriptConstants {
 	private static final String LEFT_STR = "left";
 	private static final String RIGHT_STR = "right";
 	private static final String BILATERAL_STR = "bilateral";
+	private static final String BILATERAL_STR_SP = "bilateral ";
 
 	private Set<Concept> bodyStructures = null;
 	private Set<Concept> morphologicAbnormalities = null;
@@ -38,6 +40,11 @@ public class ConceptLateralizer implements ScriptConstants {
 	private boolean copyInferredRelationshipsToStatedWhereMissing = false;
 
 	private static final Set<String> PLURALITY_EXCEPTIONS = new HashSet<>();
+
+	//Eye structures to be expressed as "X of <laterality> eye" eg 'left lens' -> 'lens of left eye'
+	private static final List<String> EYE_STRUCTURES_OF_EYE = List.of(
+			"lens",
+			"optic disc");
 
 	private static final Map<String, String> pluralisationMappings = Map.of(
 			"cavity", "cavities");
@@ -104,6 +111,7 @@ public class ConceptLateralizer implements ScriptConstants {
 			lateralizeGroup(c, clone, g, laterality);
 		}
 		lateralizeFsn(c, clone, laterality);
+		clone.setFsn(clone.getFSNDescription().getTerm());
 		clone.setDirty();
 		SnomedUtils.getAllComponents(clone).forEach(Component::setDirty);
 
@@ -162,7 +170,7 @@ public class ConceptLateralizer implements ScriptConstants {
 				&& !lateralizeFsnUsingBodyStructureCutPoint(original, clone, lateralityStr)
 				&& !lateralizeFsnUsingAlternativeApproach(original, clone, lateralityStr, laterality)) {
 			String proposedPT = termStrategy.suggestTerm(clone, lateralityStr);
-			applyTermAsPtAndFsn(original, clone, proposedPT);
+			applyTermAsPtAndFsn(clone, proposedPT);
 		}
 		normalizeDescriptions(clone, laterality);
 	}
@@ -176,12 +184,12 @@ public class ConceptLateralizer implements ScriptConstants {
 		};
 	}
 
-	public void applyTermAsPtAndFsn(Concept original, Concept clone, String proposedPT) throws TermServerScriptException {
+	public void applyTermAsPtAndFsn(Concept clone, String proposedPT) throws TermServerScriptException {
 		clone.getPreferredSynonym(US_ENG_LANG_REFSET).setTerm(proposedPT);
-		String semTag = SnomedUtilsBase.deconstructFSN(original.getFsn())[1];
+		Description fsnDesc = clone.getFSNDescription();
+		String semTag = SnomedUtilsBase.deconstructFSN(fsnDesc.getTerm())[1];
 		String fsn = proposedPT + " " + semTag;
 		clone.getFSNDescription().setTerm(fsn);
-		clone.setFsn(fsn);
 	}
 
 	/**
@@ -201,12 +209,6 @@ public class ConceptLateralizer implements ScriptConstants {
 		String lateralizedBodyStructurePT = lateralizableBodyStructure.getPreferredSynonym().toLowerCase();
 	if (laterality.equals(BILATERAL) && !lateralizedBodyStructurePT.contains(RIGHT_STR)) {
 			lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace(LEFT_STR, BILATERAL_STR);
-
-			if (lateralizedBodyStructurePT.contains("eyelid")) {
-				lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace("eyelid", "eyelids");
-			} else if (lateralizedBodyStructurePT.contains("eye") && !lateralizedBodyStructurePT.contains("eyes")) {
-				lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace("eye", "eyes");
-			}
 		}
 
 		//If the body structure was not able to be lateralized, we'll need to force the laterality for the FSN
@@ -221,7 +223,6 @@ public class ConceptLateralizer implements ScriptConstants {
 			laterlizedFsn = fsnParts[0].substring(0, cutPoint) + " of " + lateralizedBodyStructurePT + fsnParts[0].substring(cutPoint) + " " + fsnParts[1];
 		}
 		clone.getFSNDescription().setTerm(laterlizedFsn);
-		clone.setFsn(laterlizedFsn);
 		return true;
 	}
 
@@ -247,7 +248,6 @@ public class ConceptLateralizer implements ScriptConstants {
 				}
 
 				clone.getFSNDescription().setTerm(laterlizedFsn);
-				clone.setFsn(laterlizedFsn);
 				successfulLaterlization = true;
 				break;
 			}
@@ -260,20 +260,68 @@ public class ConceptLateralizer implements ScriptConstants {
 		clone.getDescriptions(RF2Constants.ActiveState.ACTIVE).stream()
 				.filter(d -> !d.getType().equals(RF2Constants.DescriptionType.FSN))
 				.forEach(clone::removeDescription);
-		String pt = SnomedUtilsBase.deconstructFSN(clone.getFSNDescription().getTerm())[0];
-		if (laterality.equals(BILATERAL)) {
-			pt = pt.replace("right and left", BILATERAL_STR);
-		}
-		Description ptDesc = Description.withDefaults(pt, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.PREFERRED);
-		clone.addDescription(ptDesc);
+		doBaseNormalisation(clone.getFSNDescription(), laterality);
+		addPTandSynonyms(clone, laterality);
+		allocateIdentifiers(clone);
+	}
 
-		//Bilateral concepts will have an acceptable "both" synonym
+	private void doBaseNormalisation(Description fsnDescription, Concept laterality) {
+		String term = fsnDescription.getTerm();
+		//Don't need 'structure of'
+		term = term.replace(STRUCTURE_OF_SP, "");
+
+		//'Tilted intraocular right lens' -> 'Tilted intraocular lens of right eye'
+		term = normaliseEyeStructureLaterality(term);
+
+		//Bilateral 'pupil' -> 'pupils'
+		if (laterality.equals(BILATERAL) && !term.contains("pupils")) {
+			term = term.replace("pupil", "pupils");
+		}
+
+		//Bilateral 'eye' -> 'eyes', 'eyelid' -> 'eyelids'
 		if (laterality.equals(BILATERAL)) {
-			String bothTerm = pluralize(pt.replace(BILATERAL_STR, "both"));
+			term = term.replaceAll("\\b(eye|eyelid)\\b", "$1s");
+		}
+		fsnDescription.setTerm(term);
+	}
+
+	private String normaliseEyeStructureLaterality(String term) {
+		if (term.contains("eye")) {
+			return term;
+		}
+		for (String eyeStructure : EYE_STRUCTURES_OF_EYE) {
+			for (String lateralityStr : List.of(LEFT_STR, RIGHT_STR, BILATERAL_STR)) {
+				term = term.replaceAll("\\b" + lateralityStr + " " + eyeStructure + "\\b", eyeStructure + " of " + lateralityStr + " eye");
+			}
+		}
+		return term;
+	}
+
+	private void addPTandSynonyms(Concept clone, Concept laterality) throws TermServerScriptException {
+		String termBase = SnomedUtilsBase.deconstructFSN(clone.getFSNDescription().getTerm())[0];
+		String pt = termBase;
+		if (laterality.equals(BILATERAL)) {
+			termBase = termBase.replace("right and left", BILATERAL_STR);
+
+			//PT Starts with the word Bilateral
+			pt = StringUtils.decapitalizeFirstLetter(termBase).replace(BILATERAL_STR_SP, "");
+			pt = StringUtils.capitalizeFirstLetter(BILATERAL_STR_SP) + pt;
+
+			//Bilateral concepts will have an acceptable "bilateral" synonym
+			Description bilateralDesc = Description.withDefaults(termBase, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
+			clone.addDescription(bilateralDesc);
+
+			//Bilateral concepts will have an acceptable "both" synonym
+			String bothTerm = pluralize(termBase.replace(BILATERAL_STR, "both"));
 			Description bothDesc = Description.withDefaults(bothTerm, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
 			clone.addDescription(bothDesc);
 		}
 
+		Description ptDesc = Description.withDefaults(pt, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.PREFERRED);
+		clone.addDescription(ptDesc);
+	}
+
+	private void allocateIdentifiers(Concept clone) {
 		//Let's give these descriptions some identifiers!
 		clone.getDescriptions(RF2Constants.ActiveState.ACTIVE).stream()
 				.forEach(d -> {
@@ -359,7 +407,7 @@ public class ConceptLateralizer implements ScriptConstants {
 		}
 
 		//Also for the case X structure of Y, we'll try just "of Y"
-		if (origPT.contains("structure of ")) {
+		if (origPT.contains(STRUCTURE_OF_SP)) {
 			String[] parts = pt.split(STRUCTURE);
 			bodyStructureStrs.add(parts[1]);
 		}

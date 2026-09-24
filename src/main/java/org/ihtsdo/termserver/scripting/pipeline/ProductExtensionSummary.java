@@ -30,6 +30,8 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 
 	private static final String TO_INTERNATIONAL_CONCEPT = " to International Concept";
 
+	private static final String CONCEPT_FSN_SEMTAG = "Concept, FSN, SemTag";
+
 	private List<Concept> inScopeConcepts;
 
 	enum Mode { PUBLISHED, UNPUBLISHED }
@@ -71,13 +73,13 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		String[] columnHeadings = new String[] {
 				"Category, Item, Count",
 				"Concept, FSN, SemTag, Alternate Identifier, Descriptions, Inferred Model, , ",
-				"Concept, FSN, SemTag",
-				"Concept, FSN, SemTag",
+				CONCEPT_FSN_SEMTAG,
+				CONCEPT_FSN_SEMTAG,
 				"SCTID, active, Term",
 				"Concept, FSN, SemTag, Definition",
 				"Component, EffectiveTime, Active, Module, Author",
 				"ID, Component Type, Component",
-				"Concept, FSN, SemTag"
+				CONCEPT_FSN_SEMTAG
 		};
 		postInit(tabNames, columnHeadings);
 		inScopeConcepts = gl.getAllConcepts().stream()
