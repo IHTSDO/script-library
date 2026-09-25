@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ConceptLateralizer implements ScriptConstants {
@@ -24,6 +26,7 @@ public class ConceptLateralizer implements ScriptConstants {
 	private static final String STRUCTURE_OF_SP = "structure of ";
 	private static final String USING = "using";
 	private static final String USING_SP = " using ";
+	private static final String WITH_SP = " with ";
 	private static final String WITH_LATERALITY_SP = " with laterality ";
 
 	private static final String LEFT_STR = "left";
@@ -48,6 +51,18 @@ public class ConceptLateralizer implements ScriptConstants {
 
 	private static final Map<String, String> pluralisationMappings = Map.of(
 			"cavity", "cavities");
+
+	//Whole-word simplifications of body structure terms, eg 'of left eye proper' -> 'of left eye'
+	private static final Map<String, String> TERM_SIMPLIFICATIONS = Map.of(
+			"eye proper", "eye");
+
+	//Whole-word adjustments needed when the subject of a bilateral term becomes plural
+	//eg 'Bilateral eyes does not move up' -> 'Bilateral eyes do not move up'
+	private static final Map<String, String> PLURAL_ADJUSTMENTS = Map.of(
+			"does", "do");
+
+	//Structures already pluralised by base normalisation, so the 'both' term needs no further pluralisation
+	private static final String ALREADY_PLURALISED_REGEX = ".*\\b(eyes|eyelids|pupils)\\b.*";
 
 	private ConceptLateralizer() {}
 
@@ -206,7 +221,7 @@ public class ConceptLateralizer implements ScriptConstants {
 			return false;
 		}
 
-		String lateralizedBodyStructurePT = lateralizableBodyStructure.getPreferredSynonym().toLowerCase();
+		String lateralizedBodyStructurePT = asMidSentence(lateralizableBodyStructure.getPreferredSynonym(US_ENG_LANG_REFSET));
 	if (laterality.equals(BILATERAL) && !lateralizedBodyStructurePT.contains(RIGHT_STR)) {
 			lateralizedBodyStructurePT = lateralizedBodyStructurePT.replace(LEFT_STR, BILATERAL_STR);
 		}
@@ -217,6 +232,9 @@ public class ConceptLateralizer implements ScriptConstants {
 			reportMissingLateralizedBodyStructure(lateralizableBodyStructure, original);
 		}
 
+		//If the site is already named in the term, eg 'Fibrin in anterior chamber', then just 'of left eye' is sufficient
+		lateralizedBodyStructurePT = removeSiteAlreadyInTerm(fsnParts[0], lateralizedBodyStructurePT, lateralityStr);
+
 		String laterlizedFsn = fsnParts[0] + " of " + lateralizedBodyStructurePT + " " + fsnParts[1];
 		if (fsnParts[0].contains(USING)) {
 			int cutPoint = fsnParts[0].indexOf(USING_SP);
@@ -224,6 +242,32 @@ public class ConceptLateralizer implements ScriptConstants {
 		}
 		clone.getFSNDescription().setTerm(laterlizedFsn);
 		return true;
+	}
+
+	private String removeSiteAlreadyInTerm(String term, String lateralizedBodyStructurePT, String lateralityStr) {
+		//Looking for body structures of the form 'X of <laterality> Y' where X is already in the term
+		String site = lateralizedBodyStructurePT.replaceFirst("(?i)^structure of ", "");
+		Matcher lateralityMatcher = Pattern.compile(" of " + lateralityStr + "\\b").matcher(site);
+		if (lateralityMatcher.find() && lateralityMatcher.start() > 0) {
+			String unlateralizedSite = site.substring(0, lateralityMatcher.start());
+			if (initialCharCaseInsensitivePattern(unlateralizedSite).matcher(term).find()) {
+				return site.substring(lateralityMatcher.start() + " of ".length());
+			}
+		}
+		return lateralizedBodyStructurePT;
+	}
+
+	private Pattern initialCharCaseInsensitivePattern(String str) {
+		//Match as whole words, with the first character case-insensitive, eg 'retinal artery' matches 'Retinal artery occlusion'
+		return Pattern.compile("\\b(?i:" + Pattern.quote(str.substring(0, 1)) + ")" + Pattern.quote(str.substring(1)) + "\\b");
+	}
+
+	private String asMidSentence(Description d) {
+		//Only decapitalise the first letter if the case significance allows it, eg keep 'Descemet's membrane'
+		if (d.getCaseSignificance() == CaseSignificance.ENTIRE_TERM_CASE_SENSITIVE) {
+			return d.getTerm();
+		}
+		return StringUtils.decapitalizeFirstLetter(d.getTerm());
 	}
 
 	private void reportMissingLateralizedBodyStructure(Concept lateralizableBodyStructure, Concept usage) throws TermServerScriptException {
@@ -237,15 +281,21 @@ public class ConceptLateralizer implements ScriptConstants {
 		boolean successfulLaterlization = false;
 		//Can we find the cut point for the specified body structure in the fsn?
 		for (String bodyStructureStr : getBodyStructureStrs(original)) {
-			if (clone.getFsn().contains(bodyStructureStr)) {
-				String laterlizedFsn;
+			//Respect word boundaries, eg 'retinal artery' should not match within 'Cilioretinal artery'
+			Matcher matcher = initialCharCaseInsensitivePattern(bodyStructureStr).matcher(clone.getFsn());
+			if (matcher.find()) {
+				boolean atStartOfTerm = matcher.start() == 0;
+				String lateralizedBodyStructureStr;
 				//If it's an X of Y, then we'll do X of <left|right> Y
 				if (bodyStructureStr.contains(" of ")) {
-					String lateralizedBodyStructureStr = bodyStructureStr.replace(" of ", " of " + lateralityStr + " ");
-					laterlizedFsn = clone.getFsn().replace(bodyStructureStr, lateralizedBodyStructureStr);
+					lateralizedBodyStructureStr = bodyStructureStr.replace(" of ", " of " + lateralityStr + " ");
 				} else {
-					laterlizedFsn = clone.getFsn().replace(bodyStructureStr, lateralityStr + " " + bodyStructureStr);
+					lateralizedBodyStructureStr = lateralityStr + " " + bodyStructureStr;
 				}
+				if (atStartOfTerm) {
+					lateralizedBodyStructureStr = StringUtils.capitalizeFirstLetter(lateralizedBodyStructureStr);
+				}
+				String laterlizedFsn = matcher.replaceAll(Matcher.quoteReplacement(lateralizedBodyStructureStr));
 
 				clone.getFSNDescription().setTerm(laterlizedFsn);
 				successfulLaterlization = true;
@@ -262,13 +312,24 @@ public class ConceptLateralizer implements ScriptConstants {
 				.forEach(clone::removeDescription);
 		doBaseNormalisation(clone.getFSNDescription(), laterality);
 		addPTandSynonyms(clone, laterality);
+		removeMultipleSpaces(clone);
 		allocateIdentifiers(clone);
+	}
+
+	private void removeMultipleSpaces(Concept clone) {
+		//Catch-all for any double spaces introduced by the various term manipulations
+		clone.getDescriptions(RF2Constants.ActiveState.ACTIVE)
+				.forEach(d -> d.setTerm(d.getTerm().replaceAll(" {2,}", " ").trim()));
 	}
 
 	private void doBaseNormalisation(Description fsnDescription, Concept laterality) {
 		String term = fsnDescription.getTerm();
 		//Don't need 'structure of'
 		term = term.replace(STRUCTURE_OF_SP, "");
+
+		for (Map.Entry<String, String> simplification : TERM_SIMPLIFICATIONS.entrySet()) {
+			term = term.replaceAll("\\b" + simplification.getKey() + "\\b", simplification.getValue());
+		}
 
 		//'Tilted intraocular right lens' -> 'Tilted intraocular lens of right eye'
 		term = normaliseEyeStructureLaterality(term);
@@ -281,20 +342,46 @@ public class ConceptLateralizer implements ScriptConstants {
 		//Bilateral 'eye' -> 'eyes', 'eyelid' -> 'eyelids'
 		if (laterality.equals(BILATERAL)) {
 			term = term.replaceAll("\\b(eye|eyelid)\\b", "$1s");
+			for (Map.Entry<String, String> adjustment : PLURAL_ADJUSTMENTS.entrySet()) {
+				term = term.replaceAll("\\b" + adjustment.getKey() + "\\b", adjustment.getValue());
+			}
 		}
 		fsnDescription.setTerm(term);
 	}
 
-	private String normaliseEyeStructureLaterality(String term) {
-		if (term.contains("eye")) {
-			return term;
+	private String normaliseEyeStructureLaterality(String fsn) {
+		if (fsn.contains("eye")) {
+			return fsn;
 		}
+		String[] fsnParts = SnomedUtilsBase.deconstructFSN(fsn);
+		String term = fsnParts[0];
 		for (String eyeStructure : EYE_STRUCTURES_OF_EYE) {
 			for (String lateralityStr : List.of(LEFT_STR, RIGHT_STR, BILATERAL_STR)) {
-				term = term.replaceAll("\\b" + lateralityStr + " " + eyeStructure + "\\b", eyeStructure + " of " + lateralityStr + " eye");
+				//Laterality may be capitalised if it starts the term, eg 'Left lens opacity'
+				Matcher matcher = Pattern.compile("\\b(?i:" + lateralityStr + ") " + Pattern.quote(eyeStructure) + "\\b").matcher(term);
+				if (matcher.find()) {
+					boolean wasCapitalized = Character.isUpperCase(term.charAt(0));
+					term = matcher.replaceAll(Matcher.quoteReplacement(eyeStructure));
+					term = appendQualifier(term, "of " + lateralityStr + " eye");
+					if (wasCapitalized) {
+						term = StringUtils.capitalizeFirstLetter(term);
+					}
+					return fsnParts[1] == null ? term : term + " " + fsnParts[1];
+				}
 			}
 		}
-		return term;
+		return fsn;
+	}
+
+	private String appendQualifier(String term, String qualifier) {
+		//Qualifier goes at the end of the term, or before any 'using' / 'with' clause
+		for (String clause : List.of(USING_SP, WITH_SP)) {
+			int cutPoint = term.indexOf(clause);
+			if (cutPoint != -1) {
+				return term.substring(0, cutPoint) + " " + qualifier + term.substring(cutPoint);
+			}
+		}
+		return term + " " + qualifier;
 	}
 
 	private void addPTandSynonyms(Concept clone, Concept laterality) throws TermServerScriptException {
@@ -307,12 +394,15 @@ public class ConceptLateralizer implements ScriptConstants {
 			pt = StringUtils.decapitalizeFirstLetter(termBase).replace(BILATERAL_STR_SP, "");
 			pt = StringUtils.capitalizeFirstLetter(BILATERAL_STR_SP) + pt;
 
-			//Bilateral concepts will have an acceptable "bilateral" synonym
-			Description bilateralDesc = Description.withDefaults(termBase, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
-			clone.addDescription(bilateralDesc);
+			//Bilateral concepts will have an acceptable "bilateral" synonym, unless that's the same as the PT
+			if (!termBase.equals(pt)) {
+				Description bilateralDesc = Description.withDefaults(termBase, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
+				clone.addDescription(bilateralDesc);
+			}
 
 			//Bilateral concepts will have an acceptable "both" synonym
-			String bothTerm = pluralize(termBase.replace(BILATERAL_STR, "both"));
+			String bothTerm = pluralize(termBase.replace(BILATERAL_STR, "both")
+					.replace(StringUtils.capitalizeFirstLetter(BILATERAL_STR), "Both"));
 			Description bothDesc = Description.withDefaults(bothTerm, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
 			clone.addDescription(bothDesc);
 		}
@@ -336,7 +426,7 @@ public class ConceptLateralizer implements ScriptConstants {
 	}
 
 	private String pluralize(String term) {
-		if (term.endsWith(")")) {
+		if (term.endsWith(")") || term.matches(ALREADY_PLURALISED_REGEX)) {
 			return term;
 		}
 		if (!term.isEmpty() && Character.isDigit(term.charAt(term.length() - 1))) {
@@ -347,8 +437,8 @@ public class ConceptLateralizer implements ScriptConstants {
 				return term;
 			}
 		}
-		if (term.contains(" with ")) {
-			return term.replace(" with ", "s with ");
+		if (term.contains(WITH_SP)) {
+			return term.replace(WITH_SP, "s with ");
 		}
 		if (term.contains(USING_SP)) {
 			return term.replace(USING_SP, "s using ");
@@ -385,9 +475,9 @@ public class ConceptLateralizer implements ScriptConstants {
 		for (Relationship r : g.getRelationships()) {
 			if (isBodyStructure(r.getTarget())) {
 				for (Description d : r.getTarget().getDescriptions(RF2Constants.ActiveState.ACTIVE, List.of(RF2Constants.DescriptionType.SYNONYM))) {
-					bodyStructureStrs.add(d.getTerm().toLowerCase());
+					bodyStructureStrs.add(asMidSentence(d));
 				}
-				String pt = r.getTarget().getPreferredSynonym().toLowerCase();
+				String pt = asMidSentence(r.getTarget().getPreferredSynonym(US_ENG_LANG_REFSET));
 				getBodyStructureFromPreferredTerm(pt, bodyStructureStrs);
 			}
 		}
