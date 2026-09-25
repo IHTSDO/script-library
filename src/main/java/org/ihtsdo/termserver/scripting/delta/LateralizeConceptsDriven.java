@@ -22,6 +22,10 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 	private NormaliseConcepts conceptNormalizer = null;
 	private Map<Concept, LateralizeInstruction> lateralizedInstructionMap = new HashMap<>();
 
+	//Input file columns: 0 = conceptId, 2 = reason for skipping (if populated), 3 = override PT
+	private static final int SKIP_REASON_COL = 2;
+	private static final int OVERRIDE_PT_COL = 3;
+
 	private static final int SOURCE_CONCEPTS_PER_ARCHIVE = 20; //This will give us 60 concepts in the output
 	
 	public static void main(String[] args) throws TermServerScriptException {
@@ -107,13 +111,18 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 		try {
 			String[] items = line.split(TAB);
 			//Is this one of the concepts we've been told is safe to lateralize?
-			if (whitelist.contains(items[0].trim())) {
+			if (whitelist.contains(items[0].trim()) && !hasSkipReason(items)) {
 				LateralizeInstruction li = parseLateralityInstruction(gl, items);
 				lateralizedInstructionMap.put(li.concept, li);
 			}
 		} catch (Exception e) {
 			LOGGER.warn("Failed to parse line: {}", line);
 		}
+	}
+
+	private boolean hasSkipReason(String[] items) {
+		//No need to report skipped rows - the input sheet itself records why they were not processed
+		return items.length > SKIP_REASON_COL && !items[SKIP_REASON_COL].isBlank();
 	}
 
 	@Override
@@ -160,8 +169,8 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 	public LateralizeInstruction parseLateralityInstruction(GraphLoader gl, String[] items) throws TermServerScriptException {
 		String conceptId = items[0];
 		String pt = null;
-		if (items.length > 2) {
-			pt = items[2];
+		if (items.length > OVERRIDE_PT_COL && !items[OVERRIDE_PT_COL].isBlank()) {
+			pt = items[OVERRIDE_PT_COL].trim();
 		}
 
 		Concept concept = gl.getConcept(conceptId);
