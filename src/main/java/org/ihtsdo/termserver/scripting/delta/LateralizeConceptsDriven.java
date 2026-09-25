@@ -123,15 +123,22 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 		if (li != null && li.pt != null) {
 			String pt = li.pt;
 			//The override is usually given as an example.  Modify for this specific laterality
-			if (lateralityStr.equals("right") && pt.contains("left")) {
-				pt = pt.replace("left", "right");
+			if (lateralityStr.equals("right")) {
+				pt = replaceLeft(pt, "right");
 			} else if (lateralityStr.contains("bilateral")) {
-				pt = pt.replace("left", "bilateral");
+				pt = replaceLeft(pt, "bilateral");
 			}
 			conceptLateralizer.applyTermAsPtAndFsn(clone, pt);
 			return true;
 		}
 		return false;
+	}
+
+	private String replaceLeft(String term, String lateralityStr) {
+		//Preserve case, eg 'Left eye' -> 'Right eye', 'of left eye' -> 'of right eye'
+		String capitalized = Character.toUpperCase(lateralityStr.charAt(0)) + lateralityStr.substring(1);
+		return term.replaceAll("\\bleft\\b", lateralityStr)
+				.replaceAll("\\bLeft\\b", capitalized);
 	}
 
 	@Override
