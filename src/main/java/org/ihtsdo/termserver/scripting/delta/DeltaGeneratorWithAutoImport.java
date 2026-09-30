@@ -88,8 +88,17 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 			initialiseSnomedServiceClients();
 		}
 
-		print("Import onto which project? : ");
-		projectName = STDIN.nextLine().trim();
+		boolean useCurrentProject = false;
+		if (!StringUtils.isEmpty(projectName)) {
+			print("Use current project - " + projectName + "? Y/N [Y]: ");
+			response = STDIN.nextLine().trim();
+			useCurrentProject = !response.equalsIgnoreCase("N");
+		}
+
+		if (!useCurrentProject) {
+			print("Import onto which project? : ");
+			projectName = STDIN.nextLine().trim();
+		}
 		//We might have changed the environment, so recopy state into importer
 		importer.copyScriptState(this);
 		importer.recoverProjectFromProjectName(projectName);
