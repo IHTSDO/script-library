@@ -12,17 +12,17 @@ import org.slf4j.LoggerFactory;
  * ISRS-979 Fix for active langrefsetentries being left on inactive descriptions 
  *
  */
-public class ActiveLangRefOnInactiveDescFix extends BatchFix {
+public class InactivateLangRefOnInactiveDesc extends BatchFix {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ActiveLangRefOnInactiveDescFix.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(InactivateLangRefOnInactiveDesc.class);
 	
-	protected ActiveLangRefOnInactiveDescFix(BatchFix clone) {
+	protected InactivateLangRefOnInactiveDesc(BatchFix clone) {
 		super(clone);
 		this.populateTaskDescription = false;
 	}
 
 	public static void main(String[] args) throws TermServerScriptException {
-		new ActiveLangRefOnInactiveDescFix(null).standardExecution(args, ExecutionOptions.DEFAULT);
+		new InactivateLangRefOnInactiveDesc(null).standardExecution(args, ExecutionOptions.DEFAULT);
 	}
 
 	@Override
