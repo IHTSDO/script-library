@@ -73,22 +73,39 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		};
 		String[] columnHeadings = new String[] {
 				"Category, Item, Count",
-				"Concept, FSN, SemTag, Alternate Identifier, Descriptions, Inferred Model, , ",
-				CONCEPT_FSN_SEMTAG,
-				CONCEPT_FSN_SEMTAG,
+				"Concept, FSN, SemTag, Alternate Identifier, Descriptions, Inferred Model, Promoted",
+				CONCEPT_FSN_SEMTAG + ", Promoted",
+				CONCEPT_FSN_SEMTAG + ", Axioms, Promoted",
 				"SCTID, active, Term",
-				"Concept, FSN, SemTag, Definition",
-				"Component, EffectiveTime, Active, Module, Author",
+				"Concept, FSN, SemTag, Definition, Promoted",
+				"Component, EffectiveTime, Active, Module, Concept, Promoted",
 				"ID, Component Type, Component",
 				CONCEPT_FSN_SEMTAG,
 				"Component Type, Module, Component, Concept"
 		};
 		postInit(tabNames, columnHeadings);
+		//Namespace must be known before we can tell which concepts originated in the product
+		determineNamespace();
 		inScopeConcepts = gl.getAllConcepts().stream()
-				.filter(this::inScope)
+				.filter(this::originatedInProduct)
 				.sorted(SnomedUtils::compareSemTagFSN)
 				.toList();
-		determineNamespace();
+	}
+
+	/**
+	 * A component belongs to the product if it's in one of the product's modules, or if its SCTID is in the
+	 * product's namespace - which catches concepts promoted to the International Edition (now in the core module).
+	 * Use for content checks. Anything that depends on what the release build extracts must use inScope(),
+	 * which is module-only.
+	 */
+	private boolean originatedInProduct(Component c) {
+		return inScope(c) || (inScopeNamespace != null
+				&& SnomedUtilsBase.isSctid(c.getId())
+				&& inScopeNamespace.equals(SnomedUtilsBase.getNamespace(c.getId())));
+	}
+
+	private String promoted(Concept c) {
+		return c != null && !inScope(c) && originatedInProduct(c) ? "Y" : "";
 	}
 
 	private void determineNamespace() {
@@ -205,7 +222,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 
 	private void getConceptDetails(int tabIdx) throws TermServerScriptException {
 		for (Concept c : inScopeConcepts) {
-			report(tabIdx, c, SnomedUtils.getAlternateIdentifiers(c, false), SnomedUtils.getDescriptions(c), c.toExpression(CharacteristicType.INFERRED_RELATIONSHIP));
+			report(tabIdx, c, SnomedUtils.getAlternateIdentifiers(c, false), SnomedUtils.getDescriptions(c), c.toExpression(CharacteristicType.INFERRED_RELATIONSHIP), promoted(c));
 		}
 	}
 
@@ -213,7 +230,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		for (Concept c : inScopeConcepts) {
 			if (c.getAlternateIdentifiers().isEmpty()) {
 				incrementSummaryCount(SNAPSHOT_ACTIVE, "Concepts without AltIds");
-				report(tabIdx, c);
+				report(tabIdx, c, promoted(c));
 			}
 		}
 	}
@@ -223,7 +240,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		// Watch out that we might have an unexpected LOINC axiom on an International Concept
 		List<Concept> conceptsOfInterest = gl.getAllConcepts().stream()
 				.filter(c -> c.getAxiomEntries().size() > 1)
-				.filter(c -> c.getAxiomEntries().stream().anyMatch(this::inScope))
+				.filter(c -> c.getAxiomEntries().stream().anyMatch(this::originatedInProduct))
 				.sorted(SnomedUtils::compareSemTagFSN)
 				.toList();
 
@@ -231,17 +248,17 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 			String axiomStr = c.getAxiomEntries().stream()
 					.map(AxiomEntry::toString)
 					.collect(Collectors.joining(",\n"));
-			report(tabIdx, c, axiomStr);
+			report(tabIdx, c, axiomStr, promoted(c));
 		}
 	}
 
 	private void getTextDefinitions(int tabIdx) throws TermServerScriptException {
 		for (Concept concept : gl.getAllConcepts()) {
 			List<Description> inScopeDescriptions = concept.getDescriptions(ActiveState.ACTIVE, List.of(DescriptionType.TEXT_DEFINITION)).stream()
-					.filter(c -> inScope(c, true))
+					.filter(this::originatedInProduct)
 					.toList();
 			for (Description d : inScopeDescriptions) {
-				report(tabIdx, concept, d);
+				report(tabIdx, concept, d, promoted(concept));
 			}
 		}
 	}
@@ -249,9 +266,9 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	private void getInactiveComponents(int tabIdx) throws TermServerScriptException {
 		for (Concept concept : gl.getAllConcepts()) {
 			for (Component c : SnomedUtils.getAllComponents(concept)) {
-				if (!c.isActiveSafely() && inScope(c, true)) {
+				if (!c.isActiveSafely() && originatedInProduct(c)) {
 					Concept parent = gl.getComponentOwner(c.getId());
-					report(tabIdx, c, c.getEffectiveTime(), c.isActive(), c.getModuleId(), parent);
+					report(tabIdx, c, c.getEffectiveTime(), c.isActive(), c.getModuleId(), parent, promoted(parent));
 				}
 			}
 		}
