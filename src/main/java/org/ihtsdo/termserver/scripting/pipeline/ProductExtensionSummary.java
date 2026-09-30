@@ -68,7 +68,8 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				"Text Definitions",
 				"Inactive Components",
 				"Born Inactive Components",
-				"Promoted Concepts"
+				"Promoted Concepts",
+				"Core Components in Delta"
 		};
 		String[] columnHeadings = new String[] {
 				"Category, Item, Count",
@@ -79,7 +80,8 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				"Concept, FSN, SemTag, Definition",
 				"Component, EffectiveTime, Active, Module, Author",
 				"ID, Component Type, Component",
-				CONCEPT_FSN_SEMTAG
+				CONCEPT_FSN_SEMTAG,
+				"Component Type, Module, Component, Concept"
 		};
 		postInit(tabNames, columnHeadings);
 		inScopeConcepts = gl.getAllConcepts().stream()
@@ -116,6 +118,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	public void runJob() throws TermServerScriptException {
 		getSummaryCounts();
 		checkForBornInactiveComponents();
+		checkForCoreComponentsInDelta(DENARY_REPORT);
 		reportSummaryCounts(PRIMARY_REPORT);
 
 		if (includeDetails) {
@@ -249,6 +252,22 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				if (!c.isActiveSafely() && inScope(c, true)) {
 					Concept parent = gl.getComponentOwner(c.getId());
 					report(tabIdx, c, c.getEffectiveTime(), c.isActive(), c.getModuleId(), parent);
+				}
+			}
+		}
+	}
+
+	private void checkForCoreComponentsInDelta(int tabIdx) throws TermServerScriptException {
+		//The release build only extracts rows from the expected modules, so any component changed
+		//in the delta but left in another module (e.g. an International description inactivated
+		//without its module being changed) silently goes missing from the release.
+		//Check all concepts, not just those in scope, as these changes are typically on International concepts
+		for (Concept concept : gl.getAllConcepts()) {
+			for (Component c : SnomedUtils.getAllComponents(concept)) {
+				if (isInDelta(c) && !inScope(c)) {
+					incrementSummaryCount("Delta", "Core Components in Delta");
+					Concept owner = gl.getComponentOwner(c.getId());
+					report(tabIdx, c.getComponentType(), c.getModuleId(), c.toString(), owner);
 				}
 			}
 		}
