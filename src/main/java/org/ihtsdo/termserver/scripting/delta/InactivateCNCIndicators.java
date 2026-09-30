@@ -1,19 +1,18 @@
-package org.ihtsdo.termserver.scripting.delta.one_offs;
+package org.ihtsdo.termserver.scripting.delta;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
-import org.ihtsdo.termserver.scripting.delta.DeltaGeneratorWithAutoImport;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 
-public class MAINT2904_InactivateCNCIndicators extends DeltaGeneratorWithAutoImport {
+public class InactivateCNCIndicators extends DeltaGeneratorWithAutoImport {
 
 	enum Mode { INT, MS }
 
 	private static final Mode MODE = Mode.INT;
 
 	public static void main(String[] args) throws TermServerScriptException {
-		MAINT2904_InactivateCNCIndicators delta = new MAINT2904_InactivateCNCIndicators();
+		InactivateCNCIndicators delta = new InactivateCNCIndicators();
 		delta.getSnapshotConfiguration().setLoadOtherReferenceSets(true);
 		delta.getSnapshotConfiguration().setRunIntegrityChecks(false);
 		ArchiveImporter.setSkipSave(true);
