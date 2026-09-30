@@ -1,6 +1,7 @@
 package org.ihtsdo.termserver.scripting.delta;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
+import org.ihtsdo.otf.utils.FileUtils;
 import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.util.MultiArchiveImporter;
 
@@ -68,12 +69,13 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 	}
 
 	private void reviewArchiveNaming() throws TermServerScriptException {
-		//Check if we're going to rename the file to be the task prefix
-		print("Rename " + archive.getName() + " to " + taskPrefix + ".zip ? Y/N [Y]: ");
+		//Check if we're going to rename the file to be the task prefix, without overwriting a previous run's archive
+		File renamed = FileUtils.findUnusedFileOrIncrement(new File(archive.getParentFile(), taskPrefix + ".zip"));
+		print("Rename " + archive.getName() + " to " + renamed.getName() + " ? Y/N [Y]: ");
 		String response = STDIN.nextLine().trim();
 		if (!response.equalsIgnoreCase("N")) {
 			File oldFile = archive;
-			archive = new File(archive.getParentFile(), taskPrefix + ".zip");
+			archive = renamed;
 			if (!oldFile.renameTo(archive)) {
 				throw new TermServerScriptException("Failed to rename " + oldFile + " to " + archive);
 			}
