@@ -49,7 +49,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	private static final DateTimeFormatter FILE_TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	private static final DateTimeFormatter CONSOLE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
 
-	private List<Task> tasks = new ArrayList<>();
+	private List<Task> projectTasks = new ArrayList<>();
 	private final List<Task> tasksRolledBack = new ArrayList<>();
 	private File savedExport = null;
 
@@ -136,13 +136,13 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 
 	private void reportTasks() throws TermServerScriptException {
 		try {
-			tasks = getAuthoringServicesClient().listAllTasksOnProject(getProject().getKey());
+			projectTasks = getAuthoringServicesClient().listAllTasksOnProject(getProject().getKey());
 		} catch (RestClientException e) {
 			throw new TermServerScriptException("Failed to list tasks on " + getProject().getKey(), e);
 		}
-		report(PROCESSING, "Tasks recovered", tasks.size() + " tasks on " + getProject().getKey());
+		report(PROCESSING, "Tasks recovered", projectTasks.size() + " tasks on " + getProject().getKey());
 
-		for (Task t : tasks) {
+		for (Task t : projectTasks) {
 			Classification classification = t.getLatestClassificationJson();
 			report(TASKS,
 					t.getKey(),
@@ -170,9 +170,9 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 		//The main aim is to reach BEHIND: the branch then holds nothing that isn't also on its parent, so it's
 		//clean and ready to be brought up to date with a rebase.  As a backstop, going back in time we also stop at
 		//whichever we reach first of the base (moved forward by each rebase) or the point the branch was created.
-		long stopAt = branch.getCreationTimestamp() == null
-				? branch.getBaseTimestamp()
-				: Math.max(branch.getBaseTimestamp(), branch.getCreationTimestamp());
+		long base = requireTimestamp(branch.getBaseTimestamp(), "base", branch);
+		Long creation = branch.getCreationTimestamp();
+		long stopAt = creation == null ? base : Math.max(base, creation);
 		println("Rollback will stop when the branch is BEHIND its parent, or at " + formatForConsole(stopAt) + " (the later of the base and creation time)");
 
 		while (branch != null) {
@@ -191,7 +191,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 			return null;
 		}
 
-		long head = branch.getHeadTimestamp();
+		long head = requireHead(branch);
 		List<Task> promotedHere = tasksPromotedAt(head);
 		String commitLabel = describeCommit(promotedHere);
 		println("\nNext commit to roll back: " + formatForConsole(head) + " - " + commitLabel);
@@ -210,7 +210,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 		return rollbackHeadCommit(branch, promotedHere, commitLabel);
 	}
 
-	private String getStopReason(Branch branch, long stopAt) {
+	private String getStopReason(Branch branch, long stopAt) throws TermServerScriptException {
 		String projectKey = getProject().getKey();
 		if (BEHIND.equals(branch.getState())) {
 			return "Hard stop: " + projectKey + " is BEHIND its parent - nothing left on the branch that isn't also on the parent, so it's ready to rebase";
@@ -218,7 +218,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 		if (UP_TO_DATE.equals(branch.getState())) {
 			return projectKey + " is UP_TO_DATE - no commits of its own since its last rebase, so nothing to roll back";
 		}
-		if (branch.getHeadTimestamp() <= stopAt) {
+		if (requireHead(branch) <= stopAt) {
 			return "Hard stop: head has reached " + formatForConsole(stopAt) + " (the later of the base and creation time)";
 		}
 		return null;
@@ -234,7 +234,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	}
 
 	private Branch rollbackHeadCommit(Branch branch, List<Task> promotedHere, String commitLabel) throws TermServerScriptException {
-		long head = branch.getHeadTimestamp();
+		long head = requireHead(branch);
 		tsClient.adminRollbackCommit(branch);
 		Branch after = tsClient.getBranch(getProject().getBranchPath());
 		println("Rolled back " + commitLabel + ".\n" + describeForConsole("New", after));
@@ -242,7 +242,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 		getReportManager().flushFiles(false);
 		tasksRolledBack.addAll(promotedHere);
 
-		if (after.getHeadTimestamp() >= head) {
+		if (requireHead(after) >= head) {
 			throw new TermServerScriptException("Rollback did not move the head of " + getProject().getBranchPath() + " back from " + formatTimestamp(head));
 		}
 		//Once all the project's own commits are gone, we expect it to show as BEHIND its parent
@@ -254,6 +254,18 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 		return after;
 	}
 
+	private long requireHead(Branch branch) throws TermServerScriptException {
+		return requireTimestamp(branch.getHeadTimestamp(), "head", branch);
+	}
+
+	//Snowstorm should always supply these, but fail clearly rather than with a NullPointerException if it doesn't
+	private long requireTimestamp(Long timestamp, String which, Branch branch) throws TermServerScriptException {
+		if (timestamp == null) {
+			throw new TermServerScriptException("No " + which + " timestamp returned for branch " + branch.getPath());
+		}
+		return timestamp;
+	}
+
 	//Columns: Branch, Commit Rolled Back, New Head, New Base, State, Detail
 	private void reportRollback(Branch branch, String commitRolledBack, String detail) throws TermServerScriptException {
 		report(ROLLBACK, getProject().getBranchPath(), commitRolledBack, formatTimestamp(branch.getHeadTimestamp()),
@@ -262,7 +274,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 
 	//A promoted task's branch ends up with both head and base at the timestamp of its promotion commit on the project
 	private List<Task> tasksPromotedAt(long commitTimestamp) {
-		return tasks.stream()
+		return projectTasks.stream()
 				.filter(t -> t.getStatus() == Task.TaskStatus.PROMOTED || t.getStatus() == Task.TaskStatus.COMPLETED)
 				.filter(t -> Long.valueOf(commitTimestamp).equals(t.getBranchHeadTimestamp())
 						&& Long.valueOf(commitTimestamp).equals(t.getBranchBaseTimestamp()))
