@@ -35,6 +35,27 @@ public class RollbackBranch extends TermServerReport {
 		}
 	}
 
+	/**
+	 * Head, base and creation times as UTC, with the epoch milliseconds alongside, plus the branch state.
+	 */
+	public static String describe(Branch branch) {
+		return branch.getName() + " " + describeState(branch, " ");
+	}
+
+	/**
+	 * As describe(), without the branch name, with each item separated as required eg "\n" for a sheet cell.
+	 */
+	public static String describeState(Branch branch, String separator) {
+		return "Head: " + formatTimestamp(branch.getHeadTimestamp()) + separator +
+				"Base: " + formatTimestamp(branch.getBaseTimestamp()) + separator +
+				"Created: " + formatTimestamp(branch.getCreationTimestamp()) + separator +
+				"State: " + branch.getState();
+	}
+
+	public static String formatTimestamp(Long timestamp) {
+		return timestamp == null ? "unknown" : Instant.ofEpochMilli(timestamp) + " (" + timestamp + ")";
+	}
+
 	private void rollbackBranch() throws TermServerScriptException {
 		String branchPath = getProject().getBranchPath();
 		String msg = "Rolling back " + branchPath;
@@ -47,7 +68,7 @@ public class RollbackBranch extends TermServerReport {
 			boolean forceFurtherRollback = false;
 			LocalDateTime head = LocalDateTime.ofInstant(Instant.ofEpochMilli(branch.getHeadTimestamp()), ZoneOffset.UTC);
 			LocalDateTime base = LocalDateTime.ofInstant(Instant.ofEpochMilli(branch.getBaseTimestamp()), ZoneOffset.UTC);
-			println( "\n" + branch.getName() + " Head: " + head + " Base: " + base + " state: " + branch.getState());
+			println("\n" + describe(branch));
 			msg = "Rolled-Back";
 
 			if (branch.getHeadTimestamp() <= branch.getBaseTimestamp() || branch.getState().equals("BEHIND")) {

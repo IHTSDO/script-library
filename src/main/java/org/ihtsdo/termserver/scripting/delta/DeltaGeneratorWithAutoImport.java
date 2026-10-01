@@ -121,8 +121,6 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 	}
 
 	protected void reviewAuthor() {
-		String authorDisplay = importer.getAuthors() == null ? "" : importer.getAuthors().get(0);
-		print("Assign to author [" + authorDisplay + "]: ");
-		importer.setAuthors(STDIN.nextLine().trim());
+		importer.promptForAuthor();
 	}
 }

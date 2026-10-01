@@ -36,6 +36,13 @@ public class MultiArchiveImporter extends BatchFix {
 
 	private boolean existingTaskBeingUsed = false;
 
+	//Optional overrides for the task created to hold the import
+	private String taskSummary = null;
+	private String taskNotes = null;
+
+	//Callers sharing their report manager may need the import results written to a tab of their own
+	private int reportTabIdx = PRIMARY_REPORT;
+
 	public static void main(String[] args) throws TermServerScriptException {
 		MultiArchiveImporter importer = new MultiArchiveImporter(null);
 		try {
@@ -104,7 +111,7 @@ public class MultiArchiveImporter extends BatchFix {
 				task = new Task(null, getNextAuthor(), getNextReviewer());
 				task.setProjectKey(project.getKey());
 				lastTaskCreated = task;
-				task.setSummary("Import " + thisArchive.getName());
+				task.setSummary(taskSummary == null ? "Import " + thisArchive.getName() : taskSummary);
 				taskHelper.createTask(task);
 			}
 
@@ -123,7 +130,7 @@ public class MultiArchiveImporter extends BatchFix {
 		}
 		String taskKey = task == null ? "N/A" : task.getKey();
 		String assignedAuthor = task == null ? "N/A" : task.getAssignedAuthor();
-		report(PRIMARY_REPORT, taskKey, thisArchive.getName(), assignedAuthor, result);
+		report(reportTabIdx, taskKey, thisArchive.getName(), assignedAuthor, result);
 	}
 
 	private void classify(Task task) throws TermServerScriptException {
@@ -146,5 +153,51 @@ public class MultiArchiveImporter extends BatchFix {
 
 	public void setMode(MODE mode) {
 		this.mode = mode;
+	}
+
+	public void setTaskSummary(String taskSummary) {
+		this.taskSummary = taskSummary;
+	}
+
+	public void setTaskNotes(String taskNotes) {
+		this.taskNotes = taskNotes;
+	}
+
+	/**
+	 * The tab to write import results to (Task, Archive, User, Result).  Defaults to the primary tab.
+	 */
+	public void setReportTabIdx(int reportTabIdx) {
+		this.reportTabIdx = reportTabIdx;
+	}
+
+	public Task getLastTaskCreated() {
+		return lastTaskCreated;
+	}
+
+	/**
+	 * Ask who the import task should be assigned to, keeping the current author if nothing is entered.
+	 */
+	public void promptForAuthor() {
+		String currentAuthor = getAuthors() == null || getAuthors().isEmpty() ? "" : getAuthors().get(0);
+		String response = "";
+		while (response.isEmpty()) {
+			print("Assign to author [" + currentAuthor + "]: ");
+			response = STDIN.nextLine().trim();
+			if (response.isEmpty()) {
+				//Keep the current author if there is one, otherwise we need a name
+				response = currentAuthor;
+			}
+		}
+		setAuthors(response);
+	}
+
+	@Override
+	protected String setTaskSummaryAndDescription(Task task) throws TermServerScriptException {
+		String taskDescription = super.setTaskSummaryAndDescription(task);
+		if (taskNotes != null) {
+			taskDescription = taskNotes + "<br/>" + taskDescription;
+			task.setDescription(taskDescription);
+		}
+		return taskDescription;
 	}
 }
