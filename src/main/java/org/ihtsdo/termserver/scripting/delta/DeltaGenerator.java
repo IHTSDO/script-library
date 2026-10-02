@@ -21,6 +21,7 @@ import org.ihtsdo.termserver.scripting.TermServerScript;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+import org.snomed.module.storage.ModuleMetadata;
 import org.snomed.otf.scheduler.domain.JobRun;
 
 
@@ -59,6 +60,10 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected Set<String> sourceModuleIds = new HashSet<>();
 	protected String nameSpace="0";
 	protected String targetModuleId = SCTID_CORE_MODULE;
+	private ModuleMetadata packageMetadata;
+
+	private static final String ZIP_EXTENSION = ".zip";
+	private static final String CODE_SYSTEM_PREFIX = "SNOMEDCT-";
 	protected String[] targetLangRefsetIds = new String[] { "900000000000508004",   //GB
 															"900000000000509007" }; //US
 
@@ -243,7 +248,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 			if (branch.getMetadata().getExpectedExtensionModules() != null) {
 				sourceModuleIds.addAll(branch.getMetadata().getExpectedExtensionModules());
 			}
-		} else if (!projectName.endsWith(".zip") && sourceModuleIds.isEmpty()){
+		} else if (projectName.endsWith(ZIP_EXTENSION)) {
+			determineSettingsFromPackageMetadata();
+		} else if (sourceModuleIds.isEmpty()){
 			try{
 				scaClient = new AuthoringServicesClient(url, authenticatedCookie);
 				//MAIN is not a project, but we know what the default module is
@@ -251,7 +258,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 					sourceModuleIds = Set.of(INTERNATIONAL_MODULES);
 				} else {
 					project = scaClient.getProject(projectName);
-					if (project.getBranchPath().contains("SNOMEDCT-")
+					if (project.getBranchPath().contains(CODE_SYSTEM_PREFIX)
 							&& project.getMetadata() != null) {
 						sourceModuleIds.add(project.getMetadata().getDefaultModuleId());
 						if (project.getMetadata().getExpectedExtensionModules() != null) {
@@ -265,7 +272,50 @@ public abstract class DeltaGenerator extends TermServerScript {
 		}
 	}
 
+	private void determineSettingsFromPackageMetadata() {
+		//If the MSC knows this package, its metadata gives us the modules, edition and dependencies
+		packageMetadata = getArchiveManager().findPublishedPackageMetadata(this, projectName).orElse(null);
+		if (packageMetadata == null) {
+			return;
+		}
+		if (sourceModuleIds.isEmpty() && packageMetadata.getCompositionModuleIds() != null) {
+			sourceModuleIds = new LinkedHashSet<>(packageMetadata.getCompositionModuleIds());
+			targetModuleId = packageMetadata.getIdentifyingModuleId();
+		}
+		String codeSystem = packageMetadata.getCodeSystemShortName();
+		if (codeSystem != null) {
+			edition = codeSystem.startsWith(CODE_SYSTEM_PREFIX) ? codeSystem.substring(CODE_SYSTEM_PREFIX.length()) : "INT";
+		}
+	}
+
+	/**
+	 * Override to return false where the script must keep each component in its existing module, eg reasserting
+	 */
+	protected boolean isModuleChangeAllowed() {
+		return true;
+	}
+
+	/**
+	 * If no namespace has been specified, but we know we're working with an extension module,
+	 * then that module's SCTID tells us the namespace
+	 */
+	private void determineNamespaceFromModules() {
+		if (!nameSpace.equals("0")) {
+			return;
+		}
+		List<String> candidateModules = new ArrayList<>();
+		candidateModules.add(targetModuleId);
+		candidateModules.addAll(sourceModuleIds);
+		candidateModules.stream()
+				.filter(Objects::nonNull)
+				.map(SnomedUtils::getNamespace)
+				.filter(ns -> !ns.equals("0"))
+				.findFirst()
+				.ifPresent(ns -> nameSpace = ns);
+	}
+
 	private void checkSourceAndTargetModulesWithUser() throws TermServerScriptException {
+		determineNamespaceFromModules();
 		print("Targeting which namespace? [" + nameSpace + "]: ");
 		String response = STDIN.nextLine().trim();
 		if (!response.isEmpty()) {
@@ -283,6 +333,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 		if (nameSpace.length() > 4 && firstSourceModule.contains(nameSpace)) {
 			println("Target namespace indicates that we're keeping the source module the same.");
 			targetModuleId = firstSourceModule;
+		} else if (!isModuleChangeAllowed()) {
+			targetModuleId = sourceModuleIds.contains(targetModuleId) ? targetModuleId : firstSourceModule;
+			println("Components will keep their existing module, target module: " + targetModuleId);
 		} else {
 			print("Outputting with what targetModule? [" + targetModuleId + "]: ");
 			response = STDIN.nextLine().trim();
@@ -318,7 +371,11 @@ public abstract class DeltaGenerator extends TermServerScript {
 
 	private void checkDependencySettingsWithUser() {
 		boolean dependencySpecified = (getDependencyArchives() != null);
-		if (projectName != null && projectName.endsWith(".zip")) {
+		if (packageMetadata != null) {
+			List<String> dependencies = packageMetadata.getDependencies() == null ? List.of() :
+					packageMetadata.getDependencies().stream().map(ModuleMetadata::getFilename).toList();
+			println("MSC metadata: " + projectName + " depends on " + dependencies);
+		} else if (projectName != null && projectName.endsWith(ZIP_EXTENSION)) {
 			String choice = dependencySpecified? "Y":"N";
 			if (!dependencySpecified) {
 				println("Is " + projectName + " an extension that requires a dependant edition(s) to be loaded first?");
@@ -768,7 +825,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 
 	@Override
 	protected boolean inScope(Component c, boolean includeExpectedExtensionModules) {
-		if (project.getKey().endsWith(".zip")) {
+		if (project.getKey().endsWith(ZIP_EXTENSION)) {
 				//If we're working from a zip file, then we're targeting whatever module we said as part of this Delta generation
 				return sourceModuleIds.contains(c.getModuleId());
 		}

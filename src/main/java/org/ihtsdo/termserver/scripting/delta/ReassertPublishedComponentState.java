@@ -51,6 +51,11 @@ public class ReassertPublishedComponentState extends DeltaGeneratorWithAutoImpor
 	}
 
 	@Override
+	protected boolean isModuleChangeAllowed() {
+		return false;
+	}
+
+	@Override
 	public void postInit(String googleFolder) throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"Id, FSN, SemTag, ModuleId, Component Reasserted"};
