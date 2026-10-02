@@ -1,11 +1,14 @@
 package org.ihtsdo.termserver.scripting.pipeline.npu.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import org.apache.commons.lang3.StringUtils;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 public class NpuConcept extends ExternalConcept {
 	
@@ -98,6 +101,10 @@ public class NpuConcept extends ExternalConcept {
 	
 	@JacksonXmlProperty(localName = "current_version")
 	private String currentVersion;
+
+	//Not in the NPU full file; attached from the NPU detail file, which holds the part codes
+	@JsonIgnore
+	private NpuDetail npuDetail;
 
 
 	// Getters and Setters
@@ -365,7 +372,26 @@ public class NpuConcept extends ExternalConcept {
 
 	@Override
 	public String[] getCommonColumns() {
-		return new String[] {shortDefinition, system, component, kindOfProperty, proc, unit, specialty, contextDependent, group, scaleType,  active};
+		return new String[] {shortDefinition,
+				withPartCode(system, NpuDetail::getElementCodesForSystems),
+				withPartCode(component, NpuDetail::getElementCodesForComponents),
+				withPartCode(kindOfProperty, NpuDetail::getElementCodesForProperties),
+				proc,
+				withPartCode(unit, NpuDetail::getElementCodesForUnit),
+				specialty, contextDependent, group, scaleType, active};
+	}
+
+	private String withPartCode(String partName, Function<NpuDetail, String> partCodeGetter) {
+		String partCode = npuDetail == null ? null : partCodeGetter.apply(npuDetail);
+		return StringUtils.isEmpty(partCode) ? partName : partName + "\n" + partCode;
+	}
+
+	public NpuDetail getNpuDetail() {
+		return npuDetail;
+	}
+
+	public void setNpuDetail(NpuDetail npuDetail) {
+		this.npuDetail = npuDetail;
 	}
 
 	public Collection<Part> getParts() {

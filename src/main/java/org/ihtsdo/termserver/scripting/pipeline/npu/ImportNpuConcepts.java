@@ -55,10 +55,10 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 	@Override
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
-				"npu_code, shortDefinition, system, component, kindOfProperty, proc, unit, specialty, contextDependent, group, scaleType, active, , ",
+				"Category, Item, Count",
 				"Source, Issue, , , ",
 				"npu_code, Item of Interest, External Concept Long Name, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
-				"NpuNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, , , , , , , , , , , , , , , , , ",
+				"NpuNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, Specialty, Context Dependent, Group, Scale Type, Active",
 				"NPU Element Code, Element Name, Category, High Usage, Highest Usage, , Concepts Affected, , , ",
 				"PartNum, PartName, PartType, Needed for High Usage Mapping, Needed for Highest Usage Mapping, PriorityIndex, Usage Count,Top Priority Usage, Higest Rank, HighestUsageCount",
 				"Category, NpuNum, Detail, , , "
@@ -115,6 +115,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 				if (npuConcept == null) {
 					LOGGER.debug("NPU Concept not found for NPU code: {}", npuDetail.getNpuCode());
 				} else {
+					npuConcept.setNpuDetail(npuDetail);
 					//In the case of NPU, the parts are not given separately, but can be pulled out of the details
 					for (Part part : npuDetail.getParts(npuConcept)) {
 						partMap.put(part.getPartNumber(), part);
