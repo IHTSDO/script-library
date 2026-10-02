@@ -14,8 +14,8 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 public class ReassertPublishedComponentState extends DeltaGeneratorWithAutoImport {
 
 	String[] componentsToProcess = new String[] {
-			"4dca6968-0ebf-4086-8eaf-cf4157e39cc3",
-			"f40babb8-bd96-4dbc-87f3-8fa7c86e586f"};
+			"510731000220102",
+			"510741000220106"};
 
 	public static void main(String[] args) throws TermServerScriptException {
 		ReassertPublishedComponentState delta = new ReassertPublishedComponentState();
