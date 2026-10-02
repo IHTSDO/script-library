@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class TemplatedConcept implements ScriptConstants, ConceptWrapper, ContentPipeLineConstants {
+public abstract class TemplatedConcept implements ScriptConstants, ConceptWrapper, ContentPipelineConstants {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(TemplatedConcept.class);
 

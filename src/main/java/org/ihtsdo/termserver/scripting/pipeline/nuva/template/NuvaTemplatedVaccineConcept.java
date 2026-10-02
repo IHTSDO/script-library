@@ -6,7 +6,7 @@ import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
 import org.ihtsdo.termserver.scripting.domain.ScriptConstants;
-import org.ihtsdo.termserver.scripting.pipeline.ContentPipeLineConstants;
+import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineConstants;
 import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineManager;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
@@ -17,7 +17,7 @@ import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import java.util.List;
 import java.util.UUID;
 
-public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements ContentPipeLineConstants {
+public class NuvaTemplatedVaccineConcept extends TemplatedConcept implements ContentPipelineConstants {
 
 	protected static Concept hasValence;
 	protected static List<String> passiveVaccines;

@@ -14,7 +14,7 @@ import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AbstractMapManager implements ContentPipeLineConstants {
+public class AbstractMapManager implements ContentPipelineConstants {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMapManager.class);
 
@@ -86,7 +86,7 @@ public class AbstractMapManager implements ContentPipeLineConstants {
 		try {
 			lineProcessor.process(items);
 		} catch (TermServerScriptException e) {
-			cpm.report(cpm.getTab(ContentPipeLineConstants.TAB_MAP_ISSUES), lineNum, sourceNum, e.getMessage());
+			cpm.report(cpm.getTab(ContentPipelineConstants.TAB_MAP_ISSUES), lineNum, sourceNum, e.getMessage());
 		}
 	}
 

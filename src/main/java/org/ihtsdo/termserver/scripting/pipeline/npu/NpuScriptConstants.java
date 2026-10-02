@@ -1,8 +1,8 @@
 package org.ihtsdo.termserver.scripting.pipeline.npu;
 
-import org.ihtsdo.termserver.scripting.pipeline.ContentPipeLineConstants;
+import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineConstants;
 
-public interface NpuScriptConstants extends ContentPipeLineConstants {
+public interface NpuScriptConstants extends ContentPipelineConstants {
 
 	String NPU_PART_COMPONENT = "COMPONENT";
 	String NPU_PART_PROPERTY = "PROPERTY";

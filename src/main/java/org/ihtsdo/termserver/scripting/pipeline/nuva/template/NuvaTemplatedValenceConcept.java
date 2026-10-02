@@ -5,7 +5,7 @@ import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.Description;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
-import org.ihtsdo.termserver.scripting.pipeline.ContentPipeLineConstants;
+import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineConstants;
 import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineManager;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
@@ -17,7 +17,7 @@ import org.ihtsdo.termserver.scripting.util.CaseSensitivityUtils;
 import java.util.*;
 
 
-public class NuvaTemplatedValenceConcept extends TemplatedConcept implements ContentPipeLineConstants {
+public class NuvaTemplatedValenceConcept extends TemplatedConcept implements ContentPipelineConstants {
 
 	private static final Map<String, NuvaTemplatedValenceConcept> modelledValences = new HashMap<>();
 	private static Concept valenceGrouper;
@@ -78,7 +78,7 @@ public class NuvaTemplatedValenceConcept extends TemplatedConcept implements Con
 			NuvaValence valence = getNuvaValence();
 			//The notation is held in the altLabel, which is translated
 			if (valence.getAltLabels().isEmpty()) {
-				int tabIdx = cpm.getTab(ContentPipeLineConstants.TAB_MODELING_ISSUES);
+				int tabIdx = cpm.getTab(ContentPipelineConstants.TAB_MODELING_ISSUES);
 				cpm.report(tabIdx, externalConcept, Severity.HIGH, ReportActionType.VALIDATION_CHECK, "Valence has no shorthand notation");
 			} else {
 				String shorthandTerm = valence.getAltLabel("en", "fr");

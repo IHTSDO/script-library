@@ -1,9 +1,9 @@
 package org.ihtsdo.termserver.scripting.pipeline.loinc;
 
 import org.ihtsdo.termserver.scripting.domain.Concept;
-import org.ihtsdo.termserver.scripting.pipeline.ContentPipeLineConstants;
+import org.ihtsdo.termserver.scripting.pipeline.ContentPipelineConstants;
 
-public interface LoincScriptConstants extends ContentPipeLineConstants {
+public interface LoincScriptConstants extends ContentPipelineConstants {
 
 	Concept ORD_REFSET = new Concept("635111010000100", "LOINC Orderable Reference Set");
 	Concept OBS_REFSET = new Concept("635121010000106", "LOINC Observable Reference Set");

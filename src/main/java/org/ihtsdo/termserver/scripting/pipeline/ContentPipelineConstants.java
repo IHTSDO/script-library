@@ -1,6 +1,6 @@
 package org.ihtsdo.termserver.scripting.pipeline;
 
-public interface ContentPipeLineConstants {
+public interface ContentPipelineConstants {
 
 	enum ProcessingFlag {
 		ALLOW_SPECIMEN, DROP_OUT, ALLOW_TECHNIQUE,

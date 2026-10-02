@@ -25,7 +25,7 @@ import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ContentPipelineManager extends TermServerScript implements ContentPipeLineConstants {
+public abstract class ContentPipelineManager extends TermServerScript implements ContentPipelineConstants {
 
 	public static final String CHANGES_SINCE_LAST_ITERATION = "Changes since last iteration";
 	public static final String HIGH_USAGE_COUNTS = "High usage counts";

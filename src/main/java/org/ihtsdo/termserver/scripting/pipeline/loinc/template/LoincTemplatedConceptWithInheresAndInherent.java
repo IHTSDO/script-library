@@ -9,7 +9,7 @@ import org.ihtsdo.termserver.scripting.pipeline.loinc.domain.LoincDetail;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ihtsdo.termserver.scripting.pipeline.ContentPipeLineConstants.ProcessingFlag.ALTERNATIVE_COMPONENT_SUPPLIED;
+import static org.ihtsdo.termserver.scripting.pipeline.ContentPipelineConstants.ProcessingFlag.ALTERNATIVE_COMPONENT_SUPPLIED;
 
 public class LoincTemplatedConceptWithInheresAndInherent extends LoincTemplatedConceptWithInheres{
 
