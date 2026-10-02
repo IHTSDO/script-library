@@ -6,7 +6,6 @@ import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Classification;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.TaskUser;
 import org.ihtsdo.otf.utils.FileUtils;
-import org.ihtsdo.otf.utils.StringUtils;
 import org.ihtsdo.termserver.scripting.JobClass;
 import org.ihtsdo.termserver.scripting.domain.Branch;
 import org.ihtsdo.termserver.scripting.domain.ExecutionOptions;
@@ -14,6 +13,7 @@ import org.ihtsdo.termserver.scripting.reports.TermServerReport;
 import org.ihtsdo.termserver.scripting.snapshot.TBCHelper;
 import org.ihtsdo.termserver.scripting.util.MultiArchiveImporter;
 import org.ihtsdo.termserver.scripting.util.RollbackBranch;
+import org.ihtsdo.termserver.scripting.util.UserInteractionHelper;
 import org.snomed.otf.scheduler.domain.Job;
 
 import java.io.File;
@@ -44,7 +44,6 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	private static final int REIMPORT = QUATERNARY_REPORT;
 	private static final String BEHIND = "BEHIND";
 	private static final String UP_TO_DATE = "UP_TO_DATE";
-	private static final String YES_NO_DEFAULT_YES = "? Y/N [Y]: ";
 	private static final String REIMPORT_SKIPPED = "Re-import skipped";
 	private static final DateTimeFormatter FILE_TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	private static final DateTimeFormatter CONSOLE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
@@ -52,6 +51,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	private List<Task> projectTasks = new ArrayList<>();
 	private final List<Task> tasksRolledBack = new ArrayList<>();
 	private File savedExport = null;
+	private final UserInteractionHelper ui = new UserInteractionHelper(this);
 
 	public static void main(String[] args) throws TermServerScriptException {
 		ExecutionOptions options = new ExecutionOptions().withNoSnapshotImport();
@@ -92,23 +92,12 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	}
 
 	private void confirmProject() throws TermServerScriptException {
-		boolean useCurrentProject = false;
-		if (!StringUtils.isEmpty(projectName)) {
-			print("Use current project - " + projectName + YES_NO_DEFAULT_YES);
-			useCurrentProject = !STDIN.nextLine().trim().equalsIgnoreCase("N");
-		}
-
-		if (!useCurrentProject) {
-			print("Which project? : ");
-			projectName = STDIN.nextLine().trim();
-			recoverProjectFromProjectName(projectName);
-		}
+		ui.confirmProject();
 		report(PROCESSING, "Project confirmed", getProject().getKey() + " on " + getProject().getBranchPath());
 	}
 
 	private void exportUnpromotedChanges() throws TermServerScriptException {
-		print("Export unpromoted changes from " + getProject().getKey() + YES_NO_DEFAULT_YES);
-		if (STDIN.nextLine().trim().equalsIgnoreCase("N")) {
+		if (!ui.askYesNo("Export unpromoted changes from " + getProject().getKey(), true)) {
 			report(PROCESSING, "Unpromoted export skipped", "User declined");
 			return;
 		}
@@ -118,8 +107,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 
 		String timestamp = LocalDateTime.now().format(FILE_TIMESTAMP);
 		File saveAs = FileUtils.findUnusedFileOrIncrement(new File(getProject().getKey() + "-UnpromotedExport-" + timestamp + ".zip"));
-		print("Save as " + saveAs.getName() + " in the current directory" + YES_NO_DEFAULT_YES);
-		if (STDIN.nextLine().trim().equalsIgnoreCase("N")) {
+		if (!ui.askYesNo("Save as " + saveAs.getName() + " in the current directory", true)) {
 			report(PROCESSING, "Unpromoted export not saved", "Temporary file is deleted on exit: " + exportedDelta.getAbsolutePath());
 			return;
 		}
@@ -225,12 +213,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	}
 
 	private String askRollbackOrQuit() {
-		String choice = "";
-		while (!choice.equals("R") && !choice.equals("Q")) {
-			print("Rollback (R) or Quit (Q): ");
-			choice = STDIN.nextLine().trim().toUpperCase();
-		}
-		return choice;
+		return ui.askChoice("Rollback (R) or Quit (Q)", "R", "Q");
 	}
 
 	private Branch rollbackHeadCommit(Branch branch, List<Task> promotedHere, String commitLabel) throws TermServerScriptException {
@@ -296,8 +279,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 			return;
 		}
 		String taskKeys = tasksRolledBack.stream().map(Task::getKey).collect(Collectors.joining(", "));
-		print("Delete " + tasksRolledBack.size() + " tasks on " + getProject().getKey() + " (" + taskKeys + ")" + YES_NO_DEFAULT_YES);
-		if (STDIN.nextLine().trim().equalsIgnoreCase("N")) {
+		if (!ui.askYesNo("Delete " + tasksRolledBack.size() + " tasks on " + getProject().getKey() + " (" + taskKeys + ")", true)) {
 			report(PROCESSING, "Task deletion skipped", taskKeys);
 			return;
 		}
@@ -341,17 +323,22 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	 */
 	private File chooseArchiveToReimport() throws TermServerScriptException {
 		String projectKey = getProject().getKey();
-		print("Re-import an unpromoted export into a new task on " + projectKey + YES_NO_DEFAULT_YES);
-		if (STDIN.nextLine().trim().equalsIgnoreCase("N")) {
+		if (!ui.askYesNo("Re-import an unpromoted export into a new task on " + projectKey, true)) {
 			report(PROCESSING, REIMPORT_SKIPPED, "User declined");
 			return null;
 		}
 
 		File defaultArchive = savedExport != null ? savedExport : findLatestExport(projectKey);
-		String defaultName = defaultArchive == null ? "" : defaultArchive.getName();
-		print("File to re-import [" + defaultName + "]: ");
-		String response = STDIN.nextLine().trim();
-		File archive = response.isEmpty() ? defaultArchive : new File(response);
+		//With no default to offer, a blank answer means there's nothing to re-import
+		String response = defaultArchive == null
+				? ui.askOptional("File to re-import (blank to skip)")
+				: ui.askWithDefault("File to re-import", defaultArchive.getName());
+		File archive;
+		if (response.isEmpty()) {
+			archive = null;
+		} else {
+			archive = defaultArchive != null && response.equals(defaultArchive.getName()) ? defaultArchive : new File(response);
+		}
 		if (archive == null) {
 			report(PROCESSING, REIMPORT_SKIPPED, "No file given");
 		} else if (!archive.isFile()) {
@@ -371,8 +358,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 			return true;
 		}
 
-		print("Has " + projectKey + " been rebased in the authoring UI? Y/N [N]: ");
-		if (!STDIN.nextLine().trim().equalsIgnoreCase("Y")) {
+		if (!ui.askYesNo("Has " + projectKey + " been rebased in the authoring UI", false)) {
 			println("Please rebase " + projectKey + " first, so the re-import sits on top of its parent's current content");
 			report(PROCESSING, REIMPORT_SKIPPED, projectKey + " not yet rebased");
 			return false;
@@ -389,11 +375,9 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 	private void reimport(File archive) throws TermServerScriptException {
 		String replacedTasks = tasksRolledBack.stream().map(Task::getKey).collect(Collectors.joining(", "));
 		if (replacedTasks.isEmpty()) {
-			print("Which tasks does this re-import replace? (optional, comma separated): ");
-			replacedTasks = STDIN.nextLine().trim();
+			replacedTasks = ui.askOptional("Which tasks does this re-import replace? (optional, comma separated)");
 		}
-		print("Which ticket is this work for? (optional, used as the task summary prefix): ");
-		String ticket = STDIN.nextLine().trim();
+		String ticket = ui.askOptional("Which ticket is this work for? (optional, used as the task summary prefix)");
 
 		MultiArchiveImporter importer = new MultiArchiveImporter(this);
 		importer.setMode(MultiArchiveImporter.MODE.ALL_ARCHIVES_IN_ONE_TASK);
@@ -402,7 +386,7 @@ public class RollbackProjectCommits extends TermServerReport implements JobClass
 		importer.setTaskSummary(ticket.isEmpty() ? summary : ticket + " " + summary);
 		importer.setTaskNotes("Re-import of unpromoted changes saved in " + archive.getName() +
 				(replacedTasks.isEmpty() ? "" : ", replacing " + replacedTasks) + ", after the project was rolled back and rebased.");
-		importer.promptForAuthor();
+		importer.promptForAuthor(ui);
 		importer.importArchive(archive);
 
 		Task newTask = importer.getLastTaskCreated();

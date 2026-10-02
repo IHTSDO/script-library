@@ -176,28 +176,20 @@ public class MultiArchiveImporter extends BatchFix {
 
 	/**
 	 * Ask who the import task should be assigned to, keeping the current author if nothing is entered.
+	 * Pass the calling script's helper, so the question is read through the same input as its other questions.
 	 */
-	public void promptForAuthor() {
+	public void promptForAuthor(UserInteractionHelper ui) {
 		String currentAuthor = getAuthors() == null || getAuthors().isEmpty() ? "" : getAuthors().get(0);
-		String response = "";
-		while (response.isEmpty()) {
-			print("Assign to author [" + currentAuthor + "]: ");
-			response = STDIN.nextLine().trim();
-			if (response.isEmpty()) {
-				//Keep the current author if there is one, otherwise we need a name
-				response = currentAuthor;
-			}
-		}
-		setAuthors(response);
+		setAuthors(ui.askWithDefault("Assign to author", currentAuthor));
 	}
 
 	@Override
 	protected String setTaskSummaryAndDescription(Task task) throws TermServerScriptException {
-		String taskDescription = super.setTaskSummaryAndDescription(task);
-		if (taskNotes != null) {
-			taskDescription = taskNotes + "<br/>" + taskDescription;
-			task.setDescription(taskDescription);
+		if (taskNotes == null) {
+			return super.setTaskSummaryAndDescription(task);
 		}
+		String taskDescription = "<p>" + taskNotes + "</p>" + asPerProcessingReport(getReportManager().getUrl());
+		task.setDescription(taskDescription);
 		return taskDescription;
 	}
 }

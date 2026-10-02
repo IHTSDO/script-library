@@ -426,6 +426,16 @@ public abstract class BatchFix extends TermServerScript implements ScriptConstan
 		scaClient.updateTask(project.getKey(), task.getKey(), null, taskDescription, task.getAssignedAuthor(), task.getReviewer());
 	}
 
+	/**
+	 * "As per this processing report" with the report's URL as a link, for the end of a task description.
+	 */
+	public static String asPerProcessingReport(String reportUrl) {
+		if (reportUrl == null) {
+			return "";
+		}
+		return "<p>As per <a href=\"" + reportUrl + "\" target=\"_blank\">this processing report</a></p>";
+	}
+
 	protected String setTaskSummaryAndDescription(Task task) throws TermServerScriptException {
 		String reportName = getReportName();
 		String reportURL = getReportManager().getUrl();
