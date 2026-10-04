@@ -21,8 +21,6 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 
 	private static final String SNAPSHOT_ACTIVE = "Snapshot Active";
 
-	private static final String DESCRIPTIONS = "Descriptions";
-
 	private static final String DELTA_NEW = "Delta New";
 	private static final String DELTA_CHANGED = "Delta Changed";
 	private static final String DELTA_NEW_CHANGED = "Delta New/Changed";
@@ -31,6 +29,31 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	private static final String TO_INTERNATIONAL_CONCEPT = " to International Concept";
 
 	private static final String CONCEPT_FSN_SEMTAG = "Concept, FSN, SemTag";
+
+	private enum Tab {
+		SUMMARY_COUNTS("Summary Counts", "Category, Item, Count", false),
+		CONCEPT_DETAILS("Concept Details", "Concept, FSN, SemTag, Alternate Identifier, Descriptions, Inferred Model, Promoted", true),
+		CONCEPTS_WITHOUT_ALT_IDS("Concepts without Alternate Identifiers", CONCEPT_FSN_SEMTAG + ", Promoted", true),
+		CONCEPTS_WITH_MULTIPLE_AXIOMS("Concepts with multiple Axioms", CONCEPT_FSN_SEMTAG + ", Axioms, Promoted", true),
+		DESCRIPTIONS("Descriptions", "SCTID, active, Term", true),
+		TEXT_DEFINITIONS("Text Definitions", "Concept, FSN, SemTag, Definition, Promoted", true),
+		INACTIVE_COMPONENTS("Inactive Components", "Component, EffectiveTime, Active, Module, Concept, Promoted", true),
+		BORN_INACTIVE_COMPONENTS("Born Inactive Components", "ID, Component Type, Component", false),
+		PROMOTED_CONCEPTS("Promoted Concepts", CONCEPT_FSN_SEMTAG, false),
+		CORE_COMPONENTS_IN_DELTA("Core Components in Delta", "Component Type, Module, Component, Concept", false);
+
+		private final String tabName;
+		private final String columnHeadings;
+		private final boolean detailOnly;
+
+		Tab(String tabName, String columnHeadings, boolean detailOnly) {
+			this.tabName = tabName;
+			this.columnHeadings = columnHeadings;
+			this.detailOnly = detailOnly;
+		}
+	}
+
+	private final Map<Tab, Integer> tabIndexes = new EnumMap<>(Tab.class);
 
 	private List<Concept> inScopeConcepts;
 
@@ -59,37 +82,28 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 
 	@Override
 	public void postInit() throws TermServerScriptException {
-		String[] tabNames = new String[] {
-				"Summary Counts",
-				"Concept Details",
-				"Concepts without Alternate Identifiers",
-				"Concepts with multiple Axioms",
-				DESCRIPTIONS,
-				"Text Definitions",
-				"Inactive Components",
-				"Born Inactive Components",
-				"Promoted Concepts",
-				"Core Components in Delta"
-		};
-		String[] columnHeadings = new String[] {
-				"Category, Item, Count",
-				"Concept, FSN, SemTag, Alternate Identifier, Descriptions, Inferred Model, Promoted",
-				CONCEPT_FSN_SEMTAG + ", Promoted",
-				CONCEPT_FSN_SEMTAG + ", Axioms, Promoted",
-				"SCTID, active, Term",
-				"Concept, FSN, SemTag, Definition, Promoted",
-				"Component, EffectiveTime, Active, Module, Concept, Promoted",
-				"ID, Component Type, Component",
-				CONCEPT_FSN_SEMTAG,
-				"Component Type, Module, Component, Concept"
-		};
-		postInit(tabNames, columnHeadings);
+		List<Tab> tabsInUse = Arrays.stream(Tab.values())
+				.filter(t -> includeDetails || !t.detailOnly)
+				.toList();
+		for (int i = 0; i < tabsInUse.size(); i++) {
+			tabIndexes.put(tabsInUse.get(i), i);
+		}
+		postInit(tabsInUse.stream().map(t -> t.tabName).toArray(String[]::new),
+				tabsInUse.stream().map(t -> t.columnHeadings).toArray(String[]::new));
 		//Namespace must be known before we can tell which concepts originated in the product
 		determineNamespace();
 		inScopeConcepts = gl.getAllConcepts().stream()
 				.filter(this::originatedInProduct)
 				.sorted(SnomedUtils::compareSemTagFSN)
 				.toList();
+	}
+
+	private int getTab(Tab tab) throws TermServerScriptException {
+		Integer tabIdx = tabIndexes.get(tab);
+		if (tabIdx == null) {
+			throw new TermServerScriptException("Tab '" + tab.tabName + "' is only available when details are included");
+		}
+		return tabIdx;
 	}
 
 	/**
@@ -135,15 +149,15 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	public void runJob() throws TermServerScriptException {
 		getSummaryCounts();
 		checkForBornInactiveComponents();
-		checkForCoreComponentsInDelta(DENARY_REPORT);
-		reportSummaryCounts(PRIMARY_REPORT);
+		checkForCoreComponentsInDelta(getTab(Tab.CORE_COMPONENTS_IN_DELTA));
+		checkForConceptsWithoutAltIds();
+		reportSummaryCounts(getTab(Tab.SUMMARY_COUNTS));
 
 		if (includeDetails) {
-			getConceptDetails(SECONDARY_REPORT);
-			getConceptsWithoutAltIds(TERTIARY_REPORT);
-			getConceptsWithMultipleAxioms(QUATERNARY_REPORT);
-			getTextDefinitions(SENARY_REPORT);
-			getInactiveComponents(SEPTENARY_REPORT);
+			getConceptDetails(getTab(Tab.CONCEPT_DETAILS));
+			getConceptsWithMultipleAxioms(getTab(Tab.CONCEPTS_WITH_MULTIPLE_AXIOMS));
+			getTextDefinitions(getTab(Tab.TEXT_DEFINITIONS));
+			getInactiveComponents(getTab(Tab.INACTIVE_COMPONENTS));
 		}
 	}
 
@@ -164,7 +178,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 				String category = c.isActiveSafely() ? "Snapshot Promoted Active" : "Snapshot Promoted Inactive";
 				incrementSummaryCount(category, c.getComponentType() + TO_INTERNATIONAL_CONCEPT);
 				if (c.getComponentType().equals(Component.ComponentType.CONCEPT)) {
-					report(NONARY_REPORT, concept);
+					report(getTab(Tab.PROMOTED_CONCEPTS), concept);
 				}
 			}
 		}
@@ -176,7 +190,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		incrementSummaryCount(category, counter);
 
 		if (includeDetails && c instanceof Description d) {
-			report(QUINARY_REPORT, d.getId(), d.getActive(), d.getTerm());
+			report(getTab(Tab.DESCRIPTIONS), d.getId(), d.getActive(), d.getTerm());
 		}
 	}
 
@@ -226,11 +240,14 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		}
 	}
 
-	private void getConceptsWithoutAltIds(int tabIdx) throws TermServerScriptException {
+	private void checkForConceptsWithoutAltIds() throws TermServerScriptException {
+		//Counted whether or not details are included, so must run before the summary counts are reported
 		for (Concept c : inScopeConcepts) {
 			if (c.getAlternateIdentifiers().isEmpty()) {
 				incrementSummaryCount(SNAPSHOT_ACTIVE, "Concepts without AltIds");
-				report(tabIdx, c, promoted(c));
+				if (includeDetails) {
+					report(getTab(Tab.CONCEPTS_WITHOUT_ALT_IDS), c, promoted(c));
+				}
 			}
 		}
 	}
@@ -297,7 +314,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 			for (Component c : SnomedUtils.getAllComponents(concept)) {
 				if (inScope(c) && !c.isActiveSafely() && !c.isReleasedSafely()) {
 					incrementSummaryCount(SNAPSHOT_ACTIVE, "Born Inactive Components");
-					report(OCTONARY_REPORT, c.getId(), c);
+					report(getTab(Tab.BORN_INACTIVE_COMPONENTS), c.getId(), c);
 				}
 			}
 		}
