@@ -2,6 +2,7 @@ package org.ihtsdo.termserver.scripting.delta;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Component;
+import org.ihtsdo.otf.rest.client.terminologyserver.pojo.Task;
 import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.template.NormaliseConcepts;
@@ -10,6 +11,7 @@ import org.ihtsdo.termserver.scripting.util.TermGenerationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
@@ -20,11 +22,17 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LateralizeConceptsDriven.class);
  	private ConceptLateralizer conceptLateralizer;
 	private NormaliseConcepts conceptNormalizer = null;
-	private Map<Concept, LateralizeInstruction> lateralizedInstructionMap = new HashMap<>();
+	private Map<Concept, LateralizeInstruction> lateralizedInstructionMap = new LinkedHashMap<>();
+	private final Map<Concept, LateralizeInstruction> allInstructionsMap = new HashMap<>();
+	//The source concept currently being lateralized, so that reports about its clones can carry its comment
+	private Concept currentSourceConcept = null;
 
-	//Input file columns: 0 = conceptId, 2 = reason for skipping (if populated), 3 = override PT
+	//Input file columns: 0 = conceptId, 2 = reason for skipping (if populated), 3 = override PT, 4 = author comment
 	private static final int SKIP_REASON_COL = 2;
 	private static final int OVERRIDE_PT_COL = 3;
+	private static final int COMMENT_COL = 4;
+
+	private static final int SKIPPED_REPORT = TERTIARY_REPORT;
 
 	private static final int SOURCE_CONCEPTS_PER_ARCHIVE = 20; //This will give us 60 concepts in the output
 	
@@ -36,13 +44,15 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 	public void postInit(String googleFolder) throws TermServerScriptException {
 		additionalReportColumns += ", , ";
 		String[] columnHeadings = new String[]{
-				"SCTID, FSN, SemTag, Severity, Action, Details," + additionalReportColumns,
-				"SCTID, FSN, SemTag, Example Usage ,"
+				"SCTID, FSN, SemTag, EWO Comment, Severity, Action, Details," + additionalReportColumns,
+				"SCTID, FSN, SemTag, EWO Comment, Example Usage ,",
+				"SCTID, FSN, SemTag, EWO Comment, Skip Reason"
 		};
 
 		String[] tabNames = new String[]{
 				"Processing Report",
-				"Unlateralized Concepts"
+				"Unlateralized BodyStructs",
+				"Skipped"
 		};
 		super.postInit(googleFolder, tabNames, columnHeadings);
 		conceptLateralizer = ConceptLateralizer.get(this, true, this);
@@ -51,7 +61,17 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 		conceptLateralizer.addPluralityException("region");
 		conceptLateralizer.addPluralityException("thinning");
 
-		conceptNormalizer = new NormaliseConcepts(this);
+		//NormaliseConcepts reports in its own task-based format, so route its lines through our columns instead
+		conceptNormalizer = new NormaliseConcepts(this) {
+			@Override
+			public void report(Task task, Component component, Severity severity, ReportActionType actionType, Object... details) throws TermServerScriptException {
+				if (component instanceof Concept concept) {
+					LateralizeConceptsDriven.this.report(concept, severity, actionType, details);
+				} else {
+					super.report(task, component, severity, actionType, details);
+				}
+			}
+		};
 	}
 
 	@Override
@@ -61,16 +81,14 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 		List<Component> conceptsToLateralize = new ArrayList<>(lateralizedInstructionMap.keySet());
 		int conceptsProcessedInThisBatch = 0;
 		for (LateralizeInstruction li : lateralizedInstructionMap.values()) {
-			if (li.concept.isActiveSafely()) {
-				conceptNormalizer.normaliseConcept(null, li.concept, null);
-				report(li.concept, Severity.NONE, ReportActionType.INFO, li.concept, li.concept.toExpression(CharacteristicType.STATED_RELATIONSHIP));
-				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, LEFT, conceptsToLateralize);
-				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, RIGHT, conceptsToLateralize);
-				conceptLateralizer.createLateralizedConceptIfRequired(li.concept, BILATERAL, conceptsToLateralize);
-				conceptsProcessedInThisBatch++;
-			} else {
-				report(li.concept, Severity.LOW, ReportActionType.INFO, "Concept is inactive, skipping");
-			}
+			currentSourceConcept = li.concept;
+			conceptNormalizer.normaliseConcept(null, li.concept, null);
+			report(li.concept, Severity.NONE, ReportActionType.INFO, li.concept, li.concept.toExpression(CharacteristicType.STATED_RELATIONSHIP));
+			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, LEFT, conceptsToLateralize);
+			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, RIGHT, conceptsToLateralize);
+			conceptLateralizer.createLateralizedConceptIfRequired(li.concept, BILATERAL, conceptsToLateralize);
+			conceptsProcessedInThisBatch++;
+			currentSourceConcept = null;
 
 			if (conceptsProcessedInThisBatch >= SOURCE_CONCEPTS_PER_ARCHIVE) {
 				//ConceptLateralizer records each concept it writes via recordConceptWritten(), so
@@ -97,32 +115,73 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 	}
 
 	private void populateLateralizedInstructionMap() throws TermServerScriptException {
+		List<String> lines;
 		try {
-			for (String line : Files.readAllLines(getInputFile().toPath(), Charset.defaultCharset())) {
-				parseLateralizedInstructionMapLine(line);
-			}
-			LOGGER.info("Populated instruction map with {} concepts", lateralizedInstructionMap.size());
-		} catch (Exception e) {
+			lines = Files.readAllLines(getInputFile().toPath(), Charset.defaultCharset());
+		} catch (IOException e) {
 			throw new TermServerScriptException(e);
 		}
+		for (String line : lines) {
+			parseLateralizedInstructionMapLine(line);
+		}
+		LOGGER.info("Populated instruction map with {} concepts to lateralize, {} skipped",
+				lateralizedInstructionMap.size(), allInstructionsMap.size() - lateralizedInstructionMap.size());
 	}
 
-	private void parseLateralizedInstructionMapLine(String line) {
+	private void parseLateralizedInstructionMapLine(String line) throws TermServerScriptException {
+		if (line.isBlank()) {
+			return;
+		}
+		LateralizeInstruction li;
 		try {
-			String[] items = line.split(TAB);
-			//Is this one of the concepts we've been told is safe to lateralize?
-			if (whitelist.contains(items[0].trim()) && !hasSkipReason(items)) {
-				LateralizeInstruction li = parseLateralityInstruction(gl, items);
-				lateralizedInstructionMap.put(li.concept, li);
-			}
+			li = parseLateralityInstruction(gl, line.split(TAB));
 		} catch (Exception e) {
 			LOGGER.warn("Failed to parse line: {}", line);
+			return;
+		}
+		allInstructionsMap.put(li.concept, li);
+		String skipReason = determineSkipReason(li);
+		if (skipReason == null) {
+			lateralizedInstructionMap.put(li.concept, li);
+		} else {
+			report(SKIPPED_REPORT, li.concept, skipReason);
 		}
 	}
 
-	private boolean hasSkipReason(String[] items) {
-		//No need to report skipped rows - the input sheet itself records why they were not processed
-		return items.length > SKIP_REASON_COL && !items[SKIP_REASON_COL].isBlank();
+	private String determineSkipReason(LateralizeInstruction li) {
+		//Any reason given in the input file is a reason to skip
+		if (li.skipReason != null) {
+			return li.skipReason;
+		}
+		//Is this one of the concepts we've been told is safe to lateralize?
+		if (!whitelist.contains(li.concept.getId())) {
+			return "Not in whitelist";
+		}
+		if (!li.concept.isActiveSafely()) {
+			return "Concept is inactive";
+		}
+		return null;
+	}
+
+	@Override
+	public boolean report(int reportIdx, Concept c, Object... details) throws TermServerScriptException {
+		//Every tab has the author's comment (if any) for the concept straight after the SemTag
+		Object[] detailsWithComment = new Object[details.length + 1];
+		detailsWithComment[0] = getComment(c);
+		System.arraycopy(details, 0, detailsWithComment, 1, details.length);
+		return super.report(reportIdx, c, detailsWithComment);
+	}
+
+	private String getComment(Concept c) {
+		if (c == null) {
+			return "";
+		}
+		//Reports about lateralized clones or body structures carry the comment of the source concept being processed
+		LateralizeInstruction li = allInstructionsMap.get(c);
+		if (li == null && currentSourceConcept != null) {
+			li = allInstructionsMap.get(currentSourceConcept);
+		}
+		return li == null || li.comment == null ? "" : li.comment;
 	}
 
 	@Override
@@ -159,25 +218,34 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 	class LateralizeInstruction {
 		Concept concept;
 		String pt;
+		String skipReason;
+		String comment;
 
-		public LateralizeInstruction(Concept concept, String pt) {
+		public LateralizeInstruction(Concept concept, String pt, String skipReason, String comment) {
 			this.concept = concept;
 			this.pt = pt;
+			this.skipReason = skipReason;
+			this.comment = comment;
 		}
 	}
 
 	public LateralizeInstruction parseLateralityInstruction(GraphLoader gl, String[] items) throws TermServerScriptException {
-		String conceptId = items[0];
-		String pt = null;
-		if (items.length > OVERRIDE_PT_COL && !items[OVERRIDE_PT_COL].isBlank()) {
-			pt = items[OVERRIDE_PT_COL].trim();
-		}
-
+		String conceptId = items[0].trim();
 		Concept concept = gl.getConcept(conceptId);
 		if (concept == null) {
 			throw new TermServerScriptException("Concept not found: " + conceptId);
 		}
-		return new LateralizeInstruction(concept, pt);
+		return new LateralizeInstruction(concept,
+				getOptionalItem(items, OVERRIDE_PT_COL),
+				getOptionalItem(items, SKIP_REASON_COL),
+				getOptionalItem(items, COMMENT_COL));
+	}
+
+	private String getOptionalItem(String[] items, int idx) {
+		if (items.length > idx && !items[idx].isBlank()) {
+			return items[idx].trim();
+		}
+		return null;
 	}
 
 }

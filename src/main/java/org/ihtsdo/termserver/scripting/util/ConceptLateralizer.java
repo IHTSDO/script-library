@@ -52,8 +52,8 @@ public class ConceptLateralizer implements ScriptConstants {
 	private static final Map<String, String> pluralisationMappings = Map.of(
 			"cavity", "cavities");
 
-	//Whole-word simplifications applied to the PT only (not the FSN), eg 'of left eye proper' -> 'of left eye'
-	private static final Map<String, String> PT_SIMPLIFICATIONS = Map.of(
+	//Whole-word simplifications applied to the PT and 'both' synonym (not the FSN), eg 'of left eye proper' -> 'of left eye'
+	private static final Map<String, String> SIMPLIFICATIONS = Map.of(
 			"eye proper", "eye",
 			"eyes proper", "eyes");
 
@@ -64,6 +64,11 @@ public class ConceptLateralizer implements ScriptConstants {
 
 	//Structures already pluralised by base normalisation, so the 'both' term needs no further pluralisation
 	private static final String ALREADY_PLURALISED_REGEX = ".*\\b(eyes|eyelids|pupils)\\b.*";
+
+	//Where a pluralised eyelid or pupil qualifies a following noun, it stays singular, eg 'bilateral eyelids deformity' -> 'bilateral eyelid deformity'
+	//but not where the following word refers to the structures themselves, eg 'Bilateral eyelids normal', 'Constricted pupils of bilateral eyes'
+	//Lowercase only, so a structure starting the term is left plural, eg 'Pupils of bilateral eyes large'
+	private static final String PLURAL_MODIFIER_REGEX = "\\b(eyelid|pupil)s (?!(?:of|normal|abnormal)\\b)(?=[a-z])";
 
 	private ConceptLateralizer() {}
 
@@ -313,6 +318,10 @@ public class ConceptLateralizer implements ScriptConstants {
 				.forEach(clone::removeDescription);
 		doBaseNormalisation(clone.getFSNDescription(), laterality);
 		addPTandSynonyms(clone, laterality);
+		if (laterality.equals(BILATERAL)) {
+			clone.getDescriptions(RF2Constants.ActiveState.ACTIVE)
+					.forEach(d -> d.setTerm(d.getTerm().replaceAll(PLURAL_MODIFIER_REGEX, "$1 ")));
+		}
 		removeMultipleSpaces(clone);
 		allocateIdentifiers(clone);
 	}
@@ -331,9 +340,9 @@ public class ConceptLateralizer implements ScriptConstants {
 		//'Tilted intraocular right lens' -> 'Tilted intraocular lens of right eye'
 		term = normaliseEyeStructureLaterality(term);
 
-		//Bilateral 'eye' -> 'eyes', 'eyelid' -> 'eyelids', 'pupil' -> 'pupils' (but not 'pupillary')
+		//Bilateral 'eye' -> 'eyes', 'eyelid' -> 'eyelids', 'pupil' -> 'pupils' (but not 'pupillary'), including at the start of the term
 		if (laterality.equals(BILATERAL)) {
-			term = term.replaceAll("\\b(eye|eyelid|pupil)\\b", "$1s");
+			term = term.replaceAll("\\b([Ee]ye|[Ee]yelid|[Pp]upil)\\b", "$1s");
 			for (Map.Entry<String, String> adjustment : PLURAL_ADJUSTMENTS.entrySet()) {
 				term = term.replaceAll("\\b" + adjustment.getKey() + "\\b", adjustment.getValue());
 			}
@@ -382,8 +391,9 @@ public class ConceptLateralizer implements ScriptConstants {
 		if (laterality.equals(BILATERAL)) {
 			termBase = termBase.replace("right and left", BILATERAL_STR);
 
-			//PT Starts with the word Bilateral
-			pt = StringUtils.decapitalizeFirstLetter(termBase).replace(BILATERAL_STR_SP, "");
+			//PT Starts with the word Bilateral.  Keep the original first word's case if the term is case sensitive, eg 'Bilateral Vogt's limbal girdle'
+			boolean caseSensitive = clone.getFSNDescription().getCaseSignificance() == CaseSignificance.ENTIRE_TERM_CASE_SENSITIVE;
+			pt = (caseSensitive ? termBase : StringUtils.decapitalizeFirstLetter(termBase)).replace(BILATERAL_STR_SP, "");
 			pt = StringUtils.capitalizeFirstLetter(BILATERAL_STR_SP) + pt;
 
 			//Bilateral concepts will have an acceptable "bilateral" synonym, unless that's the same as the PT
@@ -393,17 +403,33 @@ public class ConceptLateralizer implements ScriptConstants {
 			}
 
 			//Bilateral concepts will have an acceptable "both" synonym
-			String bothTerm = pluralize(termBase.replace(BILATERAL_STR, "both")
-					.replace(StringUtils.capitalizeFirstLetter(BILATERAL_STR), "Both"));
+			String bothTerm = simplify(pluralize(termBase.replace(BILATERAL_STR, "both")
+					.replace(StringUtils.capitalizeFirstLetter(BILATERAL_STR), "Both")));
 			Description bothDesc = Description.withDefaults(bothTerm, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
 			clone.addDescription(bothDesc);
 		}
 
-		for (Map.Entry<String, String> simplification : PT_SIMPLIFICATIONS.entrySet()) {
-			pt = pt.replaceAll("\\b" + simplification.getKey() + "\\b", simplification.getValue());
-		}
-		Description ptDesc = Description.withDefaults(pt, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.PREFERRED);
+		Description ptDesc = Description.withDefaults(simplify(pt), RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.PREFERRED);
 		clone.addDescription(ptDesc);
+		addFsnBaseSynonymIfMissing(clone);
+	}
+
+	private void addFsnBaseSynonymIfMissing(Concept clone) throws TermServerScriptException {
+		//There should always be a synonym matching the FSN minus its semantic tag, eg where the PT has been simplified
+		String fsnBase = SnomedUtilsBase.deconstructFSN(clone.getFSNDescription().getTerm())[0];
+		boolean fsnBaseSynonymPresent = clone.getDescriptions(RF2Constants.ActiveState.ACTIVE).stream()
+				.anyMatch(d -> !d.getType().equals(RF2Constants.DescriptionType.FSN) && d.getTerm().equals(fsnBase));
+		if (!fsnBaseSynonymPresent) {
+			clone.addDescription(Description.withDefaults(fsnBase, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE));
+		}
+	}
+
+	private String simplify(String term) {
+		String simplified = term;
+		for (Map.Entry<String, String> simplification : SIMPLIFICATIONS.entrySet()) {
+			simplified = simplified.replaceAll("\\b" + simplification.getKey() + "\\b", simplification.getValue());
+		}
+		return simplified;
 	}
 
 	private void allocateIdentifiers(Concept clone) {
