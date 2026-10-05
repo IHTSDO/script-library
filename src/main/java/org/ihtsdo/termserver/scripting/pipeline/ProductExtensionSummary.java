@@ -37,7 +37,7 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 		CONCEPTS_WITH_MULTIPLE_AXIOMS("Concepts with multiple Axioms", CONCEPT_FSN_SEMTAG + ", Axioms, Promoted", true),
 		DESCRIPTIONS("Descriptions", "SCTID, active, Term", true),
 		TEXT_DEFINITIONS("Text Definitions", "Concept, FSN, SemTag, Definition, Promoted", true),
-		INACTIVE_COMPONENTS("Inactive Components", "Component, EffectiveTime, Active, Module, Concept, Promoted", true),
+		INACTIVE_COMPONENTS("Inactive Components", "Component, Active, Module, Concept, Promoted", true),
 		BORN_INACTIVE_COMPONENTS("Born Inactive Components", "ID, Component Type, Component", false),
 		PROMOTED_CONCEPTS("Promoted Concepts", CONCEPT_FSN_SEMTAG, false),
 		CORE_COMPONENTS_IN_DELTA("Core Components in Delta", "Component Type, Module, Component, Concept", false);
@@ -283,9 +283,11 @@ public class ProductExtensionSummary extends TermServerReport implements ReportC
 	private void getInactiveComponents(int tabIdx) throws TermServerScriptException {
 		for (Concept concept : gl.getAllConcepts()) {
 			for (Component c : SnomedUtils.getAllComponents(concept)) {
-				if (!c.isActiveSafely() && originatedInProduct(c)) {
+				//Only components inactivated in this release. Born inactive components have their own tab
+				if (!c.isActiveSafely() && isInDelta(c) && c.isReleasedSafely() && originatedInProduct(c)) {
 					Concept parent = gl.getComponentOwner(c.getId());
-					report(tabIdx, c, c.getEffectiveTime(), c.isActive(), c.getModuleId(), parent, promoted(parent));
+					//Pass the component as a String, as report(int, Component...) only writes a first column for Concepts and Relationships
+					report(tabIdx, c.toString(), c.isActive(), c.getModuleId(), parent, promoted(parent));
 				}
 			}
 		}
