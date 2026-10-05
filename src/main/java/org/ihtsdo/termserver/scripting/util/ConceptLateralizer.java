@@ -41,6 +41,7 @@ public class ConceptLateralizer implements ScriptConstants {
 	private TermGenerationStrategy termStrategy;
 	private DeltaGenerator parent;
 	private boolean copyInferredRelationshipsToStatedWhereMissing = false;
+	private DialectChecker dialectChecker = null;
 
 	private static final Set<String> PLURALITY_EXCEPTIONS = new HashSet<>();
 
@@ -323,7 +324,34 @@ public class ConceptLateralizer implements ScriptConstants {
 					.forEach(d -> d.setTerm(d.getTerm().replaceAll(PLURAL_MODIFIER_REGEX, "$1 ")));
 		}
 		removeMultipleSpaces(clone);
+		splitUsGbDescriptionsIfRequired(clone);
 		allocateIdentifiers(clone);
+	}
+
+	private void splitUsGbDescriptionsIfRequired(Concept clone) throws TermServerScriptException {
+		//If the FSN features a US specific word, every synonym featuring it becomes US only,
+		//with a GB counterpart that has the same acceptability in GB.
+		if (dialectChecker == null) {
+			dialectChecker = DialectChecker.create();
+		}
+		if (!dialectChecker.containsUSSpecificTerm(clone.getFSNDescription().getTerm())) {
+			return;
+		}
+		List<Description> synonyms = clone.getDescriptions(RF2Constants.ActiveState.ACTIVE).stream()
+				.filter(d -> d.getType().equals(RF2Constants.DescriptionType.SYNONYM))
+				.toList();
+		for (Description usDesc : synonyms) {
+			String gbTerm = dialectChecker.makeGBSpecific(usDesc.getTerm());
+			//A synonym without the US specific word can stay in both dialects, rather than creating a duplicate term
+			if (!gbTerm.equals(usDesc.getTerm())) {
+				RF2Constants.Acceptability acceptability = usDesc.getAcceptability(US_ENG_LANG_REFSET);
+				usDesc.removeAcceptability(GB_ENG_LANG_REFSET, false);
+				Description gbDesc = Description.withDefaults(gbTerm, RF2Constants.DescriptionType.SYNONYM, acceptability);
+				gbDesc.setCaseSignificance(usDesc.getCaseSignificance());
+				gbDesc.removeAcceptability(US_ENG_LANG_REFSET, false);
+				clone.addDescription(gbDesc);
+			}
+		}
 	}
 
 	private void removeMultipleSpaces(Concept clone) {
