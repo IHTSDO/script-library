@@ -26,6 +26,7 @@ public class ConceptLateralizer implements ScriptConstants {
 	private static final String STRUCTURE_OF_SP = "structure of ";
 	private static final String USING = "using";
 	private static final String USING_SP = " using ";
+	private static final String OF_SP = " of ";
 	private static final String WITH_SP = " with ";
 	private static final String WITH_LATERALITY_SP = " with laterality ";
 
@@ -141,8 +142,15 @@ public class ConceptLateralizer implements ScriptConstants {
 		clone.setDirty();
 		SnomedUtils.getAllComponents(clone).forEach(Component::setDirty);
 
-		parent.report(clone, RF2Constants.Severity.LOW, RF2Constants.ReportActionType.CONCEPT_ADDED, SnomedUtils.getDescriptions(clone), clone.toExpression(RF2Constants.CharacteristicType.STATED_RELATIONSHIP));
+		parent.report(clone, RF2Constants.Severity.LOW, RF2Constants.ReportActionType.CONCEPT_ADDED, getDescriptionsForReview(clone), clone.toExpression(RF2Constants.CharacteristicType.STATED_RELATIONSHIP));
 		return clone;
+	}
+
+	private String getDescriptionsForReview(Concept clone) {
+		//Show acceptability and case significance alongside each term, eg "P [cI] Bilateral Vogt's limbal girdle"
+		return SnomedUtils.prioritise(clone.getDescriptions(RF2Constants.ActiveState.ACTIVE)).stream()
+				.map(Description::toStringWithoutIds)
+				.collect(Collectors.joining(",\n"));
 	}
 
 	private void setParentsAndDefinitionStatus(Concept original, Concept clone) throws TermServerScriptException {
@@ -264,10 +272,10 @@ public class ConceptLateralizer implements ScriptConstants {
 		//If the site is already named in the term, eg 'Fibrin in anterior chamber', then just 'of left eye' is sufficient
 		lateralizedBodyStructurePT = removeSiteAlreadyInTerm(fsnParts[0], lateralizedBodyStructurePT, lateralityStr);
 
-		String laterlizedFsn = fsnParts[0] + " of " + lateralizedBodyStructurePT + " " + fsnParts[1];
+		String laterlizedFsn = fsnParts[0] + OF_SP + lateralizedBodyStructurePT + " " + fsnParts[1];
 		if (fsnParts[0].contains(USING)) {
 			int cutPoint = fsnParts[0].indexOf(USING_SP);
-			laterlizedFsn = fsnParts[0].substring(0, cutPoint) + " of " + lateralizedBodyStructurePT + fsnParts[0].substring(cutPoint) + " " + fsnParts[1];
+			laterlizedFsn = fsnParts[0].substring(0, cutPoint) + OF_SP + lateralizedBodyStructurePT + fsnParts[0].substring(cutPoint) + " " + fsnParts[1];
 		}
 		clone.getFSNDescription().setTerm(laterlizedFsn);
 		return true;
@@ -276,11 +284,11 @@ public class ConceptLateralizer implements ScriptConstants {
 	private String removeSiteAlreadyInTerm(String term, String lateralizedBodyStructurePT, String lateralityStr) {
 		//Looking for body structures of the form 'X of <laterality> Y' where X is already in the term
 		String site = lateralizedBodyStructurePT.replaceFirst("(?i)^structure of ", "");
-		Matcher lateralityMatcher = Pattern.compile(" of " + lateralityStr + "\\b").matcher(site);
+		Matcher lateralityMatcher = Pattern.compile(OF_SP + lateralityStr + "\\b").matcher(site);
 		if (lateralityMatcher.find() && lateralityMatcher.start() > 0) {
 			String unlateralizedSite = site.substring(0, lateralityMatcher.start());
 			if (initialCharCaseInsensitivePattern(unlateralizedSite).matcher(term).find()) {
-				return site.substring(lateralityMatcher.start() + " of ".length());
+				return site.substring(lateralityMatcher.start() + OF_SP.length());
 			}
 		}
 		return lateralizedBodyStructurePT;
@@ -316,8 +324,8 @@ public class ConceptLateralizer implements ScriptConstants {
 				boolean atStartOfTerm = matcher.start() == 0;
 				String lateralizedBodyStructureStr;
 				//If it's an X of Y, then we'll do X of <left|right> Y
-				if (bodyStructureStr.contains(" of ")) {
-					lateralizedBodyStructureStr = bodyStructureStr.replace(" of ", " of " + lateralityStr + " ");
+				if (bodyStructureStr.contains(OF_SP)) {
+					lateralizedBodyStructureStr = bodyStructureStr.replace(OF_SP, OF_SP + lateralityStr + " ");
 				} else {
 					lateralizedBodyStructureStr = lateralityStr + " " + bodyStructureStr;
 				}
@@ -574,8 +582,8 @@ public class ConceptLateralizer implements ScriptConstants {
 		if (pt.contains(STRUCTURE)) {
 			String ptWithoutStructure = pt.replace(STRUCTURE, "").replace("  ", " ").trim();
 			bodyStructureStrs.add(ptWithoutStructure);
-			if (ptWithoutStructure.contains(" of ")) {
-				String ptWithoutStructureOf = ptWithoutStructure.replace(" of ", " ").replace("  ", " ").trim();
+			if (ptWithoutStructure.contains(OF_SP)) {
+				String ptWithoutStructureOf = ptWithoutStructure.replace(OF_SP, " ").replace("  ", " ").trim();
 				bodyStructureStrs.add(ptWithoutStructureOf);
 			}
 		}
