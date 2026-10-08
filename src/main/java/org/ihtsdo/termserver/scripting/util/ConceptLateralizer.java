@@ -71,6 +71,9 @@ public class ConceptLateralizer implements ScriptConstants {
 	//Lowercase only, so a structure starting the term is left plural, eg 'Pupils of bilateral eyes large'
 	private static final String PLURAL_MODIFIER_REGEX = "\\b(eyelid|pupil)s (?!(?:of|normal|abnormal)\\b)(?=[a-z])";
 
+	//A term starting with one of these words no longer starts with the original (possibly case sensitive) first word
+	private static final Pattern LATERALITY_PREFIX = Pattern.compile("^(?i:left|right|bilateral|both)\\b");
+
 	private ConceptLateralizer() {}
 
 	public static ConceptLateralizer get(DeltaGenerator parent, boolean copyInferredRelationshipsToStatedWhereMissing, TermGenerationStrategy termStrategy) {
@@ -194,7 +197,7 @@ public class ConceptLateralizer implements ScriptConstants {
 			String proposedPT = termStrategy.suggestTerm(clone, lateralityStr);
 			applyTermAsPtAndFsn(clone, proposedPT);
 		}
-		normalizeDescriptions(clone, laterality);
+		normalizeDescriptions(clone, laterality, original.getFSNDescription().getCaseSignificance());
 	}
 
 	private String getLateralityStr(Concept laterality) {
@@ -312,7 +315,7 @@ public class ConceptLateralizer implements ScriptConstants {
 		return successfulLaterlization;
 	}
 
-	private void normalizeDescriptions(Concept clone, Concept laterality) throws TermServerScriptException {
+	private void normalizeDescriptions(Concept clone, Concept laterality, CaseSignificance originalCaseSignificance) throws TermServerScriptException {
 		//remove all non-FSN descriptions and add them back in based on the FSN
 		clone.getDescriptions(RF2Constants.ActiveState.ACTIVE).stream()
 				.filter(d -> !d.getType().equals(RF2Constants.DescriptionType.FSN))
@@ -324,6 +327,7 @@ public class ConceptLateralizer implements ScriptConstants {
 					.forEach(d -> d.setTerm(d.getTerm().replaceAll(PLURAL_MODIFIER_REGEX, "$1 ")));
 		}
 		removeMultipleSpaces(clone);
+		applyOriginalCaseSignificance(clone, originalCaseSignificance);
 		splitUsGbDescriptionsIfRequired(clone);
 		allocateIdentifiers(clone);
 	}
@@ -351,6 +355,18 @@ public class ConceptLateralizer implements ScriptConstants {
 				gbDesc.removeAcceptability(US_ENG_LANG_REFSET, false);
 				clone.addDescription(gbDesc);
 			}
+		}
+	}
+
+	private void applyOriginalCaseSignificance(Concept clone, CaseSignificance originalCaseSignificance) {
+		//New terms keep the original's case significance, except that an entirely case sensitive term which now starts
+		//with a laterality, eg 'Bilateral Vogt's limbal girdle', is only case sensitive after its first character
+		for (Description d : clone.getDescriptions(RF2Constants.ActiveState.ACTIVE)) {
+			CaseSignificance caseSignificance = originalCaseSignificance;
+			if (caseSignificance == CaseSignificance.ENTIRE_TERM_CASE_SENSITIVE && LATERALITY_PREFIX.matcher(d.getTerm()).find()) {
+				caseSignificance = CaseSignificance.INITIAL_CHARACTER_CASE_INSENSITIVE;
+			}
+			d.setCaseSignificance(caseSignificance);
 		}
 	}
 
