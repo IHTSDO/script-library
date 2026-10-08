@@ -42,7 +42,7 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 
 	@Override
 	public void postInit(String googleFolder) throws TermServerScriptException {
-		additionalReportColumns += ", , ";
+		additionalReportColumns = "Stated Expression, AdditionalDetail, , , ";
 		String[] columnHeadings = new String[]{
 				"SCTID, FSN, SemTag, EWO Comment, Severity, Action, Details," + additionalReportColumns,
 				"SCTID, FSN, SemTag, EWO Comment, Example Usage ,",

@@ -135,6 +135,7 @@ public class ConceptLateralizer implements ScriptConstants {
 		for (RelationshipGroup g : originalGroups) {
 			lateralizeGroup(c, clone, g, laterality);
 		}
+		setParentsAndDefinitionStatus(c, clone);
 		lateralizeFsn(c, clone, laterality);
 		clone.setFsn(clone.getFSNDescription().getTerm());
 		clone.setDirty();
@@ -142,6 +143,24 @@ public class ConceptLateralizer implements ScriptConstants {
 
 		parent.report(clone, RF2Constants.Severity.LOW, RF2Constants.ReportActionType.CONCEPT_ADDED, SnomedUtils.getDescriptions(clone), clone.toExpression(RF2Constants.CharacteristicType.STATED_RELATIONSHIP));
 		return clone;
+	}
+
+	private void setParentsAndDefinitionStatus(Concept original, Concept clone) throws TermServerScriptException {
+		//A primitive original is the proximal primitive parent of its lateralized concepts, while a defined original
+		//passes on its own proximal primitive parents.  Either way, the lateralized concept is then sufficiently defined.
+		List<Concept> newParents = original.getDefinitionStatus() == DefinitionStatus.PRIMITIVE
+				? List.of(original)
+				: parent.getProximalPrimitiveParents(original);
+		for (Relationship r : new ArrayList<>(clone.getRelationships(RF2Constants.CharacteristicType.STATED_RELATIONSHIP, IS_A, RF2Constants.ActiveState.ACTIVE))) {
+			clone.removeRelationship(r, true);
+		}
+		for (Concept newParent : newParents) {
+			Relationship r = new Relationship(clone, IS_A, newParent, UNGROUPED);
+			r.setIntendedForAxiom(true);
+			clone.addRelationship(r);
+			clone.addParent(RF2Constants.CharacteristicType.STATED_RELATIONSHIP, newParent);
+		}
+		clone.setDefinitionStatus(DefinitionStatus.FULLY_DEFINED);
 	}
 
 	private void lateralizeGroup(Concept c, Concept clone, RelationshipGroup g, Concept laterality) throws TermServerScriptException {

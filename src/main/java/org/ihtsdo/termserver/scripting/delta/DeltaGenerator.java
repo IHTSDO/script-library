@@ -150,6 +150,10 @@ public abstract class DeltaGenerator extends TermServerScript {
 		return conIdGenerator;
 	}
 
+	public List<Concept> getProximalPrimitiveParents(Concept c) throws TermServerScriptException {
+		return determineProximalPrimitiveParents(c);
+	}
+
 	public IdGenerator getDescIdGenerator() {
 		return descIdGenerator;
 	}
