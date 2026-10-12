@@ -9,4 +9,6 @@ public interface TermGenerationStrategy {
 
 	boolean applyTermViaOverride(Concept original, Concept clone, String termModifier) throws TermServerScriptException;
 
+	boolean isBilateralPtRequired(Concept original);
+
 }

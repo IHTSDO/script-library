@@ -27,11 +27,14 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 	//The source concept currently being lateralized, so that reports about its clones can carry its comment
 	private Concept currentSourceConcept = null;
 
-	//Input file columns: 0 = conceptId, 2 = reason for skipping (if populated), 3 = override PT, 4 = author comment
+	//Input file columns: 0 = conceptId, 2 = reason for skipping (if populated), 3 = override PT, 4 = author comment,
+	//5 = 'N' if the bilateral concept needs no PT starting "Bilateral"
 	private static final int SKIP_REASON_COL = 2;
 	private static final int OVERRIDE_PT_COL = 3;
 	private static final int COMMENT_COL = 4;
+	private static final int BILATERAL_PT_REQUIRED_COL = 5;
 
+	private static final String BILATERAL_STR = "bilateral";
 	private static final int SKIPPED_REPORT = TERTIARY_REPORT;
 
 	private static final int SOURCE_CONCEPTS_PER_ARCHIVE = 20; //This will give us 60 concepts in the output
@@ -193,13 +196,19 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 			//The override is usually given as an example.  Modify for this specific laterality
 			if (lateralityStr.equals("right")) {
 				pt = replaceLeft(pt, "right");
-			} else if (lateralityStr.contains("bilateral")) {
-				pt = replaceLeft(pt, "bilateral");
+			} else if (lateralityStr.contains(BILATERAL_STR)) {
+				pt = replaceLeft(pt, BILATERAL_STR);
 			}
 			conceptLateralizer.applyTermAsPtAndFsn(clone, pt);
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isBilateralPtRequired(Concept original) {
+		LateralizeInstruction li = lateralizedInstructionMap.get(original);
+		return li == null || li.bilateralPtRequired;
 	}
 
 	private String replaceLeft(String term, String lateralityStr) {
@@ -211,7 +220,7 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 
 	@Override
 	public String suggestTerm(Concept concept, String termModifier) {
-		String suffix = termModifier.contains("bilateral")? " eyes" : " eye";
+		String suffix = termModifier.contains(BILATERAL_STR)? " eyes" : " eye";
 		return concept.getPreferredSynonym() + " of " + termModifier + suffix;
 	}
 
@@ -220,12 +229,14 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 		String pt;
 		String skipReason;
 		String comment;
+		boolean bilateralPtRequired;
 
-		public LateralizeInstruction(Concept concept, String pt, String skipReason, String comment) {
+		public LateralizeInstruction(Concept concept, String pt, String skipReason, String comment, boolean bilateralPtRequired) {
 			this.concept = concept;
 			this.pt = pt;
 			this.skipReason = skipReason;
 			this.comment = comment;
+			this.bilateralPtRequired = bilateralPtRequired;
 		}
 	}
 
@@ -238,7 +249,8 @@ public class LateralizeConceptsDriven extends DeltaGeneratorWithMultiAutoImport 
 		return new LateralizeInstruction(concept,
 				getOptionalItem(items, OVERRIDE_PT_COL),
 				getOptionalItem(items, SKIP_REASON_COL),
-				getOptionalItem(items, COMMENT_COL));
+				getOptionalItem(items, COMMENT_COL),
+				!"N".equalsIgnoreCase(getOptionalItem(items, BILATERAL_PT_REQUIRED_COL)));
 	}
 
 	private String getOptionalItem(String[] items, int idx) {

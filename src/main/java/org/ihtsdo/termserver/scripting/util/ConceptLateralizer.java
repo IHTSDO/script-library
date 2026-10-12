@@ -111,7 +111,7 @@ public class ConceptLateralizer implements ScriptConstants {
 			if (componentsToProcess.contains(existingLateralizedConcept)) {
 				parent.report(c, RF2Constants.Severity.LOW, RF2Constants.ReportActionType.INFO, "Lateralized concept already scheduled for processed " + existingLateralizedConcept);
 			} else {
-				parent.report(c, RF2Constants.Severity.MEDIUM, RF2Constants.ReportActionType.INFO, "Lateralized concept already exists for " + c + WITH_LATERALITY_SP + laterality + " as " + existingLateralizedConcept + ", adding to list to process");
+				parent.report(c, RF2Constants.Severity.MEDIUM, RF2Constants.ReportActionType.INFO, "Lateralized concept already exists for " + c + WITH_LATERALITY_SP + laterality + " as " + existingLateralizedConcept);
 			}
 		}
 		return conceptWritten;
@@ -224,7 +224,7 @@ public class ConceptLateralizer implements ScriptConstants {
 			String proposedPT = termStrategy.suggestTerm(clone, lateralityStr);
 			applyTermAsPtAndFsn(clone, proposedPT);
 		}
-		normalizeDescriptions(clone, laterality, original.getFSNDescription().getCaseSignificance());
+		normalizeDescriptions(clone, laterality, original.getFSNDescription().getCaseSignificance(), termStrategy.isBilateralPtRequired(original));
 	}
 
 	private String getLateralityStr(Concept laterality) {
@@ -342,13 +342,13 @@ public class ConceptLateralizer implements ScriptConstants {
 		return successfulLaterlization;
 	}
 
-	private void normalizeDescriptions(Concept clone, Concept laterality, CaseSignificance originalCaseSignificance) throws TermServerScriptException {
+	private void normalizeDescriptions(Concept clone, Concept laterality, CaseSignificance originalCaseSignificance, boolean bilateralPtRequired) throws TermServerScriptException {
 		//remove all non-FSN descriptions and add them back in based on the FSN
 		clone.getDescriptions(RF2Constants.ActiveState.ACTIVE).stream()
 				.filter(d -> !d.getType().equals(RF2Constants.DescriptionType.FSN))
 				.forEach(clone::removeDescription);
 		doBaseNormalisation(clone.getFSNDescription(), laterality);
-		addPTandSynonyms(clone, laterality);
+		addPTandSynonyms(clone, laterality, bilateralPtRequired);
 		if (laterality.equals(BILATERAL)) {
 			clone.getDescriptions(RF2Constants.ActiveState.ACTIVE)
 					.forEach(d -> d.setTerm(d.getTerm().replaceAll(PLURAL_MODIFIER_REGEX, "$1 ")));
@@ -456,21 +456,15 @@ public class ConceptLateralizer implements ScriptConstants {
 		return term + " " + qualifier;
 	}
 
-	private void addPTandSynonyms(Concept clone, Concept laterality) throws TermServerScriptException {
+	private void addPTandSynonyms(Concept clone, Concept laterality, boolean bilateralPtRequired) throws TermServerScriptException {
 		String termBase = SnomedUtilsBase.deconstructFSN(clone.getFSNDescription().getTerm())[0];
 		String pt = termBase;
 		if (laterality.equals(BILATERAL)) {
 			termBase = termBase.replace("right and left", BILATERAL_STR);
-
-			//PT Starts with the word Bilateral.  Keep the original first word's case if the term is case sensitive, eg 'Bilateral Vogt's limbal girdle'
-			boolean caseSensitive = clone.getFSNDescription().getCaseSignificance() == CaseSignificance.ENTIRE_TERM_CASE_SENSITIVE;
-			pt = (caseSensitive ? termBase : StringUtils.decapitalizeFirstLetter(termBase)).replace(BILATERAL_STR_SP, "");
-			pt = StringUtils.capitalizeFirstLetter(BILATERAL_STR_SP) + pt;
-
-			//Bilateral concepts will have an acceptable "bilateral" synonym, unless that's the same as the PT
-			if (!termBase.equals(pt)) {
-				Description bilateralDesc = Description.withDefaults(termBase, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
-				clone.addDescription(bilateralDesc);
+			//Where the author has said no "Bilateral" PT is needed, the FSN minus its semantic tag serves as the PT
+			pt = termBase;
+			if (bilateralPtRequired) {
+				pt = addBilateralPT(clone, termBase);
 			}
 
 			//Bilateral concepts will have an acceptable "both" synonym
@@ -483,6 +477,20 @@ public class ConceptLateralizer implements ScriptConstants {
 		Description ptDesc = Description.withDefaults(simplify(pt), RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.PREFERRED);
 		clone.addDescription(ptDesc);
 		addFsnBaseSynonymIfMissing(clone);
+	}
+
+	private String addBilateralPT(Concept clone, String termBase) throws TermServerScriptException {
+		//PT Starts with the word Bilateral.  Keep the original first word's case if the term is case sensitive, eg 'Bilateral Vogt's limbal girdle'
+		boolean caseSensitive = clone.getFSNDescription().getCaseSignificance() == CaseSignificance.ENTIRE_TERM_CASE_SENSITIVE;
+		String pt = (caseSensitive ? termBase : StringUtils.decapitalizeFirstLetter(termBase)).replace(BILATERAL_STR_SP, "");
+		pt = StringUtils.capitalizeFirstLetter(BILATERAL_STR_SP) + pt;
+
+		//Bilateral concepts will have an acceptable "bilateral" synonym, unless that's the same as the PT
+		if (!termBase.equals(pt)) {
+			Description bilateralDesc = Description.withDefaults(termBase, RF2Constants.DescriptionType.SYNONYM, RF2Constants.Acceptability.ACCEPTABLE);
+			clone.addDescription(bilateralDesc);
+		}
+		return pt;
 	}
 
 	private void addFsnBaseSynonymIfMissing(Concept clone) throws TermServerScriptException {
