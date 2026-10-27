@@ -303,7 +303,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	 * If no namespace has been specified, but we know we're working with an extension module,
 	 * then that module's SCTID tells us the namespace
 	 */
-	private void determineNamespaceFromModules() {
+	protected void determineNamespaceFromModules() {
 		if (!nameSpace.equals("0")) {
 			return;
 		}

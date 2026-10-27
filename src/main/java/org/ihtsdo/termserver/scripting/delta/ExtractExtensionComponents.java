@@ -76,6 +76,13 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 		new ExtractExtensionComponents().doComponentExtraction(args);
 	}
 
+	@Override
+	public void determineNamespaceFromModules() {
+		//Normally we'd use the namespace from whatever project/file we're working in, but ExtractExtensionComponents
+		//is most often used to perform a promotion, so let's default to "0"
+		nameSpace = "0";
+	}
+
 	protected void doComponentExtraction(String[] args) throws TermServerScriptException {
 		try {
 			ReportSheetManager.setTargetFolderId("12ZyVGxnFVXZfsKIHxr3Ft2Z95Kdb7wPl"); //Extract and Promote
