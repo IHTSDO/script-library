@@ -1,6 +1,6 @@
 Terminology Server - Script Engine
 ===============================================
-This project is a library of classes which work with a local (cached) snapshot of some specified authoring project, so that only concepts which are targeted for modification are actually requested in full from the Terminology Server.
+This project is a library of classes which work with a local (cached) snapshot of some specified authoring project or archive, so that only concepts which are targeted for modification via the API are actually requested in full from the Terminology Server.
 
 The types of jobs undertaken by these classes cover:
 * Modifications to concepts, grouped into tasks.
@@ -10,18 +10,25 @@ The types of jobs undertaken by these classes cover:
 * Generating delta archives of translations
 * Generating Snapshots
 * Taking a delta archive and playing the changes it describes via the API into tasks
-* Extract all relevant content from an extension or edition of SNOMED CT
+* Extracting specified content from an extension or edition of SNOMED CT
 
 
 Download and Build
 ================================
 
-Requirement - Java 25 (or later), Maven, Git
+Requirements: Java 25 (or later), Maven, Git, AWS
 
 ```bash	
-git clone git@git.ihtsdotools.org:ihtsdo/reporting-engine.git
-cd reporting-engine/script-engine
+git clone git@git.ihtsdotools.org:ihtsdo/script-library.git
+cd script-library
 mvn clean package
+```
+
+### AWS
+The script may attempt to recover archives and validation resources (eg list of US/GB spellings) from S3.  The default awscli (if installed via HomeBrew) may not set the default region, which is required. If this setting is needed, create a file called "config" (with no extenion) in your home directory's AWS folder (eg "~/.aws" in Unix/Mac) that contains the following (or change to match your own S3 location):
+```bash
+[default]
+region = us-east-1
 ```
 
 Running 
