@@ -45,6 +45,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	protected boolean selectViaReview = false; //If true, then we will only process concepts that have been selected in the review panel
 	private static final List<String> KNOWN_DEFECTIVE_PROJECTS = List.of("GEN");
 	private static final String SECONDARY_CHECK_PATH = "MAIN";
+	private static final String UNEXPECTED_DEPENDENCIES = "Unexpected dependencies included";
 
 	private final Set<Component> allModifiedConcepts = new HashSet<>();
 	private final List<Component> noMoveRequired = new ArrayList<>();
@@ -178,22 +179,16 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	@Override
 	protected void init (String[] args) throws TermServerScriptException {
 		super.init(args);
-		LOGGER.info("Select an environment for live secondary checking ");
+		println("Select an environment for live secondary checking.");
 		for (int i=0; i < getEnvironments().length; i++) {
 			println("  " + i + ": " + getEnvironments()[i]);
 		}
-		print ("Choice [" + envIndex + "]: ");
-		String choice = STDIN.nextLine().trim();
-		int envChoice = envIndex;
-		if (!choice.isEmpty()) {
-			envChoice = Integer.parseInt(choice);
-		}
+		int envChoice = Integer.parseInt(ui.askWithDefault("Choice", String.valueOf(envIndex)));
 		String secondaryURL = getEnvironments()[envChoice];
-		
+
 		if (!secondaryURL.equals(url)) {
-			print("Please enter your authenticated cookie for connection to " + url + " : ");
-			String secondaryCookie = STDIN.nextLine().trim();
-			secondaryConnection = createTSClient(url, secondaryCookie);
+			String secondaryCookie = ui.askWithDefault("Please enter your authenticated cookie for connection to " + secondaryURL, "");
+			secondaryConnection = createTSClient(secondaryURL, secondaryCookie);
 		} else {
 			println("Existing authentication cookie will be used for secondary connection");
 			secondaryConnection = createTSClient(url, authenticatedCookie);
@@ -204,7 +199,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	public void postInit(String googleFolder) throws TermServerScriptException {
 		knownReplacements.put(gl.getConcept("261231004|Local flap|"), gl.getConcept("256683004|Flap|"));
 		knownReplacements.put(gl.getConcept("367651003 |Malignant neoplasm of p, s, or u origin|"), gl.getConcept("1240414004 |Malignant neoplasm|"));
-		initialiseSummaryInformation("Unexpected dependencies included");
+		initialiseSummaryInformation(UNEXPECTED_DEPENDENCIES);
 
 		if (butNotLaterality) {
 			attributeTypesExcludedFromInferredToStated = List.of(gl.getConcept("272741003 |Laterality (attribute)|"));
@@ -1039,7 +1034,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 			if (switchModule(r.getType(), componentsToProcess)) {
 				//Is this an unexpected dependency?
 				if (!componentsToProcess.contains(r.getType())) {
-					incrementSummaryInformation("Unexpected dependencies included");
+					incrementSummaryInformation(UNEXPECTED_DEPENDENCIES);
 					addSummaryInformation("Unexpected type dependency: " + r.getType(), "");
 				}
 				//We've moved this concept now, list it so as not to try again
@@ -1117,7 +1112,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 				if (switchModule(target, componentsToProcess)) {
 					//Is this an unexpected dependency?
 					if (!componentsToProcess.contains(target)) {
-						incrementSummaryInformation("Unexpected dependencies included");
+						incrementSummaryInformation(UNEXPECTED_DEPENDENCIES);
 						addSummaryInformation("Unexpected target dependency: " + target, "");
 						report(r.getSource(), Severity.HIGH, ReportActionType.INFO, "Unexpected dependency required in " + charTypeStr + " Modeling", target);
 					}
