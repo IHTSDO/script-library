@@ -52,6 +52,11 @@ public class DeltaGeneratorWithAutoImport extends DeltaGenerator {
 	}
 
 	protected boolean checkProceed() {
+		//Firstly, if we were running in dry run mode, then there's nothing to import, so we won't be proceeding
+		if (isDryRun()) {
+			LOGGER.warn("Dry run mode set, auto import skipped.");
+			return false;
+		}
 		//Let's output the processing report so the user can review it before making decisions
 		println("Processing Report: " + getReportManager().getUrl());
 
