@@ -14,31 +14,12 @@ import java.util.List;
  * in a single run (see DeltaGenerator#createOutputArchive, which records each archive it
  * creates via addArchiveCreated when the running script is a DeltaGeneratorWithAutoImport).
  * Rather than renaming a single archive to the ticket name, all archives created during the
- * run are moved into a "<ticket>/import" directory under outputStoragePathBase, and that
+ * run are moved into a "<ticket>/import" directory under baseStorageDirectory, and that
  * directory is then processed the same way MultiArchiveImporter processes a directory when
  * run standalone - one task created per archive, each reported with the archive name and the
  * task it was loaded to.
  */
 public class DeltaGeneratorWithMultiAutoImport extends DeltaGeneratorWithAutoImport {
-
-	private static final String OUTPUT_STORAGE_PATH_BASE_ARG = "--storageBaseDir";
-
-	private String outputStoragePathBase;
-
-	@Override
-	protected void init(String[] args) throws TermServerScriptException {
-		outputStoragePathBase = extractArgValue(args, OUTPUT_STORAGE_PATH_BASE_ARG);
-		super.init(args);
-	}
-
-	private static String extractArgValue(String[] args, String flag) {
-		for (int i = 0; i < args.length - 1; i++) {
-			if (args[i].equals(flag)) {
-				return args[i + 1];
-			}
-		}
-		return null;
-	}
 
 	@Override
 	protected void importArchiveToTask(File ignored) throws TermServerScriptException {
@@ -68,12 +49,12 @@ public class DeltaGeneratorWithMultiAutoImport extends DeltaGeneratorWithAutoImp
 	}
 
 	private File moveArchivesToImportDirectory(List<File> archivesCreated) throws TermServerScriptException {
-		if (StringUtils.isEmpty(outputStoragePathBase)) {
-			print("Enter base path for archive storage (eg your Google Drive folder), or set via " + OUTPUT_STORAGE_PATH_BASE_ARG + ": ");
-			outputStoragePathBase = STDIN.nextLine().trim();
+		if (StringUtils.isEmpty(baseStorageDirectory)) {
+			print("Enter base path for archive storage (eg your Google Drive folder), or set via " + BASE_STORAGE_DIRECTORY_ARG + ": ");
+			baseStorageDirectory = STDIN.nextLine().trim();
 		}
 
-		File proposedImportDir = new File(new File(outputStoragePathBase, taskPrefix), "import");
+		File proposedImportDir = new File(new File(baseStorageDirectory, taskPrefix), "import");
 		File importDir;
 		try {
 			importDir = FileUtils.createDirectoryOrIncrement(proposedImportDir);

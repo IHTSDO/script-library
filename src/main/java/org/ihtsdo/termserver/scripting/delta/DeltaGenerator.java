@@ -53,6 +53,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected String edition = "INT";
 	
 	protected String eclSubset = null;
+	protected String baseStorageDirectory = null;
 	
 	protected String languageCode = "en";
 	protected boolean isExtension = false;
@@ -63,6 +64,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	private ModuleMetadata packageMetadata;
 
 	private static final String ZIP_EXTENSION = ".zip";
+	protected static final String BASE_STORAGE_DIRECTORY_ARG = "--baseStorageDir";
 	private static final String CODE_SYSTEM_PREFIX = "SNOMEDCT-";
 	protected String[] targetLangRefsetIds = new String[] { "900000000000508004",   //GB
 															"900000000000509007" }; //US
@@ -139,6 +141,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 			}
 			if (args[x].equals("-e")) {
 				eclSubset = args[++x];
+			}
+			if (args[x].equals(BASE_STORAGE_DIRECTORY_ARG)) {
+				baseStorageDirectory = args[++x];
 			}
 			if (args[x].equals("--patchET")) {
 				getRF2Manager().setPatchEffectiveTime(args[++x]);
