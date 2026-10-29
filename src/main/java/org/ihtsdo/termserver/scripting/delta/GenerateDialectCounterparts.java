@@ -12,12 +12,12 @@ import java.util.stream.Collectors;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.otf.utils.SnomedUtilsBase;
 import org.ihtsdo.otf.utils.StringUtils;
-import org.ihtsdo.termserver.scripting.client.ReportingServerClient;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.DialectChecker;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.ihtsdo.termserver.scripting.util.DrugUtils;
 import org.ihtsdo.termserver.scripting.util.UserInteractionHelper;
+import org.ihtsdo.termserver.scripting.util.WhitelistHelper;
 import org.snomed.otf.scheduler.domain.WhiteListedConcept;
 
 /**
@@ -28,7 +28,6 @@ import org.snomed.otf.scheduler.domain.WhiteListedConcept;
 public class GenerateDialectCounterparts extends DeltaGenerator implements ScriptConstants {
 
 	private static final String RELEASE_ISSUES_REPORT = "Release Issues Report";
-	private static final String DEFAULT_CODE_SYSTEM = "SNOMEDCT";
 	private static final int SUMMARY_TAB = PRIMARY_REPORT;
 	private static final int DETAILS_TAB = SECONDARY_REPORT;
 	private static final int CLINICAL_DRUGS_TAB = TERTIARY_REPORT;
@@ -66,7 +65,6 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 
 	private final UserInteractionHelper ui = new UserInteractionHelper(this);
 	private DialectChecker dialectChecker;
-	private Set<String> whiteListedConceptIds = new HashSet<>();
 	private Set<String> manuallySkippedConceptIds = new HashSet<>();
 	private String whiteListCodeSystem;
 	private final Map<String, Integer> detailsTabByConceptId = new HashMap<>();
@@ -79,7 +77,7 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 	protected void init(String[] args) throws TermServerScriptException {
 		super.init(args);
 		//Ask now, rather than after the snapshot has loaded
-		whiteListCodeSystem = ui.askWithDefault("Code system for the " + RELEASE_ISSUES_REPORT + " whitelist", DEFAULT_CODE_SYSTEM);
+		whiteListCodeSystem = ui.askWithDefault("Code system for the " + RELEASE_ISSUES_REPORT + " whitelist", WhitelistHelper.DEFAULT_CODE_SYSTEM);
 	}
 
 	@Override
@@ -115,7 +113,7 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 		loadManuallySkippedConcepts();
 
 		for (Concept c : SnomedUtils.sortActive(gl.getAllConcepts())) {
-			if (isWhiteListed(c)) {
+			if (whitelistHelper.isWhiteListed(c)) {
 				incrementSummaryCount(CONCEPTS_CATEGORY, "Whitelisted, skipped");
 			} else if (getSkipReason(c) != null) {
 				reportSkipped(c, getSkipReason(c));
@@ -128,22 +126,14 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 	}
 
 	private void recoverWhiteList() throws TermServerScriptException {
-		Set<WhiteListedConcept> whiteList = new ReportingServerClient(url, getAuthenticatedCookie())
-				.getWhiteListForReport(RELEASE_ISSUES_REPORT, whiteListCodeSystem);
+		whitelistHelper.populateViaAPI(url, getAuthenticatedCookie(), RELEASE_ISSUES_REPORT, whiteListCodeSystem);
 
 		String whiteListItem = RELEASE_ISSUES_REPORT + " concepts whitelisted in " + whiteListCodeSystem;
 		initialiseSummaryCount(WHITELIST_CATEGORY, whiteListItem);
-		for (WhiteListedConcept wlc : whiteList.stream().sorted(Comparator.comparing(WhiteListedConcept::getSctId)).toList()) {
+		for (WhiteListedConcept wlc : whitelistHelper.getWhiteListSorted()) {
 			report(WHITELIST_TAB, wlc.getSctId(), wlc.getFsn());
 			incrementSummaryCount(WHITELIST_CATEGORY, whiteListItem);
 		}
-		whiteListedConceptIds = whiteList.stream()
-				.map(WhiteListedConcept::getSctId)
-				.collect(Collectors.toSet());
-	}
-
-	private boolean isWhiteListed(Concept c) {
-		return whiteListedConceptIds.contains(c.getId());
 	}
 
 	private void loadManuallySkippedConcepts() throws TermServerScriptException {
