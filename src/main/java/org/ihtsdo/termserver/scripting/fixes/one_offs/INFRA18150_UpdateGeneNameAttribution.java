@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("java:S101")
 public class INFRA18150_UpdateGeneNameAttribution extends BatchFix {
 
 	private static final String GENE_STRUCTURE_ECL = "< 382391000210108 | Gene structure (cell structure) |";
