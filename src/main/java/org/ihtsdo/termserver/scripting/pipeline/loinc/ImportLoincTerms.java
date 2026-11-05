@@ -22,7 +22,6 @@ import java.util.*;
 public class ImportLoincTerms extends LoincScript implements LoincScriptConstants {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ImportLoincTerms.class);
 
-	private static final String COMMON_LOINC_COLUMNS = "COMPONENT, PROPERTY, TIME_ASPCT, SYSTEM, SCALE_TYP, METHOD_TYP, CLASS, CLASSTYPE, VersionLastChanged, CHNG_TYPE, STATUS, STATUS_REASON, STATUS_TEXT, ORDER_OBS, LONG_COMMON_NAME, COMMON_TEST_RANK, COMMON_ORDER_RANK, COMMON_SI_TEST_RANK, PanelType, , , , , ";
 //	-f1 "/Users/peter/GDrive/018_Loinc/2026/2.83/Loinc.csv"
 //	-f2 "/Users/peter/GDrive/018_Loinc/2026/2.83/Part.csv"
 //	-f3 "/Users/peter/GDrive/018_Loinc/2026/2.83/LDT1.tsv"
@@ -225,6 +224,13 @@ public class ImportLoincTerms extends LoincScript implements LoincScriptConstant
 
 		ExternalConcept panelTerm = getLoincTerm(panelLoincNum);
 		return LoincTemplatedConceptPanel.create(panelTerm);
+	}
+
+	@Override
+	protected boolean inScopeForInactivation(String loincNum) {
+		//Clinical terms are mapped to existing concepts by ImportClinicalLoincTerms, so not ours to inactivate
+		LoincTerm loincTerm = getLoincTerm(loincNum);
+		return loincTerm == null || !LOINC_CLASSTYPE_CLINICAL.equals(loincTerm.getClassType());
 	}
 
 	@Override

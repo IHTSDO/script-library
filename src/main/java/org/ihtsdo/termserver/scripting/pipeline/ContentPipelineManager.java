@@ -308,9 +308,17 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		Map<String, String> altIdentifierMap = gl.getSchemaMap(scheme);
 		Set<String> inactivatingCodes =  new HashSet<>(altIdentifierMap.keySet());
 		inactivatingCodes.removeAll(sortedModelled.stream().map(m -> m.getExternalIdentifier()).collect(Collectors.toSet()));
+		inactivatingCodes.removeIf(code -> !inScopeForInactivation(code));
 		for (String inactivatingCode : inactivatingCodes) {
 			processInactivation(inactivatingCode, altIdentifierMap);
 		}
+	}
+
+	/**
+	 * Override where another run is responsible for some of the codes in this scheme
+	 */
+	protected boolean inScopeForInactivation(String externalIdentifier) {
+		return true;
 	}
 
 	private void processInactivation(String inactivatingCode, Map<String, String> altIdentifierMap) throws TermServerScriptException {
