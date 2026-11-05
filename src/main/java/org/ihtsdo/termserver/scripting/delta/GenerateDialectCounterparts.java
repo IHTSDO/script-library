@@ -108,7 +108,7 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 
 	@Override
 	protected void process() throws TermServerScriptException {
-		dialectChecker = DialectChecker.createIncludingSynonyms();
+		dialectChecker = DialectChecker.createIncludingAcceptableTerms();
 		recoverWhiteList();
 		loadManuallySkippedConcepts();
 
