@@ -24,7 +24,16 @@ import java.util.*;
  */
 public class WhitelistReportConcept extends TermServerReport implements JobClass {
 
-	private static final int PROCESSING = PRIMARY_REPORT;
+	private static final int SUMMARY = PRIMARY_REPORT;
+	private static final int PROCESSING = SECONDARY_REPORT;
+	private static final String RUN_DETAILS = "Run details";
+	private static final String QUESTION = "Question";
+	private static final String WHITELIST = "Whitelist";
+	private static final String WHITELIST_FOR = " whitelist for ";
+	private static final String IN_FILE = "Concepts in file";
+	private static final String ALREADY_WHITELISTED = "Already whitelisted";
+	private static final String ADDED = "Added";
+	private static final String NOT_IN_SNAPSHOT = "Not found in snapshot";
 	private static final String RELEASE_ISSUES_REPORT = "Release Issues Report";
 	private static final String SCTID_PATTERN = "\\d{6,18}";
 
@@ -34,9 +43,11 @@ public class WhitelistReportConcept extends TermServerReport implements JobClass
 	private String codeSystem;
 	private ReportingServerClient client;
 	private Map<String, String> requested;
-	private Map<String, WhiteListedConcept> whiteList;
+	private Map<String, WhiteListedConcept> whiteListBySctId;
 	private int existingCount;
 	private boolean proceed;
+	//Recorded as asked, then written to the Summary tab once it exists
+	private final List<String[]> runDetails = new ArrayList<>();
 
 	public static void main(String[] args) throws TermServerScriptException {
 		new WhitelistReportConcept().standardExecution(args, ExecutionOptions.DEFAULT);
@@ -50,36 +61,68 @@ public class WhitelistReportConcept extends TermServerReport implements JobClass
 	@Override
 	protected void init(String[] args) throws TermServerScriptException {
 		super.init(args);
-		requested = readConceptsFromFile(getInputFileOrThrow(0));
-		reportName = ui.askWithDefault("Report to whitelist for", RELEASE_ISSUES_REPORT);
-		codeSystem = ui.askWithDefault("Code system", WhitelistHelper.deriveCodeSystem(project.getBranchPath()));
+		File inputFile = getInputFileOrThrow(0);
+		runDetails.add(new String[] {RUN_DETAILS, "Input file", inputFile.getAbsolutePath()});
+		runDetails.add(new String[] {RUN_DETAILS, "Project", project.getKey() + " on " + project.getBranchPath()});
+		requested = readConceptsFromFile(inputFile);
+		reportName = ask("Report to whitelist for", RELEASE_ISSUES_REPORT);
+		codeSystem = ask("Code system", WhitelistHelper.deriveCodeSystem(project.getBranchPath()));
 
 		client = new ReportingServerClient(url, getAuthenticatedCookie());
-		whiteList = fetchWhiteList();
-		existingCount = whiteList.size();
-		long newCount = requested.keySet().stream().filter(sctId -> !whiteList.containsKey(sctId)).count();
+		whiteListBySctId = fetchWhiteList();
+		existingCount = whiteListBySctId.size();
+		long newCount = requested.keySet().stream().filter(sctId -> !whiteListBySctId.containsKey(sctId)).count();
 		print("Currently " + existingCount + " concepts whitelisted for " + reportName + " in " + codeSystem
 				+ ", of which " + (requested.size() - newCount) + " are in the file\n");
 
 		//Ask now, so nobody has to wait for the snapshot to load before answering
-		proceed = newCount > 0
-				&& ui.askYesNo("Add " + newCount + " concepts to the " + reportName + " whitelist for " + codeSystem, true);
+		if (newCount > 0) {
+			String question = "Add " + newCount + " concepts to the " + reportName + WHITELIST_FOR + codeSystem;
+			proceed = ui.askYesNo(question, true);
+			runDetails.add(new String[] {QUESTION, question + "?", proceed ? "Y" : "N"});
+		}
+	}
+
+	private String ask(String label, String defaultValue) {
+		String answer = ui.askWithDefault(label, defaultValue);
+		runDetails.add(new String[] {QUESTION, label + "?", answer});
+		return answer;
 	}
 
 	@Override
 	public void postInit() throws TermServerScriptException {
-		postInit(new String[] {"Processing"}, new String[] {"SCTID, FSN, Action, , "});
+		postInit(new String[] {"Summary", "Processing"},
+				new String[] {"Category, Item, Value, , , ", "SCTID, FSN, Action, , "});
+		summaryTabIdx = SUMMARY;
+		for (String[] detail : runDetails) {
+			report(SUMMARY, (Object[]) detail);
+		}
+		initialiseSummaryCount(WHITELIST, IN_FILE);
+		initialiseSummaryCount(WHITELIST, ALREADY_WHITELISTED);
+		initialiseSummaryCount(WHITELIST, ADDED);
+		initialiseSummaryCount(WHITELIST, NOT_IN_SNAPSHOT);
 	}
 
 	@Override
 	public void runJob() throws TermServerScriptException {
+		try {
+			addToWhiteList();
+		} finally {
+			reportSummaryCounts(SUMMARY);
+		}
+	}
+
+	private void addToWhiteList() throws TermServerScriptException {
+		incrementSummaryCount(WHITELIST, IN_FILE, requested.size());
+		incrementSummaryCount(WHITELIST, "Whitelist size before", existingCount);
 		List<String> toAdd = new ArrayList<>();
 		for (Map.Entry<String, String> entry : requested.entrySet()) {
 			String sctId = entry.getKey();
-			if (whiteList.containsKey(sctId)) {
-				report(PROCESSING, sctId, whiteList.get(sctId).getFsn(), "Already whitelisted");
+			if (whiteListBySctId.containsKey(sctId)) {
+				report(PROCESSING, sctId, whiteListBySctId.get(sctId).getFsn(), ALREADY_WHITELISTED);
+				incrementSummaryCount(WHITELIST, ALREADY_WHITELISTED);
 			} else {
-				whiteList.put(sctId, createWhiteListedConcept(sctId, entry.getValue()));
+				whiteListBySctId.put(sctId, createWhiteListedConcept(sctId, entry.getValue()));
 				toAdd.add(sctId);
 			}
 		}
@@ -95,12 +138,12 @@ public class WhitelistReportConcept extends TermServerReport implements JobClass
 		}
 
 		try {
-			client.setWhiteListForReport(reportName, codeSystem, new HashSet<>(whiteList.values()));
+			client.setWhiteListForReport(reportName, codeSystem, new HashSet<>(whiteListBySctId.values()));
 		} catch (RestClientException e) {
-			throw new TermServerScriptException("Failed to update the " + reportName + " whitelist for " + codeSystem, e);
+			throw new TermServerScriptException("Failed to update the " + reportName + WHITELIST_FOR + codeSystem, e);
 		}
 		confirmAdded(toAdd);
-		report(PROCESSING, "", "", "Whitelist now holds " + whiteList.size() + " concepts, was " + existingCount);
+		incrementSummaryCount(WHITELIST, "Whitelist size after", whiteListBySctId.size());
 	}
 
 	private Map<String, String> readConceptsFromFile(File file) throws TermServerScriptException {
@@ -137,7 +180,7 @@ public class WhitelistReportConcept extends TermServerReport implements JobClass
 			client.getWhiteListForReport(reportName, codeSystem)
 					.forEach(w -> current.put(w.getSctId(), w));
 		} catch (RestClientException e) {
-			throw new TermServerScriptException("Failed to recover the " + reportName + " whitelist for " + codeSystem, e);
+			throw new TermServerScriptException("Failed to recover the " + reportName + WHITELIST_FOR + codeSystem, e);
 		}
 		return current;
 	}
@@ -146,7 +189,8 @@ public class WhitelistReportConcept extends TermServerReport implements JobClass
 		if (fsn.isEmpty()) {
 			Concept c = gl.getConcept(sctId, false, false);
 			if (c == null) {
-				report(PROCESSING, sctId, "", "Not found in snapshot - whitelisting without FSN");
+				report(PROCESSING, sctId, "", NOT_IN_SNAPSHOT + " - whitelisting without FSN");
+				incrementSummaryCount(WHITELIST, NOT_IN_SNAPSHOT);
 			} else {
 				fsn = c.getFsn();
 			}
@@ -160,8 +204,9 @@ public class WhitelistReportConcept extends TermServerReport implements JobClass
 	private void confirmAdded(List<String> toAdd) throws TermServerScriptException {
 		Set<String> nowWhiteListed = fetchWhiteList().keySet();
 		for (String sctId : toAdd) {
-			String action = nowWhiteListed.contains(sctId) ? "Added" : "FAILED - not found in whitelist after update";
-			report(PROCESSING, sctId, whiteList.get(sctId).getFsn(), action);
+			boolean added = nowWhiteListed.contains(sctId);
+			report(PROCESSING, sctId, whiteListBySctId.get(sctId).getFsn(), added ? ADDED : "FAILED - not found in whitelist after update");
+			incrementSummaryCount(WHITELIST, added ? ADDED : "Failed to add");
 		}
 		if (!nowWhiteListed.containsAll(toAdd)) {
 			throw new TermServerScriptException("Whitelist update for " + reportName + " in " + codeSystem + " did not take effect for all concepts - see report");
