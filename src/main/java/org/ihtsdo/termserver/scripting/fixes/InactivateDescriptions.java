@@ -123,7 +123,7 @@ public class InactivateDescriptions extends BatchFix implements ScriptConstants 
 		String lang = lineItems[1];
 		Set<Concept> concepts = descriptionMap.get(term);
 		if (concepts == null) {
-			report(PRIMARY_REPORT, null, null, Severity.HIGH, ReportActionType.VALIDATION_CHECK, "No concept found for " + term + "|" + lang);
+			report(PRIMARY_REPORT, (Concept) null, null, Severity.HIGH, ReportActionType.VALIDATION_CHECK, "No concept found for " + term + "|" + lang);
 			return Collections.emptyList();
 		}
 

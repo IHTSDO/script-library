@@ -148,7 +148,7 @@ public class FindConceptsLexicalMatch extends TermServerReport implements Report
 		if (termMap!= null && termMap.containsKey(term)) {
 			Description d = termMap.get(term);
 			Concept c = gl.getConcept(d.getConceptId());
-			report(0, null, items[0], items[1], c, null, d);
+			report(0, (Concept) null, items[0], items[1], c, null, d);
 			matchFound = true;
 			LOGGER.info (line + " - exact match");
 			incrementSummaryInformation("Exact Match");
@@ -170,7 +170,7 @@ public class FindConceptsLexicalMatch extends TermServerReport implements Report
 		}
 		
 		if (!matchFound) {
-			report(0, null, items[0], items[1], null, null, null);
+			report(0, (Concept) null, items[0], items[1], null, null, null);
 			LOGGER.info (line + " - no match");
 			incrementSummaryInformation("No Match");
 		}
@@ -188,7 +188,7 @@ public class FindConceptsLexicalMatch extends TermServerReport implements Report
 				Description d = termMap.get(term);
 				Concept c = gl.getConcept(d.getConceptId());
 				LOGGER.info (source[0] + " " + source[1] + " - Exact out-of-order Match: " + d);
-				report(0, null, source[0], source[1], null, c, d);
+				report(0, (Concept) null, source[0], source[1], null, c, d);
 				matchFound = true;
 			}
 		}
@@ -232,7 +232,7 @@ public class FindConceptsLexicalMatch extends TermServerReport implements Report
 					.limit(5)
 					.collect(Collectors.joining(",\n"));
 			LOGGER.info (source[0] + " " + source[1] + " - best effort match: " + matchingConcepts);
-			report(0, null, source[0], source[1], null, null, matchingWords, matchingConcepts);
+			report(0, (Concept) null, source[0], source[1], null, null, matchingWords, matchingConcepts);
 			matchFound = true;
 			break;
 		}

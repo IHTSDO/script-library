@@ -272,7 +272,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			try {
 				conceptCreator.writeConceptToRF2(NOT_SET, concept, tc.getExternalIdentifier());
 			} catch (Exception e) {
-				report(getTab(TAB_IMPORT_STATUS), null, concept, Severity.CRITICAL, ReportActionType.API_ERROR, tc.getExternalIdentifier(), e);
+				report(getTab(TAB_IMPORT_STATUS), (Concept) null, concept, Severity.CRITICAL, ReportActionType.API_ERROR, tc.getExternalIdentifier(), e);
 			}
 		}
 		conceptCreator.createOutputArchive(getTab(TAB_IMPORT_STATUS));
