@@ -39,6 +39,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected String packageDir;
 	protected String conDeltaFilename;
 	protected String relDeltaFilename;
+	protected String relConcreteDeltaFilename;
 	protected String attribValDeltaFilename;
 	protected String assocDeltaFilename;
 	protected String owlDeltaFilename;
@@ -50,6 +51,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected String compAnnotDeltaFilename;
 	protected String simpleMapDeltaFilename;
 	protected String simpleRefsetDeltaFilename;
+	protected String refsetDescriptorDeltaFilename;
 	protected String edition = "INT";
 	
 	protected String eclSubset = null;
@@ -72,6 +74,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected String[] conHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,"definitionStatusId"};
 	protected String[] descHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,"conceptId","languageCode",COL_TYPE_ID,"term","caseSignificanceId"};
 	protected String[] relHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,"sourceId","destinationId","relationshipGroup",COL_TYPE_ID,"characteristicTypeId","modifierId"};
+	protected String[] relConcreteHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,"sourceId","value","relationshipGroup",COL_TYPE_ID,"characteristicTypeId","modifierId"};
 	protected String[] langHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,COL_REFSET_ID,COL_REFERENCED_COMPONENT_ID,"acceptabilityId"};
 	protected String[] attribValHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,COL_REFSET_ID,COL_REFERENCED_COMPONENT_ID,"valueId"};
 	protected String[] assocHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,COL_REFSET_ID,COL_REFERENCED_COMPONENT_ID,"targetComponentId"};
@@ -80,6 +83,7 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected String[] compAnnotHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,COL_REFSET_ID,COL_REFERENCED_COMPONENT_ID,"languageDialectCode",COL_TYPE_ID,"value"};
 	protected String[] simpleMapHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,COL_REFSET_ID,COL_REFERENCED_COMPONENT_ID,"mapTarget"};
 	protected String[] simpleRefsetHeader = new String[] {"id","effectiveTime","active","moduleId","refsetId","referencedComponentId"};
+	protected String[] refsetDescriptorHeader = new String[] {COL_ID,COL_EFFECTIVE_TIME,COL_ACTIVE,COL_MODULE_ID,COL_REFSET_ID,COL_REFERENCED_COMPONENT_ID,"attributeDescription","attributeType","attributeOrder"};
 
 	protected IdGenerator conIdGenerator;
 	protected IdGenerator descIdGenerator;
@@ -469,6 +473,9 @@ public abstract class DeltaGenerator extends TermServerScript {
 		fileMap.put(ComponentType.INFERRED_RELATIONSHIP, relDeltaFilename);
 		writeToRF2File(relDeltaFilename, relHeader);
 
+		relConcreteDeltaFilename = termDir + "sct2_RelationshipConcreteValues_Delta_"+edition+"_" + today + ".txt";
+		writeToRF2File(relConcreteDeltaFilename, relConcreteHeader);
+
 		sRelDeltaFilename = termDir + "sct2_StatedRelationship_Delta_"+edition+"_" + today + ".txt";
 		fileMap.put(ComponentType.STATED_RELATIONSHIP, sRelDeltaFilename);
 		writeToRF2File(sRelDeltaFilename, relHeader);
@@ -500,6 +507,10 @@ public abstract class DeltaGenerator extends TermServerScript {
 		simpleRefsetDeltaFilename = refDir + "Content/der2_Refset_SimpleRefsetDelta_"+edition+"_" + today + ".txt";
 		fileMap.put(ComponentType.SIMPLE_REFSET_MEMBER, simpleRefsetDeltaFilename);
 		writeToRF2File(simpleRefsetDeltaFilename, simpleRefsetHeader);
+
+		refsetDescriptorDeltaFilename = refDir + "Metadata/der2_cciRefset_RefsetDescriptorDelta_"+edition+"_" + today + ".txt";
+		fileMap.put(ComponentType.REFSET_DESCRIPTOR, refsetDescriptorDeltaFilename);
+		writeToRF2File(refsetDescriptorDeltaFilename, refsetDescriptorHeader);
 		
 		attribValDeltaFilename = refDir + "Content/der2_cRefset_AttributeValueDelta_"+edition+"_" + today + ".txt";
 		fileMap.put(ComponentType.ATTRIBUTE_VALUE, attribValDeltaFilename);
@@ -577,17 +588,21 @@ public abstract class DeltaGenerator extends TermServerScript {
 			//Does this component itself have an associated annotations?
 			outputComponentAnnotations(a);
 		}
+		for (RefsetMember rm : d.getOtherRefsetMembers()) {
+			componentOutput |= outputRF2(rm);
+		}
 		return componentOutput;
 	}
-	
+
 	protected boolean outputRF2(Relationship r) throws TermServerScriptException {
 		boolean componentOutput = false;
 		if (r.isDirty()) {
-			switch (r.getCharacteristicType()) {
-				case STATED_RELATIONSHIP : writeToRF2File(sRelDeltaFilename, r.toRF2());
-				break;
-				case INFERRED_RELATIONSHIP : 
-				default: writeToRF2File(relDeltaFilename, r.toRF2());
+			if (r.isConcrete()) {
+				writeToRF2File(relConcreteDeltaFilename, r.toRF2());
+			} else if (r.getCharacteristicType() == CharacteristicType.STATED_RELATIONSHIP) {
+				writeToRF2File(sRelDeltaFilename, r.toRF2());
+			} else {
+				writeToRF2File(relDeltaFilename, r.toRF2());
 			}
 			componentOutput = true;
 			r.setClean();
@@ -744,16 +759,26 @@ public abstract class DeltaGenerator extends TermServerScript {
 	protected boolean outputRF2(RefsetMember rm) throws TermServerScriptException {
 		boolean componentWasDirty = rm.isDirty();
 		if (rm.isDirty() && !dryRun) {
+			if (!canOutputRF2(rm)) {
+				throw new TermServerScriptException("No delta file available for refset member " + rm);
+			}
 			//What sort of refset member is this?
 			int additionalFieldCount = rm.getAdditionalFields().size();
 			String fileToWriteTo = simpleRefsetDeltaFilename;
-			if (additionalFieldCount == 1) {
+			if (rm.getComponentType() == ComponentType.REFSET_DESCRIPTOR) {
+				fileToWriteTo = refsetDescriptorDeltaFilename;
+			} else if (additionalFieldCount == 1) {
 				fileToWriteTo = simpleMapDeltaFilename;
 			}
 			writeToRF2File(fileToWriteTo, rm.toRF2());
 			rm.setClean();
 		}
 		return componentWasDirty;
+	}
+
+	protected boolean canOutputRF2(RefsetMember rm) {
+		return rm.getAdditionalFields().size() <= 1
+				|| rm.getComponentType() == ComponentType.REFSET_DESCRIPTOR;
 	}
 
 	private boolean hasDirtyStatedRelationships(Concept c) {
