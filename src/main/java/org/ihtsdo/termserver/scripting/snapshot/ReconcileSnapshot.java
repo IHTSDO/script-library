@@ -24,6 +24,7 @@ import org.ihtsdo.termserver.scripting.client.TermServerClient.ExtractType;
 import org.ihtsdo.termserver.scripting.delta.DeltaGenerator;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
+import org.snomed.otf.script.dao.Highlight;
 
 /**
  * RP-272 Reconcile an exported snapshot against a generated one
@@ -330,14 +331,14 @@ public class ReconcileSnapshot extends DeltaGenerator {
 			constructed.setDirty();
 			conceptsToOutput.add(owner);
 			report(getTabIdx(constructed), owner, Severity.HIGH, action, constructed.getId(), details, constructed, exported == null ? "" : exported);
-			incrementSummaryCount(getTabName(constructed), action);
+			incrementSummaryCount(getTabName(constructed), action, Highlight.YELLOW);
 		}
 	}
 
 	private void reportNotRestored(Component constructed, Component exported, String details) throws TermServerScriptException {
 		Concept owner = gl.getComponentOwner(constructed.getId());
 		reportComponent(getTabIdx(constructed), owner, Severity.CRITICAL, NOT_RESTORED, constructed.getId(), details, constructed, exported == null ? "" : exported);
-		incrementSummaryCount(getTabName(constructed), NOT_RESTORED);
+		incrementSummaryCount(getTabName(constructed), NOT_RESTORED, Highlight.RED);
 	}
 
 	private void reportNeedsDeleted(Component exported) throws TermServerScriptException {
@@ -345,7 +346,7 @@ public class ReconcileSnapshot extends DeltaGenerator {
 		Severity severity = StringUtils.isEmpty(exported.getEffectiveTime()) ? Severity.CRITICAL : Severity.HIGH;
 		String details = exported.getComponentType() + " is not in the constructed snapshot";
 		reportComponent(NEEDS_DELETED_TAB, findOwner(exported), severity, NEEDS_DELETED, exported.getId(), details, "", exported);
-		incrementSummaryCount(getTabName(exported), NEEDS_DELETED);
+		incrementSummaryCount(getTabName(exported), NEEDS_DELETED, Highlight.YELLOW);
 	}
 
 	private void reportComponent(int tabIdx, Concept owner, Object... details) throws TermServerScriptException {
