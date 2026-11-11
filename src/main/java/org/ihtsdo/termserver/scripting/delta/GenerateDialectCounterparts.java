@@ -54,6 +54,10 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 	private static final String MANUALLY_SPECIFIED = "Manually Specified";
 	//Words are runs of letters, as for the DialectChecker
 	private static final Pattern WORD = Pattern.compile("\\p{L}+");
+	//Measuring devices are meters in GB as well as US, so a physical object's meter gets no metre counterpart
+	private static final String PHYSICAL_OBJECT = "(physical object)";
+	private static final Pattern METER_WORD = Pattern.compile("^(meter|metre)s?$", Pattern.CASE_INSENSITIVE);
+	private static final String PHYSICAL_OBJECT_METER = "Physical object \"meter\"";
 	private static final Map<String, Pattern> SKIP_PATTERNS = SKIP_WORDS.stream()
 			.collect(Collectors.toMap(w -> w, w -> Pattern.compile("\\b" + Pattern.quote(w) + "\\b")));
 	//Concepts with any dialect word matching these get the tab, the first match winning
@@ -211,7 +215,10 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 		boolean hasUsWord = !gbTerm.equals(term);
 		String words = getDialectWords(term, usTerm, gbTerm);
 
-		if (hasUsWord && hasGbWord) {
+		if (isPhysicalObjectMeter(c, words)) {
+			reportPhysicalObjectMeter(c, d, words);
+			return false;
+		} else if (hasUsWord && hasGbWord) {
 			return splitMixedDialectSynonym(c, d, words, usTerm, gbTerm);
 		} else if (hasUsWord) {
 			return addCounterpart(c, d, words, gbTerm, US_ENG_LANG_REFSET, GB_ENG_LANG_REFSET);
@@ -223,6 +230,21 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 			return addCounterpart(c, d, words, usTerm, GB_ENG_LANG_REFSET, US_ENG_LANG_REFSET);
 		}
 		return false;
+	}
+
+	/**
+	 * A physical object's meter is most likely a measuring device, eg a blood glucose meter, rather than a unit
+	 * of length, so isn't respelled.  The whole description is skipped, rather than risk a part-converted term.
+	 * @param dialectWords the term's dialect specific words, as listed by getDialectWords
+	 */
+	private boolean isPhysicalObjectMeter(Concept c, String dialectWords) {
+		return PHYSICAL_OBJECT.equals(c.getSemTag()) && !dialectWords.isEmpty()
+				&& Arrays.stream(dialectWords.split(", ")).anyMatch(w -> METER_WORD.matcher(w).matches());
+	}
+
+	private void reportPhysicalObjectMeter(Concept c, Description d, String words) throws TermServerScriptException {
+		report(SKIPPED_TAB, c, PHYSICAL_OBJECT_METER, words + ": " + d.toStringWithoutIds());
+		incrementSummaryCount(NOT_CREATED_CATEGORY, PHYSICAL_OBJECT_METER + ", skipped");
 	}
 
 	/**
@@ -382,7 +404,10 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 		boolean hasGbWord = !usBase.equals(fsnBase);
 		String words = getDialectWords(fsnBase, usBase, gbBase);
 
-		if (hasGbWord) {
+		if (isPhysicalObjectMeter(c, words)) {
+			reportPhysicalObjectMeter(c, fsn, words);
+			return false;
+		} else if (hasGbWord) {
 			report(getDetailsTab(c), c, Severity.MEDIUM, ReportActionType.NO_CHANGE, words, fsn.toStringWithoutIds(), "GB specific spelling in FSN taken to be deliberate");
 			incrementSummaryCount(NOT_CREATED_CATEGORY, "FSN with GB spelling");
 			return false;
