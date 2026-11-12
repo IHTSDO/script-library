@@ -14,6 +14,7 @@ import org.ihtsdo.termserver.scripting.client.TermServerClient;
 import org.ihtsdo.termserver.scripting.domain.*;
 import org.ihtsdo.termserver.scripting.snapshot.ArchiveImporter;
 import org.ihtsdo.termserver.scripting.snapshot.SnapshotConfiguration;
+import org.ihtsdo.termserver.scripting.util.SecondaryAxiomHelper;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
 import org.snomed.FileType;
 import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
@@ -42,6 +43,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	private static final boolean INCLUDE_DEPENDENCIES = true;
 	private static final boolean INCLUDE_INFERRED_PARENTS = false;  //DO NOT CHECK IN AS TRUE - NEEDED ONLY FOR DRUGS
 	private static final boolean COPY_INFERRED_PARENT_RELS_TO_STATED = false;
+	private static final boolean MERGE_SECONDARY_AXIOMS = false;  //Merge an extension's secondary axiom into the axiom already on the target server
 	protected boolean selectViaReview = false; //If true, then we will only process concepts that have been selected in the review panel
 	private static final List<String> KNOWN_DEFECTIVE_PROJECTS = List.of("GEN");
 	private static final String SECONDARY_CHECK_PATH = "MAIN";
@@ -54,6 +56,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 	private final Map<String, Concept> loadedConcepts = new HashMap<>();
 	TermServerClient secondaryConnection;
 	private final AxiomRelationshipConversionService axiomService = new AxiomRelationshipConversionService(NEVER_GROUPED_ATTRIBUTES);
+	private final SecondaryAxiomHelper secondaryAxiomHelper = new SecondaryAxiomHelper(this, axiomService);
 	
 	Queue<List<Component>> archiveBatches = null;
 	private boolean ensureConceptsHaveBeenReleased = false;
@@ -644,6 +647,10 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 				subComponentsMoved = true;
 			}
 		}
+
+		if (MERGE_SECONDARY_AXIOMS && !conceptOnTS.equals(NULL_CONCEPT)) {
+			subComponentsMoved |= secondaryAxiomHelper.mergeSecondaryAxioms(c, conceptOnTS);
+		}
 		return subComponentsMoved;
 	}
 
@@ -965,7 +972,7 @@ public class ExtractExtensionComponents extends DeltaGeneratorWithAutoImport {
 					|| (a.getEffectiveTime() != null && a.getEffectiveTime().equals(axiomOnTS.getEffectiveTime())))) {
 					//Only need to say something if we originally thought we were supposed to move this concept
 					if (componentsToProcess.contains(c)) {
-						report(conceptOnTS, Severity.MEDIUM, ReportActionType.NO_CHANGE, "Axiom already on server with same (or no) effective time", a.getId());
+						report(conceptOnTS, Severity.MEDIUM, ReportActionType.NO_CHANGE, "Axiom already on server with same (or no) effective time", a.getId() + "\n" + a.getOwlExpression());
 					}
 					return false;
 				}
