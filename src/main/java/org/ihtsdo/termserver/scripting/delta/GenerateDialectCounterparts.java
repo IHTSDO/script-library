@@ -33,8 +33,10 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 	private static final int CLINICAL_DRUGS_TAB = TERTIARY_REPORT;
 	private static final int UNITS_TAB = QUATERNARY_REPORT;
 	private static final int BLOOD_TAB = QUINARY_REPORT;
-	private static final int WHITELIST_TAB = SENARY_REPORT;
-	private static final int SKIPPED_TAB = SEPTENARY_REPORT;
+	private static final int ACCEPTABLE_MAP_TAB = SENARY_REPORT;
+	private static final int LIGHT_TOUCH_TAB = SEPTENARY_REPORT;
+	private static final int WHITELIST_TAB = OCTONARY_REPORT;
+	private static final int SKIPPED_TAB = NONARY_REPORT;
 	private static final String DETAILS_HEADINGS = "SCTID, FSN, SemTag, Severity, Action, Word(s), Description, Details, Likely Counterpart, ";
 	private static final String POSSIBLE_MISSING_MAP_PAIR = "Possible missing map pair";
 
@@ -94,6 +96,8 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 				DETAILS_HEADINGS,
 				DETAILS_HEADINGS,
 				DETAILS_HEADINGS,
+				DETAILS_HEADINGS,
+				DETAILS_HEADINGS,
 				"SCTID, FSN",
 				"SCTID, FSN, SemTag, Reason, Dialect Word(s)"
 		};
@@ -104,6 +108,8 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 				"Clinical Drugs",
 				"Units",
 				"Blood",
+				"Acceptable Map",
+				"Light Touch",
 				"Whitelist",
 				"Skipped"
 		};
@@ -211,25 +217,65 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 		String term = d.getTerm();
 		String usTerm = dialectChecker.makeUSSpecific(term);
 		String gbTerm = dialectChecker.makeGBSpecific(term);
+		String gbAcceptableTerm = dialectChecker.makeGBAcceptableForm(term);
 		boolean hasGbWord = !usTerm.equals(term);
 		boolean hasUsWord = !gbTerm.equals(term);
-		String words = getDialectWords(term, usTerm, gbTerm);
+		String words = getDialectWords(term, usTerm, gbTerm, gbAcceptableTerm);
 
 		if (isPhysicalObjectMeter(c, words)) {
 			reportPhysicalObjectMeter(c, d, words);
 			return false;
-		} else if (hasUsWord && hasGbWord) {
-			return splitMixedDialectSynonym(c, d, words, usTerm, gbTerm);
+		}
+		reportAcceptableOnlyTermAsPreferred(c, d, words, usTerm);
+
+		boolean changesMade = false;
+		if (hasUsWord && hasGbWord) {
+			changesMade = splitMixedDialectSynonym(c, d, words, usTerm, gbTerm);
 		} else if (hasUsWord) {
-			return addCounterpart(c, d, words, gbTerm, US_ENG_LANG_REFSET, GB_ENG_LANG_REFSET);
+			changesMade = addCounterpart(c, d, words, gbTerm, US_ENG_LANG_REFSET, GB_ENG_LANG_REFSET);
 		} else if (hasGbWord && matchesFsnSpelling(c, words)) {
 			report(getDetailsTab(c), c, Severity.MEDIUM, ReportActionType.NO_CHANGE, words, d.toStringWithoutIds(), "Matches the GB spelling in the FSN, taken to be the correct name");
 			incrementSummaryCount(NOT_CREATED_CATEGORY, "Synonym matches FSN's GB spelling");
 			return false;
 		} else if (hasGbWord) {
-			return addCounterpart(c, d, words, usTerm, GB_ENG_LANG_REFSET, US_ENG_LANG_REFSET);
+			changesMade = addCounterpart(c, d, words, usTerm, GB_ENG_LANG_REFSET, US_ENG_LANG_REFSET);
 		}
-		return false;
+		changesMade |= addGbAcceptableForm(c, words, gbTerm, gbAcceptableTerm);
+		return changesMade;
+	}
+
+	/**
+	 * A GB term from the acceptable map (eg foetal) would normally only be acceptable, with the US term (eg fetal)
+	 * preferred in GB too.  Changing the preferred term is work for an author, so this is only noted.
+	 */
+	private void reportAcceptableOnlyTermAsPreferred(Concept c, Description d, String words, String usTerm) throws TermServerScriptException {
+		if (d.getAcceptability(GB_ENG_LANG_REFSET) == Acceptability.PREFERRED && dialectChecker.containsAcceptableOnlyGBTerm(d.getTerm())) {
+			report(LIGHT_TOUCH_TAB, c, Severity.LOW, ReportActionType.NO_CHANGE, words, d.toStringWithoutIds(), "GB term normally only acceptable, used as GB preferred term", usTerm);
+			incrementSummaryCount(NOT_CREATED_CATEGORY, "Acceptable map GB term used as GB PT, noted only");
+		}
+	}
+
+	/**
+	 * Where the GB preferred form uses a US word that is preferred in GB too (eg fetal), the GB word (eg foetal)
+	 * is also made available, as acceptable in GB only.  Only added alongside an existing GB description.
+	 */
+	private boolean addGbAcceptableForm(Concept c, String words, String gbTerm, String gbAcceptableTerm) throws TermServerScriptException {
+		if (gbAcceptableTerm.equals(gbTerm)) {
+			return false;
+		}
+		Description gbForm = findActiveDescription(c, gbTerm);
+		if (gbForm == null || gbForm.getAcceptability(GB_ENG_LANG_REFSET) == null) {
+			incrementSummaryCount(NOT_CREATED_CATEGORY, "Acceptable map GB form, no GB description to accompany");
+			return false;
+		}
+		if (hasActiveDescription(c, gbAcceptableTerm)) {
+			incrementSummaryCount(NOT_CREATED_CATEGORY, "Acceptable map GB form already present");
+			return false;
+		}
+		Description gbAcceptable = createDialectDescription(c, gbForm, gbAcceptableTerm, GB_ENG_LANG_REFSET, Acceptability.ACCEPTABLE);
+		report(getDetailsTab(c), c, Severity.LOW, ReportActionType.DESCRIPTION_ADDED, words, gbAcceptable.toStringWithoutIds(), "Acceptable GB form of " + gbForm.toStringWithoutIds());
+		incrementSummaryCount(CREATED_CATEGORY, describe(Acceptability.ACCEPTABLE, GB_ENG_LANG_REFSET) + " from acceptable map");
+		return true;
 	}
 
 	/**
@@ -494,7 +540,7 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 		Set<String> dialectWords = new LinkedHashSet<>();
 		for (Description d : c.getDescriptions(ActiveState.ACTIVE)) {
 			String term = d.getTerm();
-			String words = getDialectWords(term, dialectChecker.makeUSSpecific(term), dialectChecker.makeGBSpecific(term));
+			String words = getDialectWords(term, dialectChecker.makeUSSpecific(term), dialectChecker.makeGBSpecific(term), dialectChecker.makeGBAcceptableForm(term));
 			if (!words.isEmpty()) {
 				dialectWords.addAll(Arrays.asList(words.split(", ")));
 			}
@@ -516,17 +562,21 @@ public class GenerateDialectCounterparts extends DeltaGenerator implements Scrip
 
 	/**
 	 * Clinical drugs pick up counterparts in volume (eg milliliter), so they get a tab of their own, as do
-	 * units and blood words.  Routed by concept, on first use, so all the concept's rows land on the same tab.
+	 * units and blood words.  Anything using the acceptable map comes first.  Routed by concept, on first use,
+	 * so all the concept's rows land on the same tab.
 	 */
 	private int getDetailsTab(Concept c) {
 		return detailsTabByConceptId.computeIfAbsent(c.getId(), id -> chooseDetailsTab(c));
 	}
 
 	private int chooseDetailsTab(Concept c) {
+		Set<String> dialectWords = getDialectWords(c);
+		if (dialectWords.stream().anyMatch(dialectChecker::isAcceptableMapWord)) {
+			return ACCEPTABLE_MAP_TAB;
+		}
 		if (DrugUtils.CD.equals(c.getSemTag())) {
 			return CLINICAL_DRUGS_TAB;
 		}
-		Set<String> dialectWords = getDialectWords(c);
 		return DIALECT_WORD_TABS.entrySet().stream()
 				.filter(e -> dialectWords.stream().anyMatch(w -> e.getValue().matcher(w).find()))
 				.map(Map.Entry::getKey)
