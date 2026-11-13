@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.input.BOMInputStream;
+import org.ihtsdo.otf.RF2Constants.Severity;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.GraphLoader;
 import org.slf4j.Logger;
@@ -28,7 +29,8 @@ public class AbstractMapManager implements ContentPipelineConstants {
 
 	protected ContentPipelineManager cpm;
 	protected GraphLoader gl;
-	protected final Map<String, String> mapNotes = new HashMap<>();
+	//The map file line being processed, for reporting.  Zero when not loading a map file.
+	private int currentLineNum = 0;
 
 	protected AbstractMapManager(ContentPipelineManager cpm) {
 		this.cpm = cpm;
@@ -70,12 +72,15 @@ public class AbstractMapManager implements ContentPipelineConstants {
 						// Header line - discover indexes
 						ColIdx.initialize(line);
 					} else if (!line.isEmpty()) {
+						currentLineNum = lineNum;
 						processLine(lineProcessor, line, lineNum);
 					}
 				}
 			}
 		} catch (Exception e) {
 			throw new TermServerScriptException("Failed to import " + mapFile + " at line " + lineNum, e);
+		} finally {
+			currentLineNum = 0;
 		}
 
 	}
@@ -86,8 +91,15 @@ public class AbstractMapManager implements ContentPipelineConstants {
 		try {
 			lineProcessor.process(items);
 		} catch (TermServerScriptException e) {
-			cpm.report(cpm.getTab(ContentPipelineConstants.TAB_MAP_ISSUES), lineNum, sourceNum, e.getMessage());
+			cpm.reportMapIssue(sourceNum, lineNum, Severity.HIGH, "Map line failed to load", e.getMessage());
 		}
+	}
+
+	/**
+	 * @return the map file line being processed, or blank if we're not loading a map file
+	 */
+	protected Object getCurrentLineNum() {
+		return currentLineNum > 0 ? currentLineNum : "";
 	}
 
 	public static final class ColIdx {

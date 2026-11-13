@@ -37,13 +37,13 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 
 	protected String[] tabNames = new String[] {
 			TAB_SUMMARY,
-			TAB_MAP_STATS,
 			TAB_MAP_ISSUES,
 			TAB_MODELING_ISSUES,
 			TAB_PROPOSED_MODEL_COMPARISON,
 			TAB_MAP_ME,
 			TAB_IMPORT_STATUS,
-			TAB_STATS};
+			TAB_STATS,
+			TAB_MAP_STATS};
 
 	public static void main(String[] args) throws TermServerScriptException {
 		new ImportNpuConcepts().ingestExternalContent(args);
@@ -57,13 +57,13 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"Category, Item, Count",
-				"Item, Count, , ",
-				"Source, Issue, , , ",
+				"Source, Line, Severity, Issue, Detail",
 				"npu_code, Item of Interest, External Concept Long Name, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
 				"NpuNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, Specialty, Context Dependent, Group, Scale Type, Active",
 				"NPU Element Code, Element Name, Category, High Usage, Highest Usage, , Concepts Affected, , , ",
 				"PartNum, PartName, PartType, Needed for High Usage Mapping, Needed for Highest Usage Mapping, PriorityIndex, Usage Count,Top Priority Usage, Higest Rank, HighestUsageCount",
-				"Category, NpuNum, Detail, , , "
+				"Category, NpuNum, Detail, , , ",
+				"Item, Count, , "
 		};
 
 		super.postInit(GFOLDER_NPU, tabNames, columnHeadings, false);

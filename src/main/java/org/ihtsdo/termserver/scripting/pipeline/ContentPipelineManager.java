@@ -56,6 +56,8 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 	protected Map<String, Part> partMap = new HashMap<>();
 	protected Map<String, String> partMapNotes = new HashMap<>();
 	protected Map<Part, Set<ExternalConcept>> missingPartMappings = new HashMap<>();
+	//For the Map Stats tab, where the script has one
+	private final Map<String, Long> mapStats = new LinkedHashMap<>();
 	protected static final Map<String, String> ITEM_OF_INTEREST_MAP = new HashMap<>();
 	protected static final Map<String, String> PART_OF_INTEREST_MAP = new HashMap<>();
 
@@ -102,9 +104,7 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			if (tabExists(TAB_MAP_ME)) {
 				reportMissingMappings(getTab(TAB_MAP_ME));
 			}
-			if (tabExists(TAB_MAP_STATS)) {
-				attributePartMapManager.reportMapStats(getTab(TAB_MAP_STATS));
-			}
+			reportMapStats();
 			reportIncludedExcludedConcepts(getTab(TAB_STATS));
 			flushFiles(false);
 			switch (runMode) {
@@ -830,8 +830,56 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 							.add(getExternalConcept(externalIdentifier));
 	}
 
-	public Map<Part, Set<ExternalConcept>> getMissingPartMappings() {
-		return missingPartMappings;
+	public synchronized void initialiseMapStat(String item) {
+		mapStats.putIfAbsent(item, 0L);
+	}
+
+	public synchronized void incrementMapStat(String item) {
+		mapStats.merge(item, 1L, Long::sum);
+	}
+
+	public synchronized void setMapStat(String item, long count) {
+		mapStats.put(item, count);
+	}
+
+	/**
+	 * Map stats are listed in the order first initialised, set or incremented
+	 */
+	private void reportMapStats() throws TermServerScriptException {
+		if (!tabExists(TAB_MAP_STATS)) {
+			return;
+		}
+		if (attributePartMapManager != null) {
+			attributePartMapManager.recordMapStats();
+		}
+		Set<ExternalConcept> conceptsAffected = new HashSet<>();
+		missingPartMappings.values().forEach(conceptsAffected::addAll);
+		setMapStat("Parts with missing mappings (Map Me!)", missingPartMappings.size());
+		setMapStat("Concepts affected by missing mappings", conceptsAffected.size());
+
+		List<Map.Entry<String, Long>> entries;
+		synchronized (this) {
+			entries = new ArrayList<>(mapStats.entrySet());
+		}
+		int tabIdx = getTab(TAB_MAP_STATS);
+		for (Map.Entry<String, Long> entry : entries) {
+			report(tabIdx, entry.getKey(), entry.getValue());
+		}
+	}
+
+	/**
+	 * @param line the map file line number, or blank if the issue isn't tied to one line
+	 */
+	public void reportMapIssue(String source, Object line, Severity severity, String issue, Object detail) {
+		if (!tabExists(TAB_MAP_ISSUES)) {
+			LOGGER.warn("{} {}: {} - {}", severity, source, issue, detail);
+			return;
+		}
+		try {
+			report(getTab(TAB_MAP_ISSUES), source, line, severity, issue, detail);
+		} catch (TermServerScriptException e) {
+			LOGGER.error("Unable to report map issue for {}: {}", source, issue, e);
+		}
 	}
 
 	public void removeMissingMapping(Part part) {

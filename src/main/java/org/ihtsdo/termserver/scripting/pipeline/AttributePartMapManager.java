@@ -4,10 +4,10 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.ihtsdo.otf.RF2Constants.Severity;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
-import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -31,6 +31,35 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 	private final Set<String> noMapParts = new HashSet<>();
 	private final Set<String> usedMapFileMappings = ConcurrentHashMap.newKeySet();
 	private final Set<String> usedHardCodedMappings = ConcurrentHashMap.newKeySet();
+
+	private static final String STATUS_ACCEPTED = "ACCEPTED";
+	private static final String STATUS_MAPPED = "MAPPED";
+	private static final String STATUS_UNMAPPED = "UNMAPPED";
+	private static final String STAT_STATUS_PREFIX = "Map file parts with status ";
+	private static final String STAT_PARTS = "Parts in parts file";
+	private static final String STAT_PARTS_ABSENT = "Parts file parts absent from map file";
+	private static final String STAT_NO_MAP = "Map file parts flagged No Map";
+	private static final String STAT_MAP_FILE_MAPPINGS = "Map file mappings";
+	private static final String STAT_MAP_FILE_USED = "Map file mappings used in concepts";
+	private static final String STAT_MAP_FILE_UNUSED = "Map file mappings never used";
+	private static final String STAT_MAP_FILE_ONE_TO_MANY = "Map file one-to-many mappings";
+	private static final String STAT_VALUE_REPLACED = "Map targets inactive, replacement used";
+	private static final String STAT_VALUE_NO_REPLACEMENT = "Map targets inactive, no replacement (left unmapped)";
+	private static final String STAT_TARGET_NOT_FOUND = "Map targets not found";
+	private static final String STAT_TYPE_REPLACED = "Map types inactive, replacement used";
+	private static final String STAT_TYPE_NO_REPLACEMENT = "Map types inactive, no replacement";
+	private static final String STAT_HARD_CODED = "Hard coded mappings";
+	private static final String STAT_HARD_CODED_USED = "Hard coded mappings used in concepts";
+	private static final String STAT_HARD_CODED_UNUSED = "Hard coded mappings never used";
+	private static final String STAT_HARD_CODED_ONE_TO_MANY = "Hard coded one-to-many mappings";
+	private static final String STAT_HARD_CODED_IN_MAP_FILE = "Hard coded mappings also in map file";
+	//The order the Map Stats tab lists them in.  Any other map statuses follow.
+	private static final List<String> MAP_STATS_IN_ORDER = List.of(
+			STAT_PARTS, STAT_PARTS_ABSENT,
+			STAT_STATUS_PREFIX + STATUS_ACCEPTED, STAT_STATUS_PREFIX + STATUS_MAPPED, STAT_STATUS_PREFIX + STATUS_UNMAPPED,
+			STAT_NO_MAP, STAT_MAP_FILE_MAPPINGS, STAT_MAP_FILE_USED, STAT_MAP_FILE_UNUSED, STAT_MAP_FILE_ONE_TO_MANY,
+			STAT_VALUE_REPLACED, STAT_VALUE_NO_REPLACEMENT, STAT_TARGET_NOT_FOUND,
+			STAT_HARD_CODED, STAT_HARD_CODED_USED, STAT_HARD_CODED_UNUSED, STAT_HARD_CODED_ONE_TO_MANY, STAT_HARD_CODED_IN_MAP_FILE);
 	
 	protected AttributePartMapManager(ContentPipelineManager cpm, Map<String, Part> parts) {
 		super(cpm);
@@ -69,25 +98,38 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 	public void populatePartAttributeMap(File attributeMapFile) throws TermServerScriptException {
 		// Output format from Snap2SNOMED is expected to be:
 		// Source code[0]   Source display  Status  PartTypeName    Target code[4]  Target display  Relationship type code  Relationship type display   No map flag[8] Status[9]
+		MAP_STATS_IN_ORDER.forEach(cpm::initialiseMapStat);
 		populateConceptReplacements();
 		populateHardCodedMappings();
 		validateHardCodedMappings();
 		Set<String> partsSeen = new HashSet<>();
-		List<String> mappingNotes = new ArrayList<>();
 
-		loadMapFile(attributeMapFile, items -> processPartMapFileLine(items, partsSeen, mappingNotes));
+		loadMapFile(attributeMapFile, items -> processPartMapFileLine(items, partsSeen));
 		LOGGER.info("Populated map of {} parts to attributes", partToAttributeValueMap.size());
 		reportHardCodedMappingsAlsoInMapFile();
 	}
 
 	/**
-	 * The hard coded mapping takes precedence, so the map file's mapping for the same part is never used
+	 * The hard coded mapping takes precedence, so the map file's mapping for the same part is never used.
+	 * Where both map to the same concepts that has no effect, but where they differ the map file is being ignored.
 	 */
 	private void reportHardCodedMappingsAlsoInMapFile() throws TermServerScriptException {
 		for (String partNum : getHardCodedMappingsAlsoInMapFile()) {
-			cpm.report(cpm.getTab(TAB_MAP_ISSUES), "", partNum, "Hard coded mapping to " + hardCodedMappings.get(partNum)
-					+ " overrides map file mapping to " + partToAttributeValueMap.get(partNum));
+			List<Concept> hardCoded = hardCodedMappings.get(partNum);
+			List<Concept> mapFile = partToAttributeValueMap.get(partNum);
+			boolean sameConcepts = getConceptIds(hardCoded).equals(getConceptIds(mapFile));
+			Severity severity = sameConcepts ? Severity.LOW : Severity.CRITICAL;
+			String issue = sameConcepts ? "Hard coded mapping overrides map file mapping" : "Hard coded mapping differs from map file mapping";
+			cpm.reportMapIssue(partNum, "", severity, issue, "Hard coded: " + hardCoded + "\nMap file: " + mapFile);
 		}
+	}
+
+	private Set<String> getConceptIds(List<Concept> concepts) {
+		Set<String> conceptIds = new TreeSet<>();
+		for (Concept concept : concepts) {
+			conceptIds.add(concept.getConceptId());
+		}
+		return conceptIds;
 	}
 
 	private Set<String> getHardCodedMappingsAlsoInMapFile() {
@@ -96,32 +138,30 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 		return overlap;
 	}
 
-	public void reportMapStats(int tabIdx) throws TermServerScriptException {
+	/**
+	 * Passes the totals, which are only known once modelling is complete, to the content pipeline's map stats
+	 */
+	public void recordMapStats() {
 		Set<String> mapFileParts = new HashSet<>();
 		mapFilePartsByStatus.values().forEach(mapFileParts::addAll);
 		Set<String> partsAbsentFromMapFile = new HashSet<>(parts.keySet());
 		partsAbsentFromMapFile.removeAll(mapFileParts);
-		Map<Part, Set<ExternalConcept>> missingMappings = cpm.getMissingPartMappings();
-		Set<ExternalConcept> conceptsAffected = new HashSet<>();
-		missingMappings.values().forEach(conceptsAffected::addAll);
 
-		cpm.report(tabIdx, "Parts in parts file", parts.size());
-		cpm.report(tabIdx, "Parts file parts absent from map file", partsAbsentFromMapFile.size());
+		cpm.setMapStat(STAT_PARTS, parts.size());
+		cpm.setMapStat(STAT_PARTS_ABSENT, partsAbsentFromMapFile.size());
 		for (Map.Entry<String, Set<String>> entry : mapFilePartsByStatus.entrySet()) {
-			cpm.report(tabIdx, "Map file parts with status " + entry.getKey(), entry.getValue().size());
+			cpm.setMapStat(STAT_STATUS_PREFIX + entry.getKey(), entry.getValue().size());
 		}
-		cpm.report(tabIdx, "Map file parts flagged No Map", noMapParts.size());
-		cpm.report(tabIdx, "Map file mappings", partToAttributeValueMap.size());
-		cpm.report(tabIdx, "Map file mappings used in concepts", usedMapFileMappings.size());
-		cpm.report(tabIdx, "Map file mappings never used", partToAttributeValueMap.size() - usedMapFileMappings.size());
-		cpm.report(tabIdx, "Map file one-to-many mappings", countOneToMany(partToAttributeValueMap));
-		cpm.report(tabIdx, "Hard coded mappings", hardCodedMappings.size());
-		cpm.report(tabIdx, "Hard coded mappings used in concepts", usedHardCodedMappings.size());
-		cpm.report(tabIdx, "Hard coded mappings never used", hardCodedMappings.size() - usedHardCodedMappings.size());
-		cpm.report(tabIdx, "Hard coded one-to-many mappings", countOneToMany(hardCodedMappings));
-		cpm.report(tabIdx, "Hard coded mappings also in map file", getHardCodedMappingsAlsoInMapFile().size());
-		cpm.report(tabIdx, "Parts with missing mappings (Map Me!)", missingMappings.size());
-		cpm.report(tabIdx, "Concepts affected by missing mappings", conceptsAffected.size());
+		cpm.setMapStat(STAT_NO_MAP, noMapParts.size());
+		cpm.setMapStat(STAT_MAP_FILE_MAPPINGS, partToAttributeValueMap.size());
+		cpm.setMapStat(STAT_MAP_FILE_USED, usedMapFileMappings.size());
+		cpm.setMapStat(STAT_MAP_FILE_UNUSED, partToAttributeValueMap.size() - usedMapFileMappings.size());
+		cpm.setMapStat(STAT_MAP_FILE_ONE_TO_MANY, countOneToMany(partToAttributeValueMap));
+		cpm.setMapStat(STAT_HARD_CODED, hardCodedMappings.size());
+		cpm.setMapStat(STAT_HARD_CODED_USED, usedHardCodedMappings.size());
+		cpm.setMapStat(STAT_HARD_CODED_UNUSED, hardCodedMappings.size() - usedHardCodedMappings.size());
+		cpm.setMapStat(STAT_HARD_CODED_ONE_TO_MANY, countOneToMany(hardCodedMappings));
+		cpm.setMapStat(STAT_HARD_CODED_IN_MAP_FILE, getHardCodedMappingsAlsoInMapFile().size());
 	}
 
 	private long countOneToMany(Map<String, List<Concept>> mappings) {
@@ -146,99 +186,102 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 		}
 	}
 
-	private void processPartMapFileLine(String[] items, Set<String> partsSeen, List<String> mappingNotes) throws TermServerScriptException {
+	private void processPartMapFileLine(String[] items, Set<String> partsSeen) throws TermServerScriptException {
 		String partNum = items[ColIdx.idx(COL_PART_NUM)];
+		String status = items[ColIdx.idx(COL_STATUS)];
 
 		//Quick check that the part we're talking about here is actually known to the input files
 		Part part = cpm.getPart(partNum);
 		if (part == null) {
-			throw new TermServerScriptException("Part " + partNum + " listed in map but not known to parts file. Target was " + items[ColIdx.idx(COL_STATUS)] + " as '" + items[ColIdx.idx(COL_TARGET)]  + "'");
+			throw new TermServerScriptException("Part " + partNum + " listed in map but not known to parts file. Target was " + status + " as '" + items[ColIdx.idx(COL_TARGET)]  + "'");
 		}
 
-		mapFilePartsByStatus.computeIfAbsent(items[ColIdx.idx(COL_STATUS)], k -> new TreeSet<>()).add(partNum);
+		mapFilePartsByStatus.computeIfAbsent(status, k -> new TreeSet<>()).add(partNum);
 
 		//Note that we could have multiple lines for the same partNum in a 1:many mapping
 		if (items[ColIdx.idx(COL_NO_MAP)].equals("true")) {
 			//And we can have items that report being mapped, but with 'no map' - warn about those.
 			noMapParts.add(partNum);
-			mappingNotes.add("Map indicates part mapped to 'No Map'");
-		} else if (items[ColIdx.idx(COL_STATUS)].equals("ACCEPTED") ||
-				(allowStatusMapped && items[ColIdx.idx(COL_STATUS)].equals("MAPPED"))) {
-			processAcceptedMapItem(items, partsSeen, mappingNotes, partNum);
-		} else if (!items[ColIdx.idx(COL_STATUS)].equals("UNMAPPED")) {
-			mappingNotes.add("Map indicates non-viable map status - " + items[ColIdx.idx(COL_STATUS)]);
-		}
-
-		if (!mappingNotes.isEmpty()) {
-			mapNotes.put(partNum, String.join("\n", mappingNotes));
-			mappingNotes.clear();
+			cpm.reportMapIssue(partNum, getCurrentLineNum(), Severity.LOW, "Map line flagged No Map", status);
+		} else if (status.equals(STATUS_ACCEPTED) || (allowStatusMapped && status.equals(STATUS_MAPPED))) {
+			processAcceptedMapItem(items, partsSeen, partNum);
+		} else if (!status.equals(STATUS_UNMAPPED)) {
+			cpm.reportMapIssue(partNum, getCurrentLineNum(), Severity.MEDIUM, "Unusable map status", status);
 		}
 	}
 
-	private void processAcceptedMapItem(String[] items, Set<String> partsSeen, List<String> mappingNotes, String partNum) throws TermServerScriptException {
+	private void processAcceptedMapItem(String[] items, Set<String> partsSeen, String partNum) throws TermServerScriptException {
+		partsSeen.add(partNum);
+		Concept attributeValue;
 		try {
-			partsSeen.add(partNum);
-			Concept attributeValue = gl.getConcept(items[ColIdx.idx(COL_TARGET)], false, true);
-			attributeValue = replaceValueIfRequired(mappingNotes, attributeValue);
-			if (attributeValue != null && attributeValue.isActive()) {
-				mappingNotes.add("Inactive concept");
-			}
-			partToAttributeValueMap.computeIfAbsent(partNum, k -> new ArrayList<>()).add(attributeValue);
+			attributeValue = gl.getConcept(items[ColIdx.idx(COL_TARGET)], false, true);
 		} catch (TermServerScriptException e) {
 			String errMsg = e.getMessage();
-			if (errMsg.startsWith("Unable")) {
-				mappingNotes.add(e.getMessage());
-			} else {
+			if (errMsg == null || !errMsg.startsWith("Unable")) {
 				throw e;
 			}
+			cpm.reportMapIssue(partNum, getCurrentLineNum(), Severity.HIGH, "Map target not found", errMsg);
+			cpm.incrementMapStat(STAT_TARGET_NOT_FOUND);
+			return;
 		}
-	}
 
-	public Concept replaceValueIfRequired(List<String> mappingNotes, Concept attributeValue) {
-
+		attributeValue = replaceValueIfRequired(partNum, attributeValue);
 		if (!attributeValue.isActiveSafely()) {
-			String hardCodedIndicator = " hardcoded";
-			Concept replacementValue = knownReplacementMap.get(attributeValue);
-			if (replacementValue == null) {
-				hardCodedIndicator = "";
-				replacementValue = cpm.getReplacementSafely(mappingNotes, attributeValue, false);
-			}
-
-			String replacementMsg = replacementValue == null ? "  no replacement available." : hardCodedIndicator + " replaced with " + replacementValue;
-			String successStr = replacementValue == null ? "Unsuccessful" : "Successful";
-			cpm.incrementSummaryCount(MAP_IMPORT, successStr + " value replacement");
-			String prefix = replacementValue == null ? "* " : "";
-			mappingNotes.add(prefix + "Mapped to" + hardCodedIndicator + " inactive value: " + attributeValue + replacementMsg);
-
-			if (replacementValue != null) {
-				attributeValue = replacementValue;
-			}
+			//Inactive with no replacement, already reported.  We can't use it, so the part stays unmapped
+			return;
 		}
-		return attributeValue;
+		partToAttributeValueMap.computeIfAbsent(partNum, k -> new ArrayList<>()).add(attributeValue);
 	}
 
-	public Concept replaceTypeIfRequired(List<String> mappingNotes, Concept attributeType) {
+	/**
+	 * @param source the part (or other identifier) mapped to the value, for reporting.  May be null.
+	 * @return the replacement for an inactive value, or the value unchanged if it's active or has no replacement
+	 */
+	public Concept replaceValueIfRequired(String source, Concept attributeValue) {
+		if (attributeValue.isActiveSafely()) {
+			return attributeValue;
+		}
+		Concept replacementValue = findReplacement(source, attributeValue, "value");
+		cpm.incrementMapStat(replacementValue == null ? STAT_VALUE_NO_REPLACEMENT : STAT_VALUE_REPLACED);
+		return replacementValue == null ? attributeValue : replacementValue;
+	}
+
+	/**
+	 * @param source the part (or other identifier) mapped to the type, for reporting.  May be null.
+	 * @return the replacement for an inactive type, or the type unchanged if it's active or has no replacement
+	 */
+	public Concept replaceTypeIfRequired(String source, Concept attributeType) {
 		if (hardCodedTypeReplacementMap.containsKey(attributeType)) {
 			attributeType = hardCodedTypeReplacementMap.get(attributeType);
 		}
-
-		if (!attributeType.isActiveSafely()) {
-			String hardCodedIndicator = " hardcoded";
-			Concept replacementType = knownReplacementMap.get(attributeType);
-			if (replacementType == null) {
-				hardCodedIndicator = "";
-				replacementType = cpm.getReplacementSafely(mappingNotes, attributeType, false);
-			}
-			String replacementMsg = replacementType == null ? " no replacement available." : hardCodedIndicator + " replaced with " + replacementType;
-			String successStr = replacementType == null ? "Unsuccessful" : "Successful";
-			cpm.incrementSummaryCount(MAP_IMPORT, successStr + " type replacement");
-			mappingNotes.add("Mapped to" + hardCodedIndicator + " inactive type: " + attributeType + replacementMsg);
-
-			if (replacementType != null) {
-				attributeType = replacementType;
-			}
+		if (attributeType.isActiveSafely()) {
+			return attributeType;
 		}
-		return attributeType;
+		Concept replacementType = findReplacement(source, attributeType, "type");
+		cpm.incrementMapStat(replacementType == null ? STAT_TYPE_NO_REPLACEMENT : STAT_TYPE_REPLACED);
+		return replacementType == null ? attributeType : replacementType;
+	}
+
+	/**
+	 * A map to an inactive concept is out of date: still usable via a replacement (MEDIUM), or no longer viable
+	 * without one (HIGH)
+	 */
+	private Concept findReplacement(String source, Concept inactiveConcept, String role) {
+		List<String> notes = new ArrayList<>();
+		Concept replacement = knownReplacementMap.get(inactiveConcept);
+		String replacedHow = " hard coded replacement ";
+		if (replacement == null) {
+			replacedHow = " replaced with ";
+			replacement = cpm.getReplacementSafely(notes, inactiveConcept, false);
+		}
+
+		if (replacement == null) {
+			String detail = inactiveConcept + (notes.isEmpty() ? "" : "\n" + String.join("\n", notes));
+			cpm.reportMapIssue(source, getCurrentLineNum(), Severity.HIGH, "Mapped to inactive " + role + ", no replacement available", detail);
+		} else {
+			cpm.reportMapIssue(source, getCurrentLineNum(), Severity.MEDIUM, "Mapped to inactive " + role + ", replacement used", inactiveConcept + replacedHow + replacement);
+		}
+		return replacement;
 	}
 
 	public boolean containsMappingForPartNum(String loincPartNum) {

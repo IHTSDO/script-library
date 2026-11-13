@@ -50,7 +50,7 @@ public class ImportClinicalLoincTerms extends LoincScript {
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"Item, Info, Details, ,",
-				"Line, LoincNum, Issue, , ",
+				"Source, Line, Severity, Issue, Detail",
 				"LoincNum, Item of Interest, LoincName, Template, Issues, details",
 				"LoincNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, "  + COMMON_LOINC_COLUMNS,
 				"Concept, FSN, SemTag, Severity, Action, LoincNum, Descriptions, Expression, Status, , ",
@@ -119,7 +119,7 @@ public class ImportClinicalLoincTerms extends LoincScript {
 
 	private void reportConflict(String loincNum, String detail) throws TermServerScriptException {
 		LOGGER.error("{}: {}", loincNum, detail);
-		report(getTab(TAB_MAP_ISSUES), "", loincNum, "CRITICAL - LOINC alternate identifier conflict, term skipped: " + detail);
+		reportMapIssue(loincNum, "", Severity.CRITICAL, "LOINC alternate identifier conflict, term skipped", detail);
 		incrementSummaryCount(CLINICAL_MAP, "CRITICAL - LOINC alternate identifier conflict");
 	}
 
@@ -171,7 +171,7 @@ public class ImportClinicalLoincTerms extends LoincScript {
 			if (loincTerm != null
 					&& LOINC_CLASSTYPE_CLINICAL.equals(loincTerm.getClassType())
 					&& !mapped.contains(entry.getKey())) {
-				report(getTab(TAB_MAP_ISSUES), "", entry.getKey(), "Map withdrawn - alternate identifier and descriptions left in place on " + gl.getConcept(entry.getValue()));
+				reportMapIssue(entry.getKey(), "", Severity.MEDIUM, "Map withdrawn - alternate identifier and descriptions left in place", gl.getConcept(entry.getValue()));
 				incrementSummaryCount(CLINICAL_MAP, "Map withdrawn - left in place");
 			}
 		}

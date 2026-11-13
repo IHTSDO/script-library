@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.ihtsdo.otf.RF2Constants.Severity;
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.pipeline.AbstractMapManager;
@@ -95,8 +96,8 @@ public class TermConceptMapManager extends AbstractMapManager implements LoincSc
 						.sorted()
 						.collect(Collectors.joining(", "));
 				for (LoincTerm loincTerm : entry.getValue()) {
-					cpm.report(cpm.getTab(TAB_MAP_ISSUES), "", loincTerm.getLoincNum(),
-							"Skipped (LE-189): " + loincNums + " all equivalent to " + entry.getKey());
+					cpm.reportMapIssue(loincTerm.getLoincNum(), "", Severity.MEDIUM,
+							"Skipped (LE-189): several terms equivalent to the same concept", loincNums + " all equivalent to " + entry.getKey());
 					cpm.incrementSummaryCount(MAP_IMPORT, "Skipped - shared target");
 					conceptMap.remove(loincTerm);
 				}
