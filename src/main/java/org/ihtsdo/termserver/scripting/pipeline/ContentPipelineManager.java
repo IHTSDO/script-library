@@ -102,6 +102,9 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 			if (tabExists(TAB_MAP_ME)) {
 				reportMissingMappings(getTab(TAB_MAP_ME));
 			}
+			if (tabExists(TAB_MAP_STATS)) {
+				attributePartMapManager.reportMapStats(getTab(TAB_MAP_STATS));
+			}
 			reportIncludedExcludedConcepts(getTab(TAB_STATS));
 			flushFiles(false);
 			switch (runMode) {
@@ -825,6 +828,10 @@ public abstract class ContentPipelineManager extends TermServerScript implements
 		}
 		missingPartMappings.computeIfAbsent(part, key -> new HashSet<>())
 							.add(getExternalConcept(externalIdentifier));
+	}
+
+	public Map<Part, Set<ExternalConcept>> getMissingPartMappings() {
+		return missingPartMappings;
 	}
 
 	public void removeMissingMapping(Part part) {

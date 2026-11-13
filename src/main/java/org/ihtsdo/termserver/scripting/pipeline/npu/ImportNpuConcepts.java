@@ -37,6 +37,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 
 	protected String[] tabNames = new String[] {
 			TAB_SUMMARY,
+			TAB_MAP_STATS,
 			TAB_MAP_ISSUES,
 			TAB_MODELING_ISSUES,
 			TAB_PROPOSED_MODEL_COMPARISON,
@@ -56,6 +57,7 @@ public class ImportNpuConcepts extends ContentPipelineManager implements NpuScri
 	public void postInit() throws TermServerScriptException {
 		String[] columnHeadings = new String[] {
 				"Category, Item, Count",
+				"Item, Count, , ",
 				"Source, Issue, , , ",
 				"npu_code, Item of Interest, External Concept Long Name, ColumnName, Part Status, SCTID, FSN, Priority Index, Usage Count, Top Priority Usage, Mapping Notes,",
 				"NpuNum, Item of Interest, SCTID, This Iteration, Template, Differences, Proposed Descriptions, Previous Descriptions, Proposed Model, Previous Model, ShortName, System, Component, Property, Proc, Unit, Specialty, Context Dependent, Group, Scale Type, Active",

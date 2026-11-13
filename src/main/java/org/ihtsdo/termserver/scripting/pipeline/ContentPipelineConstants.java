@@ -15,6 +15,7 @@ public interface ContentPipelineConstants {
 
 	String TAB_SUMMARY = "Summary";
 	String TAB_MAP_ISSUES = "Map Issues";
+	String TAB_MAP_STATS = "Map Stats";
 	String TAB_MODELING_ISSUES = "Modeling Issues";
 	String TAB_PROPOSED_MODEL_COMPARISON = "Proposed Model Comparison";
 	String TAB_MAP_ME = "Map Me!";

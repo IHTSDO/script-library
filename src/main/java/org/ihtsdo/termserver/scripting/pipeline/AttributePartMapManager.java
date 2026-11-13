@@ -2,10 +2,12 @@ package org.ihtsdo.termserver.scripting.pipeline;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.ihtsdo.otf.exception.TermServerScriptException;
 import org.ihtsdo.termserver.scripting.domain.Concept;
 import org.ihtsdo.termserver.scripting.domain.RelationshipTemplate;
+import org.ihtsdo.termserver.scripting.pipeline.domain.ExternalConcept;
 import org.ihtsdo.termserver.scripting.pipeline.domain.Part;
 import org.ihtsdo.termserver.scripting.pipeline.template.TemplatedConcept;
 import org.ihtsdo.termserver.scripting.util.SnomedUtils;
@@ -23,6 +25,12 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 	protected Map<Concept, Concept> hardCodedTypeReplacementMap = new HashMap<>();
 
 	protected boolean allowStatusMapped = false;
+
+	//For the Map Stats tab
+	private final Map<String, Set<String>> mapFilePartsByStatus = new TreeMap<>();
+	private final Set<String> noMapParts = new HashSet<>();
+	private final Set<String> usedMapFileMappings = ConcurrentHashMap.newKeySet();
+	private final Set<String> usedHardCodedMappings = ConcurrentHashMap.newKeySet();
 	
 	protected AttributePartMapManager(ContentPipelineManager cpm, Map<String, Part> parts) {
 		super(cpm);
@@ -36,8 +44,10 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 			//Can't look up an unspecified part.
 			//In the case of, eg NPU Unit not being specified, this is fine.
 		} else if (hardCodedMappings.containsKey(partNum)) {
+			usedHardCodedMappings.add(partNum);
 			return extractPartMappingFromMapAsRelationshipTemplate(hardCodedMappings, partNum, attributeType);
 		} else if (containsMappingForPartNum(partNum)) {
+			usedMapFileMappings.add(partNum);
 			return extractPartMappingFromMapAsRelationshipTemplate(partToAttributeValueMap, partNum, attributeType);
 		} else if (!cpm.getMappingsAllowedAbsent().contains(partNum)) {
 			//Some special rules exist for certain parts, so we don't need to report if we have one of those.
@@ -67,6 +77,55 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 
 		loadMapFile(attributeMapFile, items -> processPartMapFileLine(items, partsSeen, mappingNotes));
 		LOGGER.info("Populated map of {} parts to attributes", partToAttributeValueMap.size());
+		reportHardCodedMappingsAlsoInMapFile();
+	}
+
+	/**
+	 * The hard coded mapping takes precedence, so the map file's mapping for the same part is never used
+	 */
+	private void reportHardCodedMappingsAlsoInMapFile() throws TermServerScriptException {
+		for (String partNum : getHardCodedMappingsAlsoInMapFile()) {
+			cpm.report(cpm.getTab(TAB_MAP_ISSUES), "", partNum, "Hard coded mapping to " + hardCodedMappings.get(partNum)
+					+ " overrides map file mapping to " + partToAttributeValueMap.get(partNum));
+		}
+	}
+
+	private Set<String> getHardCodedMappingsAlsoInMapFile() {
+		Set<String> overlap = new TreeSet<>(hardCodedMappings.keySet());
+		overlap.retainAll(partToAttributeValueMap.keySet());
+		return overlap;
+	}
+
+	public void reportMapStats(int tabIdx) throws TermServerScriptException {
+		Set<String> mapFileParts = new HashSet<>();
+		mapFilePartsByStatus.values().forEach(mapFileParts::addAll);
+		Set<String> partsAbsentFromMapFile = new HashSet<>(parts.keySet());
+		partsAbsentFromMapFile.removeAll(mapFileParts);
+		Map<Part, Set<ExternalConcept>> missingMappings = cpm.getMissingPartMappings();
+		Set<ExternalConcept> conceptsAffected = new HashSet<>();
+		missingMappings.values().forEach(conceptsAffected::addAll);
+
+		cpm.report(tabIdx, "Parts in parts file", parts.size());
+		cpm.report(tabIdx, "Parts file parts absent from map file", partsAbsentFromMapFile.size());
+		for (Map.Entry<String, Set<String>> entry : mapFilePartsByStatus.entrySet()) {
+			cpm.report(tabIdx, "Map file parts with status " + entry.getKey(), entry.getValue().size());
+		}
+		cpm.report(tabIdx, "Map file parts flagged No Map", noMapParts.size());
+		cpm.report(tabIdx, "Map file mappings", partToAttributeValueMap.size());
+		cpm.report(tabIdx, "Map file mappings used in concepts", usedMapFileMappings.size());
+		cpm.report(tabIdx, "Map file mappings never used", partToAttributeValueMap.size() - usedMapFileMappings.size());
+		cpm.report(tabIdx, "Map file one-to-many mappings", countOneToMany(partToAttributeValueMap));
+		cpm.report(tabIdx, "Hard coded mappings", hardCodedMappings.size());
+		cpm.report(tabIdx, "Hard coded mappings used in concepts", usedHardCodedMappings.size());
+		cpm.report(tabIdx, "Hard coded mappings never used", hardCodedMappings.size() - usedHardCodedMappings.size());
+		cpm.report(tabIdx, "Hard coded one-to-many mappings", countOneToMany(hardCodedMappings));
+		cpm.report(tabIdx, "Hard coded mappings also in map file", getHardCodedMappingsAlsoInMapFile().size());
+		cpm.report(tabIdx, "Parts with missing mappings (Map Me!)", missingMappings.size());
+		cpm.report(tabIdx, "Concepts affected by missing mappings", conceptsAffected.size());
+	}
+
+	private long countOneToMany(Map<String, List<Concept>> mappings) {
+		return mappings.values().stream().filter(targets -> targets.size() > 1).count();
 	}
 
 	private void validateHardCodedMappings() throws TermServerScriptException {
@@ -96,9 +155,12 @@ public abstract class AttributePartMapManager extends AbstractMapManager {
 			throw new TermServerScriptException("Part " + partNum + " listed in map but not known to parts file. Target was " + items[ColIdx.idx(COL_STATUS)] + " as '" + items[ColIdx.idx(COL_TARGET)]  + "'");
 		}
 
+		mapFilePartsByStatus.computeIfAbsent(items[ColIdx.idx(COL_STATUS)], k -> new TreeSet<>()).add(partNum);
+
 		//Note that we could have multiple lines for the same partNum in a 1:many mapping
 		if (items[ColIdx.idx(COL_NO_MAP)].equals("true")) {
 			//And we can have items that report being mapped, but with 'no map' - warn about those.
+			noMapParts.add(partNum);
 			mappingNotes.add("Map indicates part mapped to 'No Map'");
 		} else if (items[ColIdx.idx(COL_STATUS)].equals("ACCEPTED") ||
 				(allowStatusMapped && items[ColIdx.idx(COL_STATUS)].equals("MAPPED"))) {
